@@ -31,3 +31,6 @@ export const deleteCustomer = (id) => axios.delete(`${API_URL}/customers/${id}`)
 
 // Invoice detail
 export const getSaleInvoice = (id) => axios.get(`${API_URL}/sales/${id}/invoice`);
+
+// Dashboard
+export const getDashboard = () => axios.get(`${API_URL}/dashboard`);
