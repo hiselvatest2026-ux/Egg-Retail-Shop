@@ -54,14 +54,24 @@ exports.getStock = async (_req, res) => {
       ),
       sales_qty AS (
         SELECT product_id, SUM(quantity) AS qty FROM sale_items GROUP BY product_id
+      ),
+      all_ids AS (
+        SELECT id AS product_id FROM products
+        UNION
+        SELECT product_id FROM purchase_items
+        UNION
+        SELECT product_id FROM sale_items
       )
-      SELECT p.id AS product_id, p.name, COALESCE(pq.qty, 0) AS purchased_qty,
+      SELECT a.product_id,
+             COALESCE(p.name, 'Product #' || a.product_id) AS name,
+             COALESCE(pq.qty, 0) AS purchased_qty,
              COALESCE(sq.qty, 0) AS sold_qty,
              COALESCE(pq.qty, 0) - COALESCE(sq.qty, 0) AS stock
-      FROM products p
-      LEFT JOIN purchase_qty pq ON pq.product_id = p.id
-      LEFT JOIN sales_qty sq ON sq.product_id = p.id
-      ORDER BY p.name ASC
+      FROM all_ids a
+      LEFT JOIN products p ON p.id = a.product_id
+      LEFT JOIN purchase_qty pq ON pq.product_id = a.product_id
+      LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
+      ORDER BY name ASC
     `);
     res.json(result.rows.map(r => ({
       product_id: r.product_id,
