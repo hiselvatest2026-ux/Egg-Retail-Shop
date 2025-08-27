@@ -5,6 +5,7 @@ const salesRoutes = require('./routes/salesRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const productRoutes = require('./routes/productRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
@@ -18,6 +19,7 @@ app.use('/sales', salesRoutes);
 app.use('/payments', paymentRoutes);
 app.use('/products', productRoutes);
 app.use('/customers', customerRoutes);
+app.use('/suppliers', supplierRoutes);
 app.use('/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => res.send('Egg Retail Shop Backend Running'));

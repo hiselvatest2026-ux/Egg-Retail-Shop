@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getSales, createSale, updateSale, deleteSale } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
   const [form, setForm] = useState({ customer_id: '', total: '', egg_type: '' });
+  const [customers, setCustomers] = useState([]);
   const [editing, setEditing] = useState(null);
 
   const fetchSales = async () => {
@@ -17,7 +18,7 @@ const Sales = () => {
     }
   };
 
-  useEffect(() => { fetchSales(); }, []);
+  useEffect(() => { fetchSales(); (async()=>{ try { const r = await getCustomers(); setCustomers(r.data);} catch(e){ console.error('customers load failed', e);} })(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,8 +49,11 @@ const Sales = () => {
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
         <form onSubmit={handleSubmit} className="form-grid">
           <div className="input-group">
-            <label>Customer ID</label>
-            <input className="input" placeholder="e.g. 501" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} inputMode="numeric" />
+            <label>Customer</label>
+            <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
+              <option value="">Select customer</option>
+              {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
+            </select>
           </div>
           <div className="input-group">
             <label>Total Amount</label>

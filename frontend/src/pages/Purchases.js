@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getPurchases, createPurchase, updatePurchase, deletePurchase } from '../api/api';
+import { getPurchases, createPurchase, updatePurchase, deletePurchase, getSuppliers } from '../api/api';
 import Card from '../components/Card';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
   const [form, setForm] = useState({ supplier_id: '', total: '', egg_type: '' });
   const [editing, setEditing] = useState(null);
+  const [suppliers, setSuppliers] = useState([]);
   const fetchPurchases = async () => {
     try {
       const res = await getPurchases();
@@ -14,7 +15,7 @@ const Purchases = () => {
       console.error('Failed to load purchases', err);
     }
   };
-  useEffect(() => { fetchPurchases(); }, []);
+  useEffect(() => { fetchPurchases(); (async()=>{ try { const r = await getSuppliers(); setSuppliers(r.data);} catch(e){ console.error('suppliers load failed', e);} })(); }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.supplier_id || !form.total) return;
@@ -44,13 +45,10 @@ const Purchases = () => {
         <form onSubmit={handleSubmit} className="form-grid">
           <div className="input-group">
             <label>Supplier ID</label>
-            <input
-              className="input"
-              placeholder="e.g. 101"
-              value={form.supplier_id}
-              onChange={e => setForm({ ...form, supplier_id: e.target.value })}
-              inputMode="numeric"
-            />
+            <select className="input" value={form.supplier_id} onChange={e=>setForm({...form, supplier_id: e.target.value})}>
+              <option value="">Select supplier</option>
+              {suppliers.map(s => (<option key={s.id} value={s.id}>{s.name} (#{s.id})</option>))}
+            </select>
           </div>
           <div className="input-group">
             <label>Total Amount</label>
