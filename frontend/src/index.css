@@ -21,6 +21,8 @@ body {
 .table thead th { background:#f8fafc; font-weight:600; color:#334155; }
 .table-hover tbody tr { transition: background-color .12s ease; }
 .table-hover tbody tr:hover { background:#f8fafc; }
+/* Mobile-friendly tables */
+.table { display: block; overflow-x: auto; white-space: nowrap; }
 
 .sidebar { width:256px; background:#0f172a; color:#e2e8f0; }
 .sidebar .brand { padding:16px; font-weight:700; font-size:18px; border-bottom:1px solid #1f2937; }
@@ -66,6 +68,28 @@ body {
 .stat.warn { background:#fff7ed; border-color:#fed7aa; }
 .stat.danger { background:#fff1f2; border-color:#fecdd3; }
 .stat.info { background:#eff6ff; border-color:#bfdbfe; }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; position: sticky; top: 0; z-index: 30; }
+  .sidebar .nav { flex-direction: row; gap: 8px; overflow-x: auto; white-space: nowrap; }
+  .sidebar a { flex: 0 0 auto; }
+  .content { padding: 16px; }
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .content { padding: 12px; }
+  .card-body { padding: 12px; }
+  .card-header { padding: 10px 12px; }
+  .page-title { font-size: 20px; }
+  .sidebar .brand { font-size: 16px; padding: 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr; }
+  .btn-group { gap: 6px; }
+}
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
