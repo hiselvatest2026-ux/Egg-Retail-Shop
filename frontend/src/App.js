@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, NavLink } from 'react-router-dom';
 import Purchases from './pages/Purchases';
 import Sales from './pages/Sales';
 import Payments from './pages/Payments';
@@ -15,12 +15,12 @@ function App() {
         <aside className="w-64 bg-gray-100 p-4">
           <h1 className="text-xl font-bold mb-4">Egg Retail Shop</h1>
           <nav className="flex flex-col space-y-3">
-            <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">DashBoard</Link>
-            <Link to="/sales" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Sales</Link>
-            <Link to="/payments" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Payment Receipts</Link>
-            <Link to="/purchases" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Purchase</Link>
-            <Link to="/products" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Products</Link>
-            <Link to="/customers" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Customer</Link>
+            <NavLink to="/" end className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>DashBoard</NavLink>
+            <NavLink to="/sales" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Sales</NavLink>
+            <NavLink to="/payments" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Payment Receipts</NavLink>
+            <NavLink to="/purchases" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Purchase</NavLink>
+            <NavLink to="/products" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Products</NavLink>
+            <NavLink to="/customers" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Customer</NavLink>
           </nav>
         </aside>
         <main className="flex-1 p-6">
