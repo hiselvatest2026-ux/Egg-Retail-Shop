@@ -46,3 +46,31 @@ exports.deleteSale = async (req, res) => {
   }
 };
 
+exports.getSaleInvoice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const saleResult = await pool.query('SELECT * FROM sales WHERE id=$1', [id]);
+    if (saleResult.rows.length === 0) return res.status(404).json({ message: 'Sale not found' });
+    const sale = saleResult.rows[0];
+
+    const itemsResult = await pool.query(
+      `SELECT si.id, si.product_id, p.name AS product_name, si.quantity, si.price, (si.quantity * si.price) AS line_total
+       FROM sale_items si
+       JOIN products p ON p.id = si.product_id
+       WHERE si.sale_id = $1
+       ORDER BY si.id ASC`,
+      [id]
+    );
+
+    const totalResult = await pool.query(
+      'SELECT COALESCE(SUM(quantity * price), 0) AS total FROM sale_items WHERE sale_id=$1',
+      [id]
+    );
+    const computedTotal = totalResult.rows[0]?.total ?? 0;
+
+    res.json({ sale, items: itemsResult.rows, total: computedTotal });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
