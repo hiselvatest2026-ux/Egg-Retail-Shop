@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getProducts, createProduct, updateProduct, deleteProduct } from '../api/api';
+import Card from '../components/Card';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -29,8 +30,9 @@ const Products = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Products</h1>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end mb-4">
+      <h1 className="text-2xl font-bold mb-4">Products</h1>
+      <Card title={editing ? 'Edit Product' : 'Add Product'}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
         <div>
           <label className="block text-sm">Name</label>
           <input className="border p-2 w-full" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
@@ -47,10 +49,12 @@ const Products = () => {
           <label className="block text-sm">Expiry</label>
           <input type="date" className="border p-2 w-full" value={form.expiry_date} onChange={e=>setForm({...form, expiry_date: e.target.value})} />
         </div>
-        <button className="bg-green-600 text-white px-3 py-2 rounded" type="submit">{editing ? 'Update' : 'Add'}</button>
+        <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
       </form>
+      </Card>
 
-      <table className="w-full mt-4 border">
+      <Card title="Products List">
+      <table className="table mt-2">
         <thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Batch</th><th>Expiry</th><th>Actions</th></tr></thead>
         <tbody>
           {products.map(p => (
@@ -61,13 +65,14 @@ const Products = () => {
               <td>{p.batch_number}</td>
               <td>{p.expiry_date ? new Date(p.expiry_date).toLocaleDateString() : ''}</td>
               <td className="space-x-2">
-                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>startEdit(p)}>Edit</button>
-                <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteProduct(p.id); fetchProducts(); }}>Delete</button>
+                <button className="btn" onClick={()=>startEdit(p)}>Edit</button>
+                <button className="btn danger" onClick={async()=>{ await deleteProduct(p.id); fetchProducts(); }}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </Card>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getSaleItems, createSaleItem, updateSaleItem, deleteSaleItem } from '../api/api';
+import Card from '../components/Card';
 
 const SaleItems = () => {
   const { id } = useParams();
@@ -26,8 +27,9 @@ const SaleItems = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Sale Items (Sale #{id})</h1>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end mb-4">
+      <h1 className="text-2xl font-bold mb-4">Sale Items (Sale #{id})</h1>
+      <Card title={editing ? 'Edit Item' : 'Add Item'}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
         <div>
           <label className="block text-sm">Product ID</label>
           <input className="border p-2 w-full" value={form.product_id} onChange={e=>setForm({...form, product_id: e.target.value})} />
@@ -40,10 +42,12 @@ const SaleItems = () => {
           <label className="block text-sm">Price</label>
           <input className="border p-2 w-full" value={form.price} onChange={e=>setForm({...form, price: e.target.value})} />
         </div>
-        <button className="bg-green-600 text-white px-3 py-2 rounded" type="submit">{editing ? 'Update' : 'Add'}</button>
+        <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
       </form>
+      </Card>
 
-      <table className="w-full mt-4 border">
+      <Card title="Items List">
+      <table className="table mt-2">
         <thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th>Actions</th></tr></thead>
         <tbody>
           {items.map(it => (
@@ -54,13 +58,14 @@ const SaleItems = () => {
               <td>{it.price}</td>
               <td>{it.line_total}</td>
               <td className="space-x-2">
-                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(it.id); setForm({ product_id: it.product_id, quantity: it.quantity, price: it.price }); }}>Edit</button>
-                <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteSaleItem(id, it.id); fetchItems(); }}>Delete</button>
+                <button className="btn" onClick={()=>{ setEditing(it.id); setForm({ product_id: it.product_id, quantity: it.quantity, price: it.price }); }}>Edit</button>
+                <button className="btn danger" onClick={async()=>{ await deleteSaleItem(id, it.id); fetchItems(); }}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </Card>
     </div>
   );
 };

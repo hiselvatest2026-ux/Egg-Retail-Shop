@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getPayments, createPayment, updatePayment, deletePayment } from '../api/api';
+import Card from '../components/Card';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
@@ -36,29 +37,32 @@ const Payments = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Payment Receipts</h1>
+      <h1 className="text-2xl font-bold mb-4">Payment Receipts</h1>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 items-end mb-4">
+      <Card title={editing ? 'Edit Payment' : 'Add Payment'}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
         <div>
           <label className="block text-sm">Customer ID</label>
-          <input className="border p-2" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} />
+          <input className="border p-2 w-full" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Invoice (Sale) ID</label>
-          <input className="border p-2" value={form.invoice_id} onChange={e=>setForm({...form, invoice_id: e.target.value})} />
+          <input className="border p-2 w-full" value={form.invoice_id} onChange={e=>setForm({...form, invoice_id: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Amount</label>
-          <input className="border p-2" value={form.amount} onChange={e=>setForm({...form, amount: e.target.value})} />
+          <input className="border p-2 w-full" value={form.amount} onChange={e=>setForm({...form, amount: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Mode</label>
-          <input className="border p-2" placeholder="Cash / Card / UPI" value={form.payment_mode} onChange={e=>setForm({...form, payment_mode: e.target.value})} />
+          <input className="border p-2 w-full" placeholder="Cash / Card / UPI" value={form.payment_mode} onChange={e=>setForm({...form, payment_mode: e.target.value})} />
         </div>
-        <button className="bg-green-600 text-white px-3 py-2 rounded" type="submit">Add Payment</button>
+        <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
       </form>
+      </Card>
 
-      <table className="w-full mt-4 border">
+      <Card title="Payment Receipts List">
+      <table className="table mt-2">
         <thead>
           <tr><th>ID</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Mode</th><th>Actions</th></tr>
         </thead>
@@ -71,13 +75,14 @@ const Payments = () => {
               <td>{p.amount}</td>
               <td>{p.payment_mode}</td>
               <td className="space-x-2">
-                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
-                <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deletePayment(p.id); fetchPayments(); }}>Delete</button>
+                <button className="btn" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
+                <button className="btn danger" onClick={async()=>{ await deletePayment(p.id); fetchPayments(); }}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </Card>
     </div>
   );
 };

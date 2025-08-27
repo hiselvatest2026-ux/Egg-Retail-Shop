@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../api/api';
+import Card from '../components/Card';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
@@ -26,8 +27,9 @@ const Customers = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Customers</h1>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end mb-4">
+      <h1 className="text-2xl font-bold mb-4">Customers</h1>
+      <Card title={editing ? 'Edit Customer' : 'Add Customer'}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
         <div>
           <label className="block text-sm">Name</label>
           <input className="border p-2 w-full" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
@@ -36,10 +38,12 @@ const Customers = () => {
           <label className="block text-sm">Contact</label>
           <input className="border p-2 w-full" value={form.contact_info} onChange={e=>setForm({...form, contact_info: e.target.value})} />
         </div>
-        <button className="bg-green-600 text-white px-3 py-2 rounded" type="submit">{editing ? 'Update' : 'Add'}</button>
+        <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
       </form>
+      </Card>
 
-      <table className="w-full mt-4 border">
+      <Card title="Customers List">
+      <table className="table mt-2">
         <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Actions</th></tr></thead>
         <tbody>
           {customers.map(c => (
@@ -48,13 +52,14 @@ const Customers = () => {
               <td>{c.name}</td>
               <td>{c.contact_info}</td>
               <td className="space-x-2">
-                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>startEdit(c)}>Edit</button>
-                <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteCustomer(c.id); fetchCustomers(); }}>Delete</button>
+                <button className="btn" onClick={()=>startEdit(c)}>Edit</button>
+                <button className="btn danger" onClick={async()=>{ await deleteCustomer(c.id); fetchCustomers(); }}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </Card>
     </div>
   );
 };

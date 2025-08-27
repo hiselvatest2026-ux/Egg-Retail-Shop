@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getSales, createSale, updateSale, deleteSale } from '../api/api';
 import { Link } from 'react-router-dom';
+import Card from '../components/Card';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
@@ -29,21 +30,24 @@ const Sales = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Sales</h1>
+      <h1 className="text-2xl font-bold mb-4">Sales</h1>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 items-end mb-4">
+      <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
         <div>
           <label className="block text-sm">Customer ID</label>
-          <input className="border p-2" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} />
+          <input className="border p-2 w-full" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Total</label>
-          <input className="border p-2" value={form.total} onChange={e=>setForm({...form, total: e.target.value})} />
+          <input className="border p-2 w-full" value={form.total} onChange={e=>setForm({...form, total: e.target.value})} />
         </div>
-        <button className="bg-green-600 text-white px-3 py-2 rounded" type="submit">Add Sale</button>
+        <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
       </form>
+      </Card>
 
-      <table className="w-full mt-4 border">
+      <Card title="Sales List">
+      <table className="table mt-2">
         <thead>
           <tr><th>ID</th><th>Customer</th><th>Total</th><th>Actions</th></tr>
         </thead>
@@ -54,15 +58,16 @@ const Sales = () => {
               <td>{s.customer_id}</td>
               <td>{s.total}</td>
               <td className="space-x-2">
-                <Link className="bg-gray-700 text-white px-2 py-1 rounded" to={`/invoice/${s.id}`}>Invoice</Link>
-                <Link className="bg-purple-700 text-white px-2 py-1 rounded" to={`/sales/${s.id}/items`}>Items</Link>
-                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
-                <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
+                <Link className="btn secondary" to={`/invoice/${s.id}`}>Invoice</Link>
+                <Link className="btn secondary" to={`/sales/${s.id}/items`}>Items</Link>
+                <button className="btn" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
+                <button className="btn danger" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </Card>
     </div>
   );
 };

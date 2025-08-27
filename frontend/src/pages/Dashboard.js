@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboard } from '../api/api';
 import { Line, Bar } from 'react-chartjs-2';
+import Card from '../components/Card';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,9 +17,9 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
-const Card = ({ title, value }) => (
-  <div className="border rounded p-4 shadow-sm">
-    <div className="text-sm text-gray-600">{title}</div>
+const Metric = ({ title, value }) => (
+  <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
+    <div className="text-sm" style={{color:'#6b7280'}}>{title}</div>
     <div className="text-2xl font-bold">{value}</div>
   </div>
 );
@@ -60,26 +61,24 @@ const Dashboard = () => {
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Card title="Total Sales Today" value={`₹ ${Number(data?.metrics?.total_sales_today || 0).toFixed(2)}`} />
-        <Card title="Current Stock Level" value={Number(data?.metrics?.current_stock_level || 0)} />
-        <Card title="Pending Orders" value={Number(data?.metrics?.pending_orders || 0)} />
+        <Metric title="Total Sales Today" value={`₹ ${Number(data?.metrics?.total_sales_today || 0).toFixed(2)}`} />
+        <Metric title="Current Stock Level" value={Number(data?.metrics?.current_stock_level || 0)} />
+        <Metric title="Pending Orders" value={Number(data?.metrics?.pending_orders || 0)} />
       </div>
 
       <div className="flex gap-3 mb-6">
-        <Link className="bg-blue-600 text-white px-3 py-2 rounded" to="/purchases">Go to Purchase</Link>
-        <Link className="bg-blue-600 text-white px-3 py-2 rounded" to="/sales">Go to Sales</Link>
-        <Link className="bg-blue-600 text-white px-3 py-2 rounded" to="/products">Go to Inventory</Link>
+        <Link className="btn" to="/purchases">Go to Purchase</Link>
+        <Link className="btn" to="/sales">Go to Sales</Link>
+        <Link className="btn" to="/products">Go to Inventory</Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="border rounded p-4">
-          <div className="font-semibold mb-2">Sales Trend</div>
+        <Card title="Sales Trend">
           <Line data={salesTrendChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-        </div>
-        <div className="border rounded p-4">
-          <div className="font-semibold mb-2">Low/Current Stock by Product</div>
+        </Card>
+        <Card title="Low/Current Stock by Product">
           <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-        </div>
+        </Card>
       </div>
     </div>
   );
