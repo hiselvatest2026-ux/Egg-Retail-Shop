@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getSales, createSale, deleteSale } from '../api/api';
+import { Link } from 'react-router-dom';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
@@ -46,7 +47,8 @@ const Sales = () => {
               <td>{s.id}</td>
               <td>{s.customer_id}</td>
               <td>{s.total}</td>
-              <td>
+              <td className="space-x-2">
+                <Link className="bg-gray-700 text-white px-2 py-1 rounded" to={`/invoice/${s.id}`}>Invoice</Link>
                 <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
               </td>
             </tr>
