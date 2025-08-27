@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
 
 const Stat = ({ label, value, tone }) => (
@@ -8,35 +8,57 @@ const Stat = ({ label, value, tone }) => (
   </div>
 );
 
-const CreditManagement = () => (
-  <div className="page">
-    <div className="page-header">
-      <div>
-        <h1 className="page-title">Credit Management</h1>
-        <p className="page-subtitle">Monitor customer credit limits, dues, and risk</p>
+const CreditManagement = () => {
+  const [kpis, setKpis] = useState({ total_customers_with_dues: 0, total_outstanding: 0, total_overdue_30: 0 });
+  const [rows, setRows] = useState([]);
+  useEffect(() => {
+    (async()=>{
+      try {
+        const base = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace('frontend','backend') : '');
+        const res = await fetch(`${base}/credit-summary/summary`);
+        const data = await res.json();
+        setKpis(data.kpis || { total_customers_with_dues: 0, total_outstanding: 0, total_overdue_30: 0 });
+        setRows(data.customers || []);
+      } catch (e) { console.error('load credit summary failed', e); }
+    })();
+  }, []);
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Credit Management</h1>
+          <p className="page-subtitle">Monitor customer dues and risk</p>
+        </div>
       </div>
+
+      <Card title="Overview">
+        <div className="stat-grid">
+          <Stat label="Total Outstanding" value={`₹ ${Number(kpis.total_outstanding||0).toLocaleString()}`} tone="warn" />
+          <Stat label="> 30d Overdue" value={`₹ ${Number(kpis.total_overdue_30||0).toLocaleString()}`} tone="danger" />
+          <Stat label="Customers with Dues" value={kpis.total_customers_with_dues} tone="info" />
+        </div>
+      </Card>
+
+      <div style={{height:12}} />
+
+      <Card title="Outstanding by Customer">
+        <table className="table table-hover">
+          <thead><tr><th>Customer</th><th>Total Due</th><th>Overdue >30d</th></tr></thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.customer_id}>
+                <td>{r.customer_name} (#{r.customer_id})</td>
+                <td>₹ {Number(r.total_due||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>₹ {Number(r.overdue_30||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
     </div>
-
-    <Card title="Overview">
-      <div className="stat-grid">
-        <Stat label="Total Outstanding" value="₹ 3,42,500" tone="warn" />
-        <Stat label="Overdue > 30 days" value="₹ 1,05,200" tone="danger" />
-        <Stat label="At-risk Customers" value="12" tone="danger" />
-        <Stat label="Credit Limit Utilization" value="68%" tone="info" />
-      </div>
-    </Card>
-
-    <div style={{height:12}} />
-
-    <Card title="Actions">
-      <div className="btn-group">
-        <button className="btn">Send Payment Reminders</button>
-        <button className="btn secondary">Export Outstanding List</button>
-        <button className="btn secondary">Adjust Credit Limits</button>
-      </div>
-    </Card>
-  </div>
-);
+  );
+};
 
 export default CreditManagement;
 
