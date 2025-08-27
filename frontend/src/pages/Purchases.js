@@ -53,7 +53,7 @@ const Purchases = () => {
           <div className="input-group">
             <label>Supplier ID</label>
             <select className="input" value={form.supplier_id} onChange={e=>setForm({...form, supplier_id: e.target.value})}>
-              <option value="">Select supplier</option>
+              <option value="">{suppliers.length ? 'Select supplier' : 'No suppliers found - add one first'}</option>
               {suppliers.map(s => (<option key={s.id} value={s.id}>{s.name} (#{s.id})</option>))}
             </select>
           </div>

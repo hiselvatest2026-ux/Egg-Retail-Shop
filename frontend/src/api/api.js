@@ -44,6 +44,9 @@ export const deleteCustomer = (id) => axios.delete(`${API_URL}/customers/${id}`)
 
 // Suppliers APIs
 export const getSuppliers = () => axios.get(`${API_URL}/suppliers`);
+export const createSupplier = (data) => axios.post(`${API_URL}/suppliers`, data);
+export const updateSupplier = (id, data) => axios.put(`${API_URL}/suppliers/${id}`, data);
+export const deleteSupplier = (id) => axios.delete(`${API_URL}/suppliers/${id}`);
 
 // Invoice detail
 export const getSaleInvoice = (id) => axios.get(`${API_URL}/sales/${id}/invoice`);

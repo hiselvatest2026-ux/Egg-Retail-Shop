@@ -6,6 +6,7 @@ import Sales from './pages/Sales';
 import Payments from './pages/Payments';
 import Products from './pages/Products';
 import Customers from './pages/Customers';
+import Suppliers from './pages/Suppliers';
 import Dashboard from './pages/Dashboard';
 import Invoice from './pages/Invoice';
 import SaleItems from './pages/SaleItems';
@@ -26,6 +27,7 @@ function App() {
             <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
             <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
             <NavLink to="/payments" className={({isActive})=> isActive ? 'active' : ''}><FiCreditCard style={{marginRight:8}} /> Payment receipts</NavLink>
+            <NavLink to="/suppliers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Suppliers</NavLink>
             <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
             <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
@@ -41,6 +43,7 @@ function App() {
             <Route path="/payments" element={<Payments />} />
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/invoice/:id" element={<Invoice />} />
             <Route path="/sales/:id/items" element={<SaleItems />} />
             <Route path="/purchases/:id/items" element={<PurchaseItems />} />

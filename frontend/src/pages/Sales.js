@@ -57,7 +57,7 @@ const Sales = () => {
           <div className="input-group">
             <label>Customer</label>
             <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
-              <option value="">Select customer</option>
+              <option value="">{customers.length ? 'Select customer' : 'No customers found - add one first'}</option>
               {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
             </select>
           </div>
