@@ -15,12 +15,11 @@ function App() {
         <aside className="w-64 bg-gray-100 p-4">
           <h1 className="text-xl font-bold mb-4">Egg Retail Shop</h1>
           <nav className="flex flex-col space-y-3">
-            <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Dashboard</Link>
-            <Link to="/purchases" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Purchase</Link>
+            <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">DashBoard</Link>
             <Link to="/sales" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Sales</Link>
-            <Link to="/payments" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Payment Receipts</Link>
+            <Link to="/purchases" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Purchase</Link>
             <Link to="/products" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Products</Link>
-            <Link to="/customers" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Customers</Link>
+            <Link to="/customers" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Customer</Link>
           </nav>
         </aside>
         <main className="flex-1 p-6">
