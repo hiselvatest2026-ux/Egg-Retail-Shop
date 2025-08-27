@@ -34,3 +34,15 @@ export const getSaleInvoice = (id) => axios.get(`${API_URL}/sales/${id}/invoice`
 
 // Dashboard
 export const getDashboard = () => axios.get(`${API_URL}/dashboard`);
+
+// Sale Items
+export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);
+export const createSaleItem = (saleId, data) => axios.post(`${API_URL}/sales/${saleId}/items`, data);
+export const updateSaleItem = (saleId, itemId, data) => axios.put(`${API_URL}/sales/${saleId}/items/${itemId}`, data);
+export const deleteSaleItem = (saleId, itemId) => axios.delete(`${API_URL}/sales/${saleId}/items/${itemId}`);
+
+// Purchase Items
+export const getPurchaseItems = (purchaseId) => axios.get(`${API_URL}/purchases/${purchaseId}/items`);
+export const createPurchaseItem = (purchaseId, data) => axios.post(`${API_URL}/purchases/${purchaseId}/items`, data);
+export const updatePurchaseItem = (purchaseId, itemId, data) => axios.put(`${API_URL}/purchases/${purchaseId}/items/${itemId}`, data);
+export const deletePurchaseItem = (purchaseId, itemId) => axios.delete(`${API_URL}/purchases/${purchaseId}/items/${itemId}`);

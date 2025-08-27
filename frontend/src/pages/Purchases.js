@@ -37,6 +37,7 @@ const Purchases = () => {
       <tbody>{purchases.map(p => (<tr key={p.id}>
         <td>{p.id}</td><td>{p.supplier_id}</td><td>{p.total}</td>
         <td className="space-x-2">
+          <a className="bg-purple-700 text-white px-2 py-1 rounded" href={`/purchases/${p.id}/items`}>Items</a>
           <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total }); }}>Edit</button>
           <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={()=>{deletePurchase(p.id); fetchPurchases();}}>Delete</button>
         </td>

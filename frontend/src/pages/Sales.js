@@ -55,6 +55,7 @@ const Sales = () => {
               <td>{s.total}</td>
               <td className="space-x-2">
                 <Link className="bg-gray-700 text-white px-2 py-1 rounded" to={`/invoice/${s.id}`}>Invoice</Link>
+                <Link className="bg-purple-700 text-white px-2 py-1 rounded" to={`/sales/${s.id}/items`}>Items</Link>
                 <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
                 <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
               </td>

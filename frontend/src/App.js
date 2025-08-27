@@ -7,6 +7,8 @@ import Products from './pages/Products';
 import Customers from './pages/Customers';
 import Dashboard from './pages/Dashboard';
 import Invoice from './pages/Invoice';
+import SaleItems from './pages/SaleItems';
+import PurchaseItems from './pages/PurchaseItems';
 
 function App() {
   return (
@@ -32,6 +34,8 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/invoice/:id" element={<Invoice />} />
+            <Route path="/sales/:id/items" element={<SaleItems />} />
+            <Route path="/purchases/:id/items" element={<PurchaseItems />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
