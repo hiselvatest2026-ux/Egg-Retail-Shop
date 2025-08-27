@@ -54,3 +54,12 @@ body {
 
 /* Badges */
 .badge { display:inline-block; padding:4px 8px; border-radius:9999px; background:#eef2ff; color:#4f46e5; font-weight:600; font-size:12px; border:1px solid #e0e7ff; }
+
+/* Stat cards */
+.stat-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
+.stat { padding:14px; border:1px solid #e5e7eb; background:#ffffff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+.stat-label { color:#64748b; font-size:12px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; }
+.stat-value { margin-top:6px; font-weight:800; color:#0f172a; font-size:20px; }
+.stat.warn { background:#fff7ed; border-color:#fed7aa; }
+.stat.danger { background:#fff1f2; border-color:#fecdd3; }
+.stat.info { background:#eff6ff; border-color:#bfdbfe; }

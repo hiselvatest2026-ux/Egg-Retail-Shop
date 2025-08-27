@@ -29,44 +29,54 @@ const Sales = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Sales</h1>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Sales</h1>
+          <p className="page-subtitle">Record sales and access invoices</p>
+        </div>
+      </div>
 
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-        <div>
-          <label className="block text-sm">Customer ID</label>
-          <input className="border p-2 w-full" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} />
-        </div>
-        <div>
-          <label className="block text-sm">Total</label>
-          <input className="border p-2 w-full" value={form.total} onChange={e=>setForm({...form, total: e.target.value})} />
-        </div>
-        <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
-      </form>
+        <form onSubmit={handleSubmit} className="form-grid">
+          <div className="input-group">
+            <label>Customer ID</label>
+            <input className="input" placeholder="e.g. 501" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})} inputMode="numeric" />
+          </div>
+          <div className="input-group">
+            <label>Total Amount</label>
+            <input className="input" placeholder="e.g. 1450.00" value={form.total} onChange={e=>setForm({...form, total: e.target.value})} inputMode="decimal" />
+          </div>
+          <div className="actions-row">
+            <button className="btn" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
+            {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '' }); }}>Cancel</button>}
+          </div>
+        </form>
       </Card>
 
       <Card title="Sales List">
-      <table className="table mt-2">
-        <thead>
-          <tr><th>ID</th><th>Customer</th><th>Total</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          {sales.map(s => (
-            <tr key={s.id}>
-              <td>{s.id}</td>
-              <td>{s.customer_id}</td>
-              <td>{s.total}</td>
-              <td className="space-x-2">
-                <Link className="btn secondary" to={`/invoice/${s.id}`}>Invoice</Link>
-                <Link className="btn secondary" to={`/sales/${s.id}/items`}>Items</Link>
-                <button className="btn" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
-                <button className="btn danger" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <table className="table table-hover mt-2">
+          <thead>
+            <tr><th>ID</th><th>Customer</th><th>Total</th><th style={{width:260}}>Actions</th></tr>
+          </thead>
+          <tbody>
+            {sales.map(s => (
+              <tr key={s.id}>
+                <td>#{s.id}</td>
+                <td><span className="badge">{s.customer_id}</span></td>
+                <td>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>
+                  <div className="btn-group">
+                    <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
+                    <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
+                    <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
+                    <button className="btn danger btn-sm" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Card>
     </div>
   );
