@@ -53,20 +53,79 @@ exports.collectionsCsv = async (req, res) => {
 
 exports.stockCsv = async (req, res) => {
   try {
-    const result = await pool.query(`
-      WITH purchase_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM purchase_items GROUP BY product_id
+    const { start, end } = req.query;
+    // Default period: today
+    const startExpr = start ? `TO_TIMESTAMP($1, 'YYYY-MM-DD"T"HH24:MI:SS')` : `DATE_TRUNC('day', NOW())`;
+    const endExpr = end ? `TO_TIMESTAMP(${start ? '$2' : '$1'}, 'YYYY-MM-DD"T"HH24:MI:SS')` : `NOW()`;
+
+    const params = [];
+    if (start) params.push(start);
+    if (end) params.push(end);
+
+    const sql = `
+      WITH all_ids AS (
+        SELECT id AS product_id, name FROM products
       ),
-      sales_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM sale_items GROUP BY product_id
+      opening_purchases AS (
+        SELECT product_id, SUM(quantity) AS qty
+        FROM purchase_items pi
+        JOIN purchases p ON p.id = pi.purchase_id
+        WHERE p.purchase_date < ${startExpr}
+        GROUP BY product_id
+      ),
+      opening_sales AS (
+        SELECT product_id, SUM(quantity) AS qty
+        FROM sale_items si
+        JOIN sales s ON s.id = si.sale_id
+        WHERE s.sale_date < ${startExpr}
+        GROUP BY product_id
+      ),
+      opening_adj AS (
+        SELECT product_id, SUM(quantity) AS qty
+        FROM stock_adjustments a
+        WHERE a.created_at < ${startExpr}
+        GROUP BY product_id
+      ),
+      period_purchases AS (
+        SELECT product_id, SUM(quantity) AS qty
+        FROM purchase_items pi
+        JOIN purchases p ON p.id = pi.purchase_id
+        WHERE p.purchase_date >= ${startExpr} AND p.purchase_date <= ${endExpr}
+        GROUP BY product_id
+      ),
+      period_sales AS (
+        SELECT product_id, SUM(quantity) AS qty
+        FROM sale_items si
+        JOIN sales s ON s.id = si.sale_id
+        WHERE s.sale_date >= ${startExpr} AND s.sale_date <= ${endExpr}
+        GROUP BY product_id
+      ),
+      period_adj AS (
+        SELECT product_id, SUM(quantity) AS qty
+        FROM stock_adjustments a
+        WHERE a.created_at >= ${startExpr} AND a.created_at <= ${endExpr}
+        GROUP BY product_id
       )
-      SELECT p.id AS product_id, p.name, COALESCE(pq.qty, 0) - COALESCE(sq.qty, 0) AS stock
-      FROM products p
-      LEFT JOIN purchase_qty pq ON pq.product_id = p.id
-      LEFT JOIN sales_qty sq ON sq.product_id = p.id
-      ORDER BY p.name ASC
-    `);
-    const headers = ['product_id','name','stock'];
+      SELECT 
+        coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id) AS product_id,
+        coalesce(ai.name, 'Product #' || coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id)) AS name,
+        COALESCE(op.qty,0) - COALESCE(os.qty,0) - COALESCE(oa.qty,0) AS opening,
+        COALESCE(pp.qty,0) AS purchase,
+        COALESCE(ps.qty,0) AS sales,
+        COALESCE(pa.qty,0) AS adjustments,
+        (COALESCE(op.qty,0) - COALESCE(os.qty,0) - COALESCE(oa.qty,0)) + COALESCE(pp.qty,0) - COALESCE(ps.qty,0) - COALESCE(pa.qty,0) AS closing
+      FROM all_ids ai
+      FULL OUTER JOIN opening_purchases op ON op.product_id = ai.product_id
+      FULL OUTER JOIN opening_sales os ON os.product_id = ai.product_id
+      FULL OUTER JOIN opening_adj oa ON oa.product_id = ai.product_id
+      FULL OUTER JOIN period_purchases pp ON pp.product_id = ai.product_id
+      FULL OUTER JOIN period_sales ps ON ps.product_id = ai.product_id
+      FULL OUTER JOIN period_adj pa ON pa.product_id = ai.product_id
+      ORDER BY name ASC
+    `;
+
+    const result = await pool.query(sql, params);
+    const headers = ['product_id','name','opening','purchase','sales','adjustments','closing'];
     sendCsv(res, 'stock.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };

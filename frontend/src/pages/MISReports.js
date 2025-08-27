@@ -37,7 +37,7 @@ const MISReports = () => {
           <ReportCard title="Purchase Report" desc="Date-wise purchases with supplier totals" onDownload={()=>download('purchases.csv')} />
           <ReportCard title="Sales Report" desc="Daily sales, customer breakup, and top items" onDownload={()=>download('sales.csv')} />
           <ReportCard title="Collection Report" desc="Receipts by mode and invoice mapping" onDownload={()=>download('collections.csv')} />
-          <ReportCard title="Stock Report" desc="On hand, reserved, and reorder suggestions" onDownload={()=>download('stock.csv')} />
+          <ReportCard title="Stock Report" desc="Closing = Opening + Purchase - Sales - Adjustments" onDownload={()=>download('stock.csv')} />
         </div>
       </Card>
     </div>
