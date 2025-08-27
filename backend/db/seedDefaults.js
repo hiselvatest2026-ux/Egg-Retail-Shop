@@ -26,6 +26,21 @@ async function seedDefaults() {
   } catch (e) {
     console.error('Seeding customers failed:', e.message);
   }
+
+  try {
+    const prod = await pool.query('SELECT id FROM products LIMIT 1');
+    if (prod.rows.length === 0) {
+      await pool.query('INSERT INTO products (name, price, batch_number, expiry_date) VALUES ($1,$2,$3,$4)', [
+        'Default Egg',
+        5.00,
+        null,
+        null
+      ]);
+      console.log('Seeded default product');
+    }
+  } catch (e) {
+    console.error('Seeding products failed:', e.message);
+  }
 }
 
 module.exports = seedDefaults;
