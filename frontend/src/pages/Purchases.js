@@ -20,34 +20,81 @@ const Purchases = () => {
     setEditing(null);
     fetchPurchases();
   };
-  return (<div className="p-4">
-    <h1 className="text-2xl font-bold mb-4">Purchase</h1>
-    <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-      <div>
-        <label className="block text-sm">Supplier ID</label>
-        <input className="border p-2 w-full" value={form.supplier_id} onChange={e=>setForm({...form, supplier_id: e.target.value})} />
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Purchases</h1>
+          <p className="page-subtitle">Create and manage supplier purchases</p>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm">Total</label>
-        <input className="border p-2 w-full" value={form.total} onChange={e=>setForm({...form, total: e.target.value})} />
-      </div>
-      <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
-    </form>
-    </Card>
-    <Card title="Purchases List">
-    <table className="table mt-2">
-      <thead><tr><th>ID</th><th>Supplier</th><th>Total</th><th>Actions</th></tr></thead>
-      <tbody>{purchases.map(p => (<tr key={p.id}>
-        <td>{p.id}</td><td>{p.supplier_id}</td><td>{p.total}</td>
-        <td className="space-x-2">
-          <a className="btn secondary" href={`/purchases/${p.id}/items`}>Items</a>
-          <button className="btn" onClick={()=>{ setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total }); }}>Edit</button>
-          <button className="btn danger" onClick={()=>{deletePurchase(p.id); fetchPurchases();}}>Delete</button>
-        </td>
-      </tr>))}</tbody>
-    </table>
-    </Card>
-  </div>);
+
+      <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
+        <form onSubmit={handleSubmit} className="form-grid">
+          <div className="input-group">
+            <label>Supplier ID</label>
+            <input
+              className="input"
+              placeholder="e.g. 101"
+              value={form.supplier_id}
+              onChange={e => setForm({ ...form, supplier_id: e.target.value })}
+              inputMode="numeric"
+            />
+          </div>
+          <div className="input-group">
+            <label>Total Amount</label>
+            <input
+              className="input"
+              placeholder="e.g. 2500.00"
+              value={form.total}
+              onChange={e => setForm({ ...form, total: e.target.value })}
+              inputMode="decimal"
+            />
+          </div>
+          <div className="actions-row">
+            <button className="btn" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
+            {editing && (
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => { setEditing(null); setForm({ supplier_id: '', total: '' }); }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </Card>
+
+      <Card title="Purchases List">
+        <table className="table table-hover mt-2">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Supplier</th>
+              <th>Total</th>
+              <th style={{ width: 240 }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {purchases.map(p => (
+              <tr key={p.id}>
+                <td>#{p.id}</td>
+                <td><span className="badge">{p.supplier_id}</span></td>
+                <td>₹ {Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>
+                  <div className="btn-group">
+                    <a className="btn secondary btn-sm" href={`/purchases/${p.id}/items`}>Items</a>
+                    <button className="btn btn-sm" onClick={() => { setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total }); }}>Edit</button>
+                    <button className="btn danger btn-sm" onClick={() => { deletePurchase(p.id); fetchPurchases(); }}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
 }
 export default Purchases;
