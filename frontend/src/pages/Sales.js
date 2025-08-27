@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { getSales, createSale, deleteSale } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale } from '../api/api';
 import { Link } from 'react-router-dom';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
   const [form, setForm] = useState({ customer_id: '', total: '' });
+  const [editing, setEditing] = useState(null);
 
   const fetchSales = async () => {
     const res = await getSales();
@@ -16,8 +17,13 @@ const Sales = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.customer_id || !form.total) return;
-    await createSale({ customer_id: Number(form.customer_id), total: Number(form.total) });
+    if (editing) {
+      await updateSale(editing, { customer_id: Number(form.customer_id), total: Number(form.total) });
+    } else {
+      await createSale({ customer_id: Number(form.customer_id), total: Number(form.total) });
+    }
     setForm({ customer_id: '', total: '' });
+    setEditing(null);
     fetchSales();
   };
 
@@ -49,6 +55,7 @@ const Sales = () => {
               <td>{s.total}</td>
               <td className="space-x-2">
                 <Link className="bg-gray-700 text-white px-2 py-1 rounded" to={`/invoice/${s.id}`}>Invoice</Link>
+                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
                 <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
               </td>
             </tr>

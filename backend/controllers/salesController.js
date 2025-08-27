@@ -25,10 +25,10 @@ exports.createSale = async (req, res) => {
 exports.updateSale = async (req, res) => {
   try {
     const { id } = req.params;
-    const { total } = req.body;
+    const { customer_id, total } = req.body;
     const result = await pool.query(
-      'UPDATE sales SET total=$1 WHERE id=$2 RETURNING *',
-      [total, id]
+      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total) WHERE id=$3 RETURNING *',
+      [customer_id ?? null, total ?? null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {

@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { getPurchases, createPurchase, deletePurchase } from '../api/api';
+import { getPurchases, createPurchase, updatePurchase, deletePurchase } from '../api/api';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
   const [form, setForm] = useState({ supplier_id: '', total: '' });
+  const [editing, setEditing] = useState(null);
   const fetchPurchases = async () => { const res = await getPurchases(); setPurchases(res.data); };
   useEffect(() => { fetchPurchases(); }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.supplier_id || !form.total) return;
-    await createPurchase({ supplier_id: Number(form.supplier_id), total: Number(form.total) });
+    if (editing) {
+      await updatePurchase(editing, { total: Number(form.total) });
+    } else {
+      await createPurchase({ supplier_id: Number(form.supplier_id), total: Number(form.total) });
+    }
     setForm({ supplier_id: '', total: '' });
+    setEditing(null);
     fetchPurchases();
   };
   return (<div className="p-4">
@@ -30,7 +36,10 @@ const Purchases = () => {
       <thead><tr><th>ID</th><th>Supplier</th><th>Total</th><th>Actions</th></tr></thead>
       <tbody>{purchases.map(p => (<tr key={p.id}>
         <td>{p.id}</td><td>{p.supplier_id}</td><td>{p.total}</td>
-        <td><button className="bg-red-500 text-white px-2 py-1 rounded" onClick={()=>{deletePurchase(p.id); fetchPurchases();}}>Delete</button></td>
+        <td className="space-x-2">
+          <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total }); }}>Edit</button>
+          <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={()=>{deletePurchase(p.id); fetchPurchases();}}>Delete</button>
+        </td>
       </tr>))}</tbody>
     </table>
   </div>);

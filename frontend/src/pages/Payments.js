@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { getPayments, createPayment, deletePayment } from '../api/api';
+import { getPayments, createPayment, updatePayment, deletePayment } from '../api/api';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
   const [form, setForm] = useState({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' });
+  const [editing, setEditing] = useState(null);
 
   const fetchPayments = async () => {
     const res = await getPayments();
@@ -15,13 +16,21 @@ const Payments = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.customer_id || !form.invoice_id || !form.amount) return;
-    await createPayment({
-      customer_id: Number(form.customer_id),
-      invoice_id: Number(form.invoice_id),
-      amount: Number(form.amount),
-      payment_mode: form.payment_mode || 'Cash'
-    });
+    if (editing) {
+      await updatePayment(editing, {
+        amount: Number(form.amount),
+        payment_mode: form.payment_mode || 'Cash'
+      });
+    } else {
+      await createPayment({
+        customer_id: Number(form.customer_id),
+        invoice_id: Number(form.invoice_id),
+        amount: Number(form.amount),
+        payment_mode: form.payment_mode || 'Cash'
+      });
+    }
     setForm({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' });
+    setEditing(null);
     fetchPayments();
   };
 
@@ -61,7 +70,8 @@ const Payments = () => {
               <td>{p.invoice_id}</td>
               <td>{p.amount}</td>
               <td>{p.payment_mode}</td>
-              <td>
+              <td className="space-x-2">
+                <button className="bg-blue-600 text-white px-2 py-1 rounded" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
                 <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={async()=>{ await deletePayment(p.id); fetchPayments(); }}>Delete</button>
               </td>
             </tr>
