@@ -1,14 +1,14 @@
 const fs = require('fs');
+const path = require('path');
 const pool = require('./models/db');
 
 (async () => {
   try {
-    // Read SQL from init.sql
-    const sql = fs.readFileSync('./db/init.sql').toString();
-    
-    // Execute SQL
+    // Use absolute path relative to this file
+    const sqlPath = path.join(__dirname, 'db', 'init.sql');
+    const sql = fs.readFileSync(sqlPath).toString();
+
     await pool.query(sql);
-    
     console.log('Database initialized successfully!');
     process.exit(0);
   } catch (err) {
