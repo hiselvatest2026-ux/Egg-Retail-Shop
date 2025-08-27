@@ -26,7 +26,7 @@ const Invoice = () => {
       <Card title={`Invoice #${sale.id}`} actions={<button className="btn secondary" onClick={()=>window.print()}>Print</button>}>
         <div className="mb-4">
           <div>Date: {new Date(sale.sale_date).toLocaleString()}</div>
-          <div>Customer ID: {sale.customer_id}</div>
+          <div>Customer: {sale.customer_name || `#${sale.customer_id}`}</div>
         </div>
         <table className="table mb-4">
           <thead>

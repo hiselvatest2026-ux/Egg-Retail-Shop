@@ -49,7 +49,13 @@ exports.deleteSale = async (req, res) => {
 exports.getSaleInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-    const saleResult = await pool.query('SELECT * FROM sales WHERE id=$1', [id]);
+    const saleResult = await pool.query(
+      `SELECT s.*, c.name AS customer_name
+       FROM sales s
+       LEFT JOIN customers c ON c.id = s.customer_id
+       WHERE s.id=$1`,
+      [id]
+    );
     if (saleResult.rows.length === 0) return res.status(404).json({ message: 'Sale not found' });
     const sale = saleResult.rows[0];
 
