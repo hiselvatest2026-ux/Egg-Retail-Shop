@@ -9,8 +9,12 @@ const Sales = () => {
   const [editing, setEditing] = useState(null);
 
   const fetchSales = async () => {
-    const res = await getSales();
-    setSales(res.data);
+    try {
+      const res = await getSales();
+      setSales(res.data);
+    } catch (err) {
+      console.error('Failed to load sales', err);
+    }
   };
 
   useEffect(() => { fetchSales(); }, []);
@@ -18,14 +22,18 @@ const Sales = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.customer_id || !form.total) return;
-    if (editing) {
-      await updateSale(editing, { customer_id: Number(form.customer_id), total: Number(form.total) });
-    } else {
-      await createSale({ customer_id: Number(form.customer_id), total: Number(form.total) });
+    try {
+      if (editing) {
+        await updateSale(editing, { customer_id: Number(form.customer_id), total: Number(form.total) });
+      } else {
+        await createSale({ customer_id: Number(form.customer_id), total: Number(form.total) });
+      }
+      setForm({ customer_id: '', total: '' });
+      setEditing(null);
+      await fetchSales();
+    } catch (err) {
+      console.error('Failed to submit sale', err);
     }
-    setForm({ customer_id: '', total: '' });
-    setEditing(null);
-    fetchSales();
   };
 
   return (
@@ -70,7 +78,7 @@ const Sales = () => {
                     <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
                     <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
                     <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ await deleteSale(s.id); fetchSales(); }}>Delete</button>
+                    <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
                 </td>
               </tr>
