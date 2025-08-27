@@ -1,38 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import { getPayments, createPayment, updatePayment, deletePayment } from '../api/api';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getPayments, createPayment, updatePayment, deletePayment, getCustomers, getSales } from '../api/api';
 import Card from '../components/Card';
 
 const Payments = () => {
   const [payments, setPayments] = useState([]);
   const [form, setForm] = useState({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' });
   const [editing, setEditing] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const fetchPayments = async () => {
-    const res = await getPayments();
-    setPayments(res.data);
+    try {
+      const res = await getPayments();
+      setPayments(res.data);
+    } catch (e) { console.error('load payments failed', e); }
   };
 
-  useEffect(() => { fetchPayments(); }, []);
+  useEffect(() => {
+    fetchPayments();
+    (async()=>{
+      try {
+        const [cRes, sRes] = await Promise.all([getCustomers(), getSales()]);
+        setCustomers(cRes.data || []);
+        setInvoices(sRes.data || []);
+      } catch (e) { console.error('load dropdown data failed', e); }
+    })();
+  }, []);
+
+  const filteredInvoices = useMemo(() => {
+    if (!form.customer_id) return invoices;
+    return invoices.filter(inv => String(inv.customer_id) === String(form.customer_id));
+  }, [invoices, form.customer_id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.customer_id || !form.invoice_id || !form.amount) return;
-    if (editing) {
-      await updatePayment(editing, {
-        amount: Number(form.amount),
-        payment_mode: form.payment_mode || 'Cash'
-      });
-    } else {
-      await createPayment({
-        customer_id: Number(form.customer_id),
-        invoice_id: Number(form.invoice_id),
-        amount: Number(form.amount),
-        payment_mode: form.payment_mode || 'Cash'
-      });
+    setError(''); setSuccess('');
+    if (!form.customer_id) { setError('Please select a customer.'); return; }
+    if (!form.invoice_id) { setError('Please select an invoice.'); return; }
+    if (!form.amount || Number.isNaN(Number(form.amount))) { setError('Please enter a valid amount.'); return; }
+    try {
+      if (editing) {
+        await updatePayment(editing, {
+          amount: Number(form.amount),
+          payment_mode: form.payment_mode || 'Cash'
+        });
+        setSuccess('Payment updated successfully.');
+      } else {
+        await createPayment({
+          customer_id: Number(form.customer_id),
+          invoice_id: Number(form.invoice_id),
+          amount: Number(form.amount),
+          payment_mode: form.payment_mode || 'Cash'
+        });
+        setSuccess('Payment added successfully.');
+      }
+      setForm({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' });
+      setEditing(null);
+      await fetchPayments();
+    } catch (e) {
+      console.error('submit payment failed', e);
+      setError('Failed to save payment. Please try again.');
     }
-    setForm({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' });
-    setEditing(null);
-    fetchPayments();
   };
 
   return (
@@ -47,12 +77,18 @@ const Payments = () => {
       <Card title={editing ? 'Edit Payment' : 'Add Payment'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
           <div className="input-group">
-            <label>Customer ID</label>
-            <input className="input" value={form.customer_id} placeholder="e.g. 501" onChange={e=>setForm({...form, customer_id: e.target.value})} inputMode="numeric" />
+            <label>Customer</label>
+            <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value, invoice_id: ''})}>
+              <option value="">{customers.length ? 'Select customer' : 'No customers found'}</option>
+              {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
+            </select>
           </div>
           <div className="input-group">
-            <label>Invoice (Sale) ID</label>
-            <input className="input" value={form.invoice_id} placeholder="e.g. 1201" onChange={e=>setForm({...form, invoice_id: e.target.value})} inputMode="numeric" />
+            <label>Invoice (Sale)</label>
+            <select className="input" value={form.invoice_id} onChange={e=>setForm({...form, invoice_id: e.target.value})}>
+              <option value="">{filteredInvoices.length ? 'Select invoice' : 'No invoices found'}</option>
+              {filteredInvoices.map(inv => (<option key={inv.id} value={inv.id}>Invoice #{inv.id} - ₹ {Number(inv.total||0).toFixed(2)}</option>))}
+            </select>
           </div>
           <div className="input-group">
             <label>Amount</label>
@@ -66,6 +102,8 @@ const Payments = () => {
             <button className="btn" type="submit">{editing ? 'Update Payment' : 'Add Payment'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' }); }}>Cancel</button>}
           </div>
+          {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
+          {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
         </form>
       </Card>
 
@@ -85,7 +123,7 @@ const Payments = () => {
                 <td>
                   <div className="btn-group">
                     <button className="btn btn-sm" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ await deletePayment(p.id); fetchPayments(); }}>Delete</button>
+                    <button className="btn danger btn-sm" onClick={async()=>{ try { await deletePayment(p.id); await fetchPayments(); } catch(e){ console.error('delete failed', e);} }}>Delete</button>
                   </div>
                 </td>
               </tr>
