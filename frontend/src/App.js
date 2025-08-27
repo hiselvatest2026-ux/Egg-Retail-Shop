@@ -30,7 +30,6 @@ function App() {
             <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
             <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
-            <NavLink to="/invoice-print" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Invoice Printing</NavLink>
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS- Purchase,Sales,Collection, Stock Report</NavLink>
           </nav>
         </aside>
