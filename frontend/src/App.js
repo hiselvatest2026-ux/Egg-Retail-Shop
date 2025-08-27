@@ -13,6 +13,7 @@ import SaleItems from './pages/SaleItems';
 import PurchaseItems from './pages/PurchaseItems';
 import CreditManagement from './pages/CreditManagement';
 import InventoryManagement from './pages/InventoryManagement';
+import StockAdjustments from './pages/StockAdjustments';
 import CollectionSettlement from './pages/CollectionSettlement';
 import InvoicePrinting from './pages/InvoicePrinting';
 import MISReports from './pages/MISReports';
@@ -29,6 +30,7 @@ function App() {
             <NavLink to="/payments" className={({isActive})=> isActive ? 'active' : ''}><FiCreditCard style={{marginRight:8}} /> Payment receipts</NavLink>
             <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
             <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
+            <NavLink to="/inventory/adjustments" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Stock Adjustments</NavLink>
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
           </nav>
@@ -47,6 +49,7 @@ function App() {
             <Route path="/purchases/:id/items" element={<PurchaseItems />} />
             <Route path="/credit" element={<CreditManagement />} />
             <Route path="/inventory" element={<InventoryManagement />} />
+            <Route path="/inventory/adjustments" element={<StockAdjustments />} />
             <Route path="/collection" element={<CollectionSettlement />} />
             <Route path="/invoice-print" element={<InvoicePrinting />} />
             <Route path="/mis" element={<MISReports />} />
