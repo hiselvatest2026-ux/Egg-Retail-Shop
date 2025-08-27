@@ -17,6 +17,7 @@ function App() {
           <nav className="flex flex-col space-y-3">
             <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">DashBoard</Link>
             <Link to="/sales" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Sales</Link>
+            <Link to="/payments" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Payment Receipts</Link>
             <Link to="/purchases" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Purchase</Link>
             <Link to="/products" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Products</Link>
             <Link to="/customers" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Customer</Link>
