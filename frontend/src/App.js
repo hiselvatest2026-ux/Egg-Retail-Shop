@@ -13,13 +13,15 @@ function App() {
     <Router>
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">Egg Retail Shop</h1>
-        <nav className="flex gap-4 mb-6 flex-wrap">
-          <Link to="/" className="text-blue-600">Dashboard</Link>
-          <Link to="/purchases" className="text-blue-600">Purchase</Link>
-          <Link to="/sales" className="text-blue-600">Sales</Link>
-          <Link to="/payments" className="text-blue-600">Payment Receipts</Link>
-          <Link to="/products" className="text-blue-600">Products</Link>
-          <Link to="/customers" className="text-blue-600">Customers</Link>
+        <nav className="mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Link to="/purchases" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Purchase</Link>
+            <Link to="/sales" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Sales</Link>
+            <Link to="/payments" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Payment Receipts</Link>
+            <Link to="/products" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Products</Link>
+            <Link to="/customers" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Customer</Link>
+            <Link to="/" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Dashboard</Link>
+          </div>
         </nav>
         <Routes>
           <Route path="/" element={<Dashboard />} />
