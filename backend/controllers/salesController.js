@@ -73,8 +73,10 @@ exports.getSaleInvoice = async (req, res) => {
       [id]
     );
     const computedTotal = totalResult.rows[0]?.total ?? 0;
+    const items = itemsResult.rows;
+    const total = (items && items.length > 0) ? computedTotal : (sale.total ?? 0);
 
-    res.json({ sale, items: itemsResult.rows, total: computedTotal });
+    res.json({ sale, items, total });
   } catch (err) {
     res.status(500).send(err.message);
   }

@@ -33,15 +33,21 @@ const Invoice = () => {
             <tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th></tr>
           </thead>
           <tbody>
-            {items.map((it, idx) => (
-              <tr key={it.id}>
-                <td>{idx + 1}</td>
-                <td>{it.product_name}</td>
-                <td>{it.quantity}</td>
-                <td>{it.price}</td>
-                <td>{it.line_total}</td>
+            {items.length > 0 ? (
+              items.map((it, idx) => (
+                <tr key={it.id}>
+                  <td>{idx + 1}</td>
+                  <td>{it.product_name}</td>
+                  <td>{it.quantity}</td>
+                  <td>{it.price}</td>
+                  <td>{it.line_total}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} style={{color:'#64748b'}}>No line items added yet.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
         <div className="text-right text-xl font-bold">Grand Total: ₹ {Number(total || 0).toFixed(2)}</div>
