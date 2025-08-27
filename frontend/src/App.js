@@ -15,11 +15,11 @@ function App() {
         <h1 className="text-2xl font-bold mb-4">Egg Retail Shop</h1>
         <nav className="flex gap-4 mb-6 flex-wrap">
           <Link to="/" className="text-blue-600">Dashboard</Link>
-          <Link to="/purchases" className="text-blue-600">Purchases</Link>
+          <Link to="/purchases" className="text-blue-600">Purchase</Link>
           <Link to="/sales" className="text-blue-600">Sales</Link>
+          <Link to="/payments" className="text-blue-600">Payment Receipts</Link>
           <Link to="/products" className="text-blue-600">Products</Link>
           <Link to="/customers" className="text-blue-600">Customers</Link>
-          <Link to="/payments" className="text-blue-600">Payments</Link>
         </nav>
         <Routes>
           <Route path="/" element={<Dashboard />} />
