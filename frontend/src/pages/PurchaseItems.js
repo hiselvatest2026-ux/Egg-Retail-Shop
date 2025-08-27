@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPurchaseItems, createPurchaseItem, updatePurchaseItem, deletePurchaseItem } from '../api/api';
+import { getPurchaseItems, createPurchaseItem, updatePurchaseItem, deletePurchaseItem, getProducts } from '../api/api';
 import Card from '../components/Card';
 
 const PurchaseItems = () => {
@@ -8,21 +8,26 @@ const PurchaseItems = () => {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ product_id: '', quantity: '', price: '' });
   const [editing, setEditing] = useState(null);
+  const [products, setProducts] = useState([]);
 
-  const fetchItems = async () => { const res = await getPurchaseItems(id); setItems(res.data); };
-  useEffect(() => { fetchItems(); }, [id]);
+  const fetchItems = async () => { try { const res = await getPurchaseItems(id); setItems(res.data); } catch(e){ console.error('load items failed', e);} };
+  useEffect(() => { fetchItems(); (async()=>{ try { const r = await getProducts(); setProducts(r.data);} catch(e){ console.error('load products failed', e);} })(); }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = { product_id: Number(form.product_id), quantity: Number(form.quantity), price: Number(form.price) };
-    if (editing) {
-      await updatePurchaseItem(id, editing, payload);
-    } else {
-      await createPurchaseItem(id, payload);
+    try {
+      if (editing) {
+        await updatePurchaseItem(id, editing, payload);
+      } else {
+        await createPurchaseItem(id, payload);
+      }
+      setForm({ product_id: '', quantity: '', price: '' });
+      setEditing(null);
+      await fetchItems();
+    } catch (e) {
+      console.error('submit item failed', e);
     }
-    setForm({ product_id: '', quantity: '', price: '' });
-    setEditing(null);
-    fetchItems();
   };
 
   return (
@@ -31,8 +36,11 @@ const PurchaseItems = () => {
       <Card title={editing ? 'Edit Item' : 'Add Item'}>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
         <div>
-          <label className="block text-sm">Product ID</label>
-          <input className="border p-2 w-full" value={form.product_id} onChange={e=>setForm({...form, product_id: e.target.value})} />
+          <label className="block text-sm">Product</label>
+          <select className="border p-2 w-full" value={form.product_id} onChange={e=>setForm({...form, product_id: e.target.value})}>
+            <option value="">Select product</option>
+            {products.map(p => (<option key={p.id} value={p.id}>{p.name} (#{p.id})</option>))}
+          </select>
         </div>
         <div>
           <label className="block text-sm">Qty</label>
