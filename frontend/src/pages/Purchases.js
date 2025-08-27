@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getSuppliers } from '../api/api';
 import Card from '../components/Card';
+import { Link } from 'react-router-dom';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -106,7 +107,7 @@ const Purchases = () => {
                 <td>{p.egg_type || '-'}</td>
                 <td>
                   <div className="btn-group">
-                    <a className="btn secondary btn-sm" href={`/purchases/${p.id}/items`}>Items</a>
+                    <Link className="btn secondary btn-sm" to={`/purchases/${p.id}/items`}>Items</Link>
                     <button className="btn btn-sm" onClick={() => { setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total, egg_type: p.egg_type || '' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
