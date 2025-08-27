@@ -1,5 +1,18 @@
 import axios from 'axios';
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+let API_URL = process.env.REACT_APP_API_URL;
+if (!API_URL && typeof window !== 'undefined') {
+  const { origin, hostname, protocol } = window.location;
+  if (/onrender\.com$/.test(hostname)) {
+    const guessed = origin.replace('frontend', 'backend');
+    API_URL = guessed;
+  } else {
+    API_URL = 'http://localhost:5000';
+  }
+}
+if (!API_URL) {
+  API_URL = 'http://localhost:5000';
+}
 export const getPurchases = () => axios.get(`${API_URL}/purchases`);
 export const createPurchase = (data) => axios.post(`${API_URL}/purchases`, data);
 export const updatePurchase = (id, data) => axios.put(`${API_URL}/purchases/${id}`, data);

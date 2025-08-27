@@ -6,19 +6,30 @@ const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
   const [form, setForm] = useState({ supplier_id: '', total: '' });
   const [editing, setEditing] = useState(null);
-  const fetchPurchases = async () => { const res = await getPurchases(); setPurchases(res.data); };
+  const fetchPurchases = async () => {
+    try {
+      const res = await getPurchases();
+      setPurchases(res.data);
+    } catch (err) {
+      console.error('Failed to load purchases', err);
+    }
+  };
   useEffect(() => { fetchPurchases(); }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.supplier_id || !form.total) return;
-    if (editing) {
-      await updatePurchase(editing, { total: Number(form.total) });
-    } else {
-      await createPurchase({ supplier_id: Number(form.supplier_id), total: Number(form.total) });
+    try {
+      if (editing) {
+        await updatePurchase(editing, { total: Number(form.total) });
+      } else {
+        await createPurchase({ supplier_id: Number(form.supplier_id), total: Number(form.total) });
+      }
+      setForm({ supplier_id: '', total: '' });
+      setEditing(null);
+      await fetchPurchases();
+    } catch (err) {
+      console.error('Failed to submit purchase', err);
     }
-    setForm({ supplier_id: '', total: '' });
-    setEditing(null);
-    fetchPurchases();
   };
   return (
     <div className="page">
@@ -86,7 +97,7 @@ const Purchases = () => {
                   <div className="btn-group">
                     <a className="btn secondary btn-sm" href={`/purchases/${p.id}/items`}>Items</a>
                     <button className="btn btn-sm" onClick={() => { setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={() => { deletePurchase(p.id); fetchPurchases(); }}>Delete</button>
+                    <button className="btn danger btn-sm" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
                 </td>
               </tr>
