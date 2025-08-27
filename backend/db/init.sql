@@ -49,4 +49,18 @@ CREATE TABLE IF NOT EXISTS sales (
 -- Sale Items Table
 CREATE TABLE IF NOT EXISTS sale_items (
     id SERIAL PRIMARY KEY,
-    sale_id INT REFERENCES sales(id) ON DE_
+    sale_id INT REFERENCES sales(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    price NUMERIC(10,2) NOT NULL
+);
+
+-- Payments Table
+CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(id),
+    invoice_id INT REFERENCES sales(id),
+    amount NUMERIC(10,2) NOT NULL,
+    payment_date TIMESTAMP DEFAULT NOW(),
+    payment_mode VARCHAR(50)
+);
