@@ -39,6 +39,8 @@ exports.updateSale = async (req, res) => {
 exports.deleteSale = async (req, res) => {
   try {
     const { id } = req.params;
+    // Remove dependent payments first to avoid FK constraint failures
+    await pool.query('DELETE FROM payments WHERE invoice_id=$1', [id]);
     await pool.query('DELETE FROM sales WHERE id=$1', [id]);
     res.json({ message: 'Sale deleted' });
   } catch (err) {
