@@ -27,7 +27,6 @@ function App() {
             <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
             <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
             <NavLink to="/payments" className={({isActive})=> isActive ? 'active' : ''}><FiCreditCard style={{marginRight:8}} /> Payment receipts</NavLink>
-            <NavLink to="/suppliers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Suppliers</NavLink>
             <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
             <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
