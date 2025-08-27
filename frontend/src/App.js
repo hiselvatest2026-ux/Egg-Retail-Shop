@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard } from 'react-icons/fi';
 import Purchases from './pages/Purchases';
 import Sales from './pages/Sales';
 import Payments from './pages/Payments';
@@ -13,19 +14,19 @@ import PurchaseItems from './pages/PurchaseItems';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen flex">
-        <aside className="w-64 bg-gray-100 p-4">
-          <h1 className="text-xl font-bold mb-4">Egg Retail Shop</h1>
-          <nav className="flex flex-col space-y-3">
-            <NavLink to="/" end className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>DashBoard</NavLink>
-            <NavLink to="/sales" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Sales</NavLink>
-            <NavLink to="/payments" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Payment Receipts</NavLink>
-            <NavLink to="/purchases" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Purchase</NavLink>
-            <NavLink to="/products" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Products</NavLink>
-            <NavLink to="/customers" className={({isActive})=>`px-4 py-2 rounded text-white ${isActive ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'}`}>Customer</NavLink>
+      <div className="layout">
+        <aside className="sidebar">
+          <div className="brand">Egg Retail Shop</div>
+          <nav className="nav">
+            <NavLink to="/" end className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> DashBoard</NavLink>
+            <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
+            <NavLink to="/payments" className={({isActive})=> isActive ? 'active' : ''}><FiCreditCard style={{marginRight:8}} /> Payment Receipts</NavLink>
+            <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
+            <NavLink to="/products" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Products</NavLink>
+            <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer</NavLink>
           </nav>
         </aside>
-        <main className="flex-1 p-6">
+        <main className="content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/purchases" element={<Purchases />} />

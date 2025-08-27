@@ -4,3 +4,24 @@ body {
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
 }
+
+/* Simple utility styles */
+.btn { display:inline-block; padding:8px 12px; border-radius:6px; color:#fff; background:#2563eb; text-decoration:none; }
+.btn:hover { background:#1d4ed8; }
+.btn.secondary { background:#6b7280; }
+.btn.secondary:hover { background:#4b5563; }
+.btn.danger { background:#dc2626; }
+.btn.danger:hover { background:#b91c1c; }
+
+.table { width:100%; border-collapse: collapse; }
+.table th, .table td { border:1px solid #e5e7eb; padding:8px; text-align:left; }
+.table thead th { background:#f3f4f6; font-weight:600; }
+
+.sidebar { width:256px; background:#0f172a; color:#e2e8f0; }
+.sidebar .brand { padding:16px; font-weight:700; font-size:18px; border-bottom:1px solid #1f2937; }
+.sidebar .nav { display:flex; flex-direction:column; gap:8px; padding:16px; }
+.sidebar a { display:block; padding:10px 12px; border-radius:8px; color:#e2e8f0; text-decoration:none; }
+.sidebar a.active, .sidebar a:hover { background:#1d4ed8; color:#fff; }
+
+.layout { min-height:100vh; display:flex; }
+.content { flex:1; padding:24px; }
