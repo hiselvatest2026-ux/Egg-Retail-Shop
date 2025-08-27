@@ -46,3 +46,30 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
+exports.getStock = async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      WITH purchase_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items GROUP BY product_id
+      ),
+      sales_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM sale_items GROUP BY product_id
+      )
+      SELECT p.id AS product_id, p.name, COALESCE(pq.qty, 0) AS purchased_qty,
+             COALESCE(sq.qty, 0) AS sold_qty,
+             COALESCE(pq.qty, 0) - COALESCE(sq.qty, 0) AS stock
+      FROM products p
+      LEFT JOIN purchase_qty pq ON pq.product_id = p.id
+      LEFT JOIN sales_qty sq ON sq.product_id = p.id
+      ORDER BY p.name ASC
+    `);
+    res.json(result.rows.map(r => ({
+      product_id: r.product_id,
+      name: r.name,
+      purchased_qty: Number(r.purchased_qty || 0),
+      sold_qty: Number(r.sold_qty || 0),
+      stock: Number(r.stock || 0)
+    })));
+  } catch (err) { res.status(500).send(err.message); }
+};
+
