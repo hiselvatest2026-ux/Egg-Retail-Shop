@@ -5,16 +5,16 @@ exports.getPurchases = async (req, res) => {
 };
 exports.createPurchase = async (req, res) => {
     try {
-        const { supplier_id, total } = req.body;
-        const result = await pool.query('INSERT INTO purchases (supplier_id, total) VALUES ($1,$2) RETURNING *', [supplier_id, total]);
+        const { supplier_id, total, egg_type } = req.body;
+        const result = await pool.query('INSERT INTO purchases (supplier_id, total, egg_type) VALUES ($1,$2,$3) RETURNING *', [supplier_id, total, egg_type || null]);
         res.status(201).json(result.rows[0]);
     } catch (err) { res.status(500).send(err.message); }
 };
 exports.updatePurchase = async (req, res) => {
     try {
         const { id } = req.params;
-        const { total } = req.body;
-        const result = await pool.query('UPDATE purchases SET total=$1 WHERE id=$2 RETURNING *', [total, id]);
+        const { total, egg_type } = req.body;
+        const result = await pool.query('UPDATE purchases SET total=COALESCE($1,total), egg_type=COALESCE($2, egg_type) WHERE id=$3 RETURNING *', [total ?? null, egg_type ?? null, id]);
         res.json(result.rows[0]);
     } catch (err) { res.status(500).send(err.message); }
 };

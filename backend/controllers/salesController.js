@@ -11,10 +11,10 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { customer_id, total } = req.body;
+    const { customer_id, total, egg_type } = req.body;
     const result = await pool.query(
-      'INSERT INTO sales (customer_id, total) VALUES ($1, $2) RETURNING *',
-      [customer_id, total]
+      'INSERT INTO sales (customer_id, total, egg_type) VALUES ($1, $2, $3) RETURNING *',
+      [customer_id, total, egg_type || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -25,10 +25,10 @@ exports.createSale = async (req, res) => {
 exports.updateSale = async (req, res) => {
   try {
     const { id } = req.params;
-    const { customer_id, total } = req.body;
+    const { customer_id, total, egg_type } = req.body;
     const result = await pool.query(
-      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total) WHERE id=$3 RETURNING *',
-      [customer_id ?? null, total ?? null, id]
+      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type) WHERE id=$4 RETURNING *',
+      [customer_id ?? null, total ?? null, egg_type ?? null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {

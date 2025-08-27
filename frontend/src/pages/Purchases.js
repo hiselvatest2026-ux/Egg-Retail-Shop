@@ -4,7 +4,7 @@ import Card from '../components/Card';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
-  const [form, setForm] = useState({ supplier_id: '', total: '' });
+  const [form, setForm] = useState({ supplier_id: '', total: '', egg_type: '' });
   const [editing, setEditing] = useState(null);
   const fetchPurchases = async () => {
     try {
@@ -20,11 +20,11 @@ const Purchases = () => {
     if (!form.supplier_id || !form.total) return;
     try {
       if (editing) {
-        await updatePurchase(editing, { total: Number(form.total) });
+        await updatePurchase(editing, { total: Number(form.total), egg_type: form.egg_type || null });
       } else {
-        await createPurchase({ supplier_id: Number(form.supplier_id), total: Number(form.total) });
+        await createPurchase({ supplier_id: Number(form.supplier_id), total: Number(form.total), egg_type: form.egg_type || null });
       }
-      setForm({ supplier_id: '', total: '' });
+      setForm({ supplier_id: '', total: '', egg_type: '' });
       setEditing(null);
       await fetchPurchases();
     } catch (err) {
@@ -62,13 +62,24 @@ const Purchases = () => {
               inputMode="decimal"
             />
           </div>
+          <div className="input-group">
+            <label>Egg Type</label>
+            <select className="input" value={form.egg_type} onChange={e=>setForm({...form, egg_type: e.target.value})}>
+              <option value="">Select type</option>
+              <option value="Chicken">Chicken</option>
+              <option value="Duck">Duck</option>
+              <option value="Quail">Quail</option>
+              <option value="Country">Country</option>
+              <option value="Organic">Organic</option>
+            </select>
+          </div>
           <div className="actions-row">
             <button className="btn" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
                 type="button"
                 className="btn secondary"
-                onClick={() => { setEditing(null); setForm({ supplier_id: '', total: '' }); }}
+                onClick={() => { setEditing(null); setForm({ supplier_id: '', total: '', egg_type: '' }); }}
               >
                 Cancel
               </button>
@@ -84,6 +95,7 @@ const Purchases = () => {
               <th>ID</th>
               <th>Supplier</th>
               <th>Total</th>
+              <th>Egg Type</th>
               <th style={{ width: 240 }}>Actions</th>
             </tr>
           </thead>
@@ -93,10 +105,11 @@ const Purchases = () => {
                 <td>#{p.id}</td>
                 <td><span className="badge">{p.supplier_id}</span></td>
                 <td>₹ {Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>{p.egg_type || '-'}</td>
                 <td>
                   <div className="btn-group">
                     <a className="btn secondary btn-sm" href={`/purchases/${p.id}/items`}>Items</a>
-                    <button className="btn btn-sm" onClick={() => { setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total }); }}>Edit</button>
+                    <button className="btn btn-sm" onClick={() => { setEditing(p.id); setForm({ supplier_id: p.supplier_id, total: p.total, egg_type: p.egg_type || '' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
                 </td>

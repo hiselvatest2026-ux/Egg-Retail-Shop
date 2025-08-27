@@ -8,9 +8,11 @@ const customerRoutes = require('./routes/customerRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
+const ensureSchema = require('./db/ensureSchema');
 app.use(cors());
 app.use(express.json());
 
+ensureSchema().catch(()=>{});
 app.use('/purchases', purchaseRoutes);
 app.use('/sales', salesRoutes);
 app.use('/payments', paymentRoutes);
