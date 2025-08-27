@@ -1,4 +1,3 @@
-
 -- Suppliers Table
 CREATE TABLE IF NOT EXISTS suppliers (
     id SERIAL PRIMARY KEY,
@@ -33,4 +32,21 @@ CREATE TABLE IF NOT EXISTS purchases (
 -- Purchase Items Table
 CREATE TABLE IF NOT EXISTS purchase_items (
     id SERIAL PRIMARY KEY,
-    pur
+    purchase_id INT REFERENCES purchases(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    price NUMERIC(10,2) NOT NULL
+);
+
+-- Sales Table
+CREATE TABLE IF NOT EXISTS sales (
+    id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(id),
+    sale_date TIMESTAMP DEFAULT NOW(),
+    total NUMERIC(10,2)
+);
+
+-- Sale Items Table
+CREATE TABLE IF NOT EXISTS sale_items (
+    id SERIAL PRIMARY KEY,
+    sale_id INT REFERENCES sales(id) ON DE_
