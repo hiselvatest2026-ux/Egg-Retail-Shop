@@ -7,6 +7,8 @@ const Sales = () => {
   const [sales, setSales] = useState([]);
   const [form, setForm] = useState({ customer_id: '', total: '', egg_type: '' });
   const [customers, setCustomers] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(null);
 
   const fetchSales = async () => {
@@ -22,7 +24,9 @@ const Sales = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.customer_id || !form.total) return;
+    setError(''); setSuccess('');
+    if (!form.customer_id) { setError('Please select a customer.'); return; }
+    if (!form.total || Number.isNaN(Number(form.total))) { setError('Please enter a valid total amount.'); return; }
     try {
       if (editing) {
         await updateSale(editing, { customer_id: Number(form.customer_id), total: Number(form.total), egg_type: form.egg_type || null });
@@ -32,8 +36,10 @@ const Sales = () => {
       setForm({ customer_id: '', total: '', egg_type: '' });
       setEditing(null);
       await fetchSales();
+      setSuccess('Sale saved successfully.');
     } catch (err) {
       console.error('Failed to submit sale', err);
+      setError('Failed to save sale. Please try again.');
     }
   };
 
@@ -74,6 +80,8 @@ const Sales = () => {
             <button className="btn" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '', egg_type: '' }); }}>Cancel</button>}
           </div>
+          {error && <div className="form-help">{error}</div>}
+          {success && <div className="toast">{success}</div>}
         </form>
       </Card>
 

@@ -8,6 +8,8 @@ const Purchases = () => {
   const [form, setForm] = useState({ supplier_id: '', total: '', egg_type: '' });
   const [editing, setEditing] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const fetchPurchases = async () => {
     try {
       const res = await getPurchases();
@@ -19,7 +21,9 @@ const Purchases = () => {
   useEffect(() => { fetchPurchases(); (async()=>{ try { const r = await getSuppliers(); setSuppliers(r.data);} catch(e){ console.error('suppliers load failed', e);} })(); }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.supplier_id || !form.total) return;
+    setError(''); setSuccess('');
+    if (!form.supplier_id) { setError('Please select a supplier.'); return; }
+    if (!form.total || Number.isNaN(Number(form.total))) { setError('Please enter a valid total amount.'); return; }
     try {
       if (editing) {
         await updatePurchase(editing, { total: Number(form.total), egg_type: form.egg_type || null });
@@ -29,8 +33,10 @@ const Purchases = () => {
       setForm({ supplier_id: '', total: '', egg_type: '' });
       setEditing(null);
       await fetchPurchases();
+      setSuccess('Purchase saved successfully.');
     } catch (err) {
       console.error('Failed to submit purchase', err);
+      setError('Failed to save purchase. Please try again.');
     }
   };
   return (
@@ -84,6 +90,8 @@ const Purchases = () => {
               </button>
             )}
           </div>
+          {error && <div className="form-help">{error}</div>}
+          {success && <div className="toast">{success}</div>}
         </form>
       </Card>
 
