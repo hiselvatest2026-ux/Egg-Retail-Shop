@@ -25,6 +25,9 @@ async function ensureSchema() {
     );`
     ,"ALTER TABLE IF EXISTS purchase_items ADD COLUMN IF NOT EXISTS location_id INT REFERENCES locations(id);"
     ,"ALTER TABLE IF EXISTS sale_items ADD COLUMN IF NOT EXISTS location_id INT REFERENCES locations(id);"
+    ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);"
+    ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Completed';"
+    ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) DEFAULT 0;"
   ];
   for (const sql of alters) {
     try {

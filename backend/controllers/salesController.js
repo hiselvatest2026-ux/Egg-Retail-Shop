@@ -11,10 +11,10 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { customer_id, total, egg_type } = req.body;
+    const { customer_id, total, egg_type, payment_method, status = 'Completed', discount = 0 } = req.body;
     const result = await pool.query(
-      'INSERT INTO sales (customer_id, total, egg_type) VALUES ($1, $2, $3) RETURNING *',
-      [customer_id, total, egg_type || null]
+      'INSERT INTO sales (customer_id, total, egg_type, payment_method, status, discount) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [customer_id, total, egg_type || null, payment_method || null, status, discount]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -25,10 +25,10 @@ exports.createSale = async (req, res) => {
 exports.updateSale = async (req, res) => {
   try {
     const { id } = req.params;
-    const { customer_id, total, egg_type } = req.body;
+    const { customer_id, total, egg_type, payment_method, status, discount } = req.body;
     const result = await pool.query(
-      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type) WHERE id=$4 RETURNING *',
-      [customer_id ?? null, total ?? null, egg_type ?? null, id]
+      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type), payment_method=COALESCE($4,payment_method), status=COALESCE($5,status), discount=COALESCE($6,discount) WHERE id=$7 RETURNING *',
+      [customer_id ?? null, total ?? null, egg_type ?? null, payment_method ?? null, status ?? null, discount ?? null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
