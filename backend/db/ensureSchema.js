@@ -12,6 +12,13 @@ async function ensureSchema() {
       note VARCHAR(255),
       created_at TIMESTAMP DEFAULT NOW()
     );`
+    ,`CREATE TABLE IF NOT EXISTS stock_counts (
+      id SERIAL PRIMARY KEY,
+      product_id INT REFERENCES products(id),
+      counted_qty INT NOT NULL,
+      note VARCHAR(255),
+      created_at TIMESTAMP DEFAULT NOW()
+    );`
   ];
   for (const sql of alters) {
     try {

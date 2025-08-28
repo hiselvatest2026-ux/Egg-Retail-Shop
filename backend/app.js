@@ -10,6 +10,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const creditRoutes = require('./routes/creditRoutes');
 const adjustmentRoutes = require('./routes/adjustmentRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
 
 const app = express();
 const ensureSchema = require('./db/ensureSchema');
@@ -28,6 +29,7 @@ app.use('/dashboard', dashboardRoutes);
 app.use('/reports', reportRoutes);
 app.use('/credit-summary', creditRoutes);
 app.use('/stock-adjustments', adjustmentRoutes);
+app.use('/inventory', inventoryRoutes);
 
 app.get('/', (req, res) => res.send('Egg Retail Shop Backend Running'));
 module.exports = app;

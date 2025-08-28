@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import { getStock } from '../api/api';
+import { getStock, getInventoryInsights } from '../api/api';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
   const [lowCount, setLowCount] = useState(0);
-  useEffect(() => { (async()=>{ try{ const r = await getStock(); setRows(r.data||[]); setLowCount((r.data||[]).filter(x=>Number(x.stock)<=5).length);}catch(e){ console.error('load stock failed', e);} })(); }, []);
+  const [insights, setInsights] = useState({ kpis:{ total_stock_value:0, low_stock_count:0 }, low_stock:[], fast_movers:[], slow_movers:[], reorder_suggestions:[] });
+  useEffect(() => { (async()=>{ try{ const [r, i] = await Promise.all([getStock(), getInventoryInsights()]); setRows(r.data||[]); setLowCount((r.data||[]).filter(x=>Number(x.stock)<=5).length); setInsights(i.data||insights);}catch(e){ console.error('load stock failed', e);} })(); }, []);
 
   const totalSkus = rows.length;
   const totalStock = rows.reduce((s,r)=>s+Number(r.stock||0),0);
@@ -23,12 +24,13 @@ const InventoryManagement = () => {
           <div className="stat"><div className="stat-label">Total SKUs</div><div className="stat-value">{totalSkus}</div></div>
           <div className="stat warn"><div className="stat-label">Low Stock Items (≤5)</div><div className="stat-value">{lowCount}</div></div>
           <div className="stat info"><div className="stat-label">Total Units</div><div className="stat-value">{totalStock}</div></div>
+          <div className="stat"><div className="stat-label">Stock Value</div><div className="stat-value">₹ {Number(insights.kpis.total_stock_value||0).toLocaleString()}</div></div>
         </div>
       </Card>
 
       <div style={{height:12}} />
 
-      <Card title="Stock Details">
+      <Card title="Stock Details (FIFO: sell older batches first)">
         <table className="table table-hover">
           <thead><tr><th>Product</th><th>Purchased</th><th>Sold</th><th>In Stock</th></tr></thead>
           <tbody>
@@ -42,6 +44,28 @@ const InventoryManagement = () => {
             ))}
           </tbody>
         </table>
+      </Card>
+
+      <div style={{height:12}} />
+
+      <Card title="Reorder Suggestions">
+        <table className="table table-hover">
+          <thead><tr><th>Product</th><th>Current Stock</th></tr></thead>
+          <tbody>
+            {insights.reorder_suggestions.map(r => (
+              <tr key={r.product_id}><td>{r.name} (#{r.product_id})</td><td>{r.stock}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      <div style={{height:12}} />
+
+      <Card title="Fast vs Slow Movers (30 days)">
+        <div className="stat-grid">
+          <div className="stat"><div className="stat-label">Top Fast Movers</div><div className="stat-value">{insights.fast_movers.slice(0,3).map(m=>m.name).join(', ') || '-'}</div></div>
+          <div className="stat"><div className="stat-label">Top Slow Movers</div><div className="stat-value">{insights.slow_movers.slice(0,3).map(m=>m.name).join(', ') || '-'}</div></div>
+        </div>
       </Card>
     </div>
   );
