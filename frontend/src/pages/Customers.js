@@ -14,20 +14,25 @@ const Customers = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submitted:', form);
     setError(''); setSuccess('');
     if (!form.name) { setError('Customer Name is required.'); return; }
     try {
       if (editing) {
+        console.log('Updating customer:', editing, form);
         await updateCustomer(editing, form);
         setSuccess('Customer updated.');
       } else {
-        await createCustomer(form);
+        console.log('Creating customer:', form);
+        const result = await createCustomer(form);
+        console.log('Create result:', result);
         setSuccess('Customer added.');
       }
       setForm({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable', contact_info: '' });
       setEditing(null);
       await fetchCustomers();
     } catch (e) {
+      console.error('Error in handleSubmit:', e);
       setError(e?.response?.data?.message || 'Save failed.');
     }
   };

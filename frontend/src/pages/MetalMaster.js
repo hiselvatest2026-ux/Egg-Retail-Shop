@@ -13,20 +13,28 @@ const MetalMaster = () => {
   useEffect(()=>{ load(); }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setError(''); setSuccess('');
+    e.preventDefault(); 
+    console.log('Metal form submitted:', form);
+    setError(''); setSuccess('');
     if (!form.metal_type || !form.gst_percent) { setError('Material Type and GST % are required.'); return; }
     try {
       if (editing) {
+        console.log('Updating metal:', editing, { metal_type: form.metal_type, description: form.description });
         await updateMetal(editing, { metal_type: form.metal_type, description: form.description });
         setSuccess('Material updated. (GST % not editable)');
       } else {
-        await createMetal({ metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description });
+        console.log('Creating metal:', { metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description });
+        const result = await createMetal({ metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description });
+        console.log('Create metal result:', result);
         setSuccess('Material created.');
       }
       setForm({ part_code:'', metal_type:'Egg', gst_percent:'', description:'' });
       setEditing(null);
       await load();
-    } catch (e) { setError('Save failed.'); }
+    } catch (e) { 
+      console.error('Error in metal handleSubmit:', e);
+      setError('Save failed.'); 
+    }
   };
 
   return (

@@ -13,6 +13,7 @@ if (!API_URL && typeof window !== 'undefined') {
 if (!API_URL) {
   API_URL = 'http://localhost:5000';
 }
+console.log('API_URL resolved to:', API_URL);
 export const getPurchases = () => axios.get(`${API_URL}/purchases`);
 export const createPurchase = (data) => axios.post(`${API_URL}/purchases`, data);
 export const updatePurchase = (id, data) => axios.put(`${API_URL}/purchases/${id}`, data);
@@ -48,10 +49,22 @@ export const getReorderSuggestions = () => axios.get(`${API_URL}/purchase-orders
 export const getSupplierPerformance = () => axios.get(`${API_URL}/purchase-orders/suppliers/performance`);
 
 // Metal Master
-export const getMetals = () => axios.get(`${API_URL}/metal-master`);
-export const createMetal = (data) => axios.post(`${API_URL}/metal-master`, data);
-export const updateMetal = (id, data) => axios.put(`${API_URL}/metal-master/${id}`, data);
-export const deleteMetal = (id) => axios.delete(`${API_URL}/metal-master/${id}`);
+export const getMetals = () => {
+  console.log('getMetals called, API_URL:', API_URL);
+  return axios.get(`${API_URL}/metal-master`);
+};
+export const createMetal = (data) => {
+  console.log('createMetal called with data:', data, 'API_URL:', API_URL);
+  return axios.post(`${API_URL}/metal-master`, data);
+};
+export const updateMetal = (id, data) => {
+  console.log('updateMetal called with id:', id, 'data:', data, 'API_URL:', API_URL);
+  return axios.put(`${API_URL}/metal-master/${id}`, data);
+};
+export const deleteMetal = (id) => {
+  console.log('deleteMetal called with id:', id, 'API_URL:', API_URL);
+  return axios.delete(`${API_URL}/metal-master/${id}`);
+};
 // Stock adjustments
 export const getAdjustments = () => axios.get(`${API_URL}/stock-adjustments`);
 export const createAdjustment = (data) => axios.post(`${API_URL}/stock-adjustments`, data);
@@ -61,10 +74,22 @@ export const updateProduct = (id, data) => axios.put(`${API_URL}/products/${id}`
 export const deleteProduct = (id) => axios.delete(`${API_URL}/products/${id}`);
 
 // Customers APIs
-export const getCustomers = () => axios.get(`${API_URL}/customers`);
-export const createCustomer = (data) => axios.post(`${API_URL}/customers`, data);
-export const updateCustomer = (id, data) => axios.put(`${API_URL}/customers/${id}`, data);
-export const deleteCustomer = (id) => axios.delete(`${API_URL}/customers/${id}`);
+export const getCustomers = () => {
+  console.log('getCustomers called, API_URL:', API_URL);
+  return axios.get(`${API_URL}/customers`);
+};
+export const createCustomer = (data) => {
+  console.log('createCustomer called with data:', data, 'API_URL:', API_URL);
+  return axios.post(`${API_URL}/customers`, data);
+};
+export const updateCustomer = (id, data) => {
+  console.log('updateCustomer called with id:', id, 'data:', data, 'API_URL:', API_URL);
+  return axios.put(`${API_URL}/customers/${id}`, data);
+};
+export const deleteCustomer = (id) => {
+  console.log('deleteCustomer called with id:', id, 'API_URL:', API_URL);
+  return axios.delete(`${API_URL}/customers/${id}`);
+};
 
 // Suppliers APIs
 export const getSuppliers = () => axios.get(`${API_URL}/suppliers`);
