@@ -67,7 +67,7 @@ const MetalMaster = () => {
             <input className="input" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
           </div>
           <div className="actions-row">
-            <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
+            <button className="btn" type="submit" onClick={() => console.log('Metal button clicked!')}>{editing ? 'Update' : 'Add'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ part_code:'', metal_type:'', gst_percent:'', description:'' }); }}>Cancel</button>}
           </div>
           {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}

@@ -81,7 +81,7 @@ const Customers = () => {
           <input className="input" value={form.contact_info} onChange={e=>setForm({...form, contact_info: e.target.value})} />
         </div>
         <div className="actions-row">
-          <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
+          <button className="btn" type="submit" onClick={() => console.log('Button clicked!')}>{editing ? 'Update' : 'Add'}</button>
           {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'' }); }}>Cancel</button>}
         </div>
         {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
