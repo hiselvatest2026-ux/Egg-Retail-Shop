@@ -28,6 +28,29 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Completed';"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) DEFAULT 0;"
+    ,`CREATE TABLE IF NOT EXISTS purchase_orders (
+      id SERIAL PRIMARY KEY,
+      supplier_id INT REFERENCES suppliers(id),
+      status VARCHAR(20) DEFAULT 'Draft',
+      created_at TIMESTAMP DEFAULT NOW(),
+      expected_date DATE,
+      notes VARCHAR(255)
+    );`
+    ,`CREATE TABLE IF NOT EXISTS purchase_order_items (
+      id SERIAL PRIMARY KEY,
+      po_id INT REFERENCES purchase_orders(id) ON DELETE CASCADE,
+      product_id INT REFERENCES products(id),
+      quantity INT NOT NULL,
+      price NUMERIC(10,2) NOT NULL
+    );`
+    ,`CREATE TABLE IF NOT EXISTS goods_receipts (
+      id SERIAL PRIMARY KEY,
+      po_id INT REFERENCES purchase_orders(id),
+      product_id INT REFERENCES products(id),
+      received_qty INT NOT NULL,
+      quality_note VARCHAR(255),
+      received_at TIMESTAMP DEFAULT NOW()
+    );`
   ];
   for (const sql of alters) {
     try {
