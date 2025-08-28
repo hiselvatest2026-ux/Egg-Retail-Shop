@@ -118,6 +118,12 @@ export const deleteSupplier = (id) => axios.delete(`${API_URL}/suppliers/${id}`)
 // Invoice detail
 export const getSaleInvoice = (id) => axios.get(`${API_URL}/sales/${id}/invoice`);
 
+// Pricing for sales
+export const getPricingForSale = (params) => {
+  console.log('getPricingForSale called with params:', params, 'API_URL:', API_URL);
+  return axios.get(`${API_URL}/sales/pricing`, { params });
+};
+
 // Dashboard
 export const getDashboard = () => axios.get(`${API_URL}/dashboard`);
 

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { getSales, createSale, updateSale, deleteSale, getSaleInvoice } = require('../controllers/salesController');
+const { getSales, createSale, updateSale, deleteSale, getSaleInvoice, getPricingForSale } = require('../controllers/salesController');
 const saleItems = require('../controllers/saleItemController');
 
 router.get('/', getSales);
 router.post('/', createSale);
 router.put('/:id', updateSale);
 router.delete('/:id', deleteSale);
+router.get('/pricing', getPricingForSale);
 router.get('/:id/invoice', getSaleInvoice);
 
 // nested items

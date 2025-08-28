@@ -48,11 +48,73 @@ exports.deleteSale = async (req, res) => {
   }
 };
 
+// New function to get pricing information for sales
+exports.getPricingForSale = async (req, res) => {
+  try {
+    const { customer_id, material_code, category = 'Retail' } = req.query;
+    
+    // Get customer tax applicability
+    const customerResult = await pool.query(
+      'SELECT tax_applicability FROM customers WHERE id = $1',
+      [customer_id]
+    );
+    
+    if (customerResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    
+    const customer = customerResult.rows[0];
+    const isTaxable = customer.tax_applicability === 'Taxable';
+    
+    // Get pricing information
+    let pricingQuery = `
+      SELECT pm.base_price, pm.gst_percent, mm.description as material_description
+      FROM pricing_master pm
+      LEFT JOIN metal_master mm ON pm.material_code = mm.part_code
+      WHERE pm.material_code = $1 AND pm.category = $2
+    `;
+    let pricingParams = [material_code, category];
+    
+    // If customer_id is provided, look for customer-specific pricing first
+    if (customer_id) {
+      pricingQuery += ' AND (pm.customer_id = $3 OR pm.customer_id IS NULL)';
+      pricingParams.push(customer_id);
+    }
+    
+    pricingQuery += ' ORDER BY pm.customer_id DESC LIMIT 1'; // Customer-specific first, then general
+    
+    const pricingResult = await pool.query(pricingQuery, pricingParams);
+    
+    if (pricingResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Pricing not found for this material and category' });
+    }
+    
+    const pricing = pricingResult.rows[0];
+    const basePrice = parseFloat(pricing.base_price);
+    const gstPercent = parseFloat(pricing.gst_percent);
+    
+    // Calculate final price based on tax applicability
+    const gstAmount = isTaxable ? (basePrice * gstPercent / 100) : 0;
+    const finalPrice = basePrice + gstAmount;
+    
+    res.json({
+      base_price: basePrice,
+      gst_percent: gstPercent,
+      gst_amount: gstAmount,
+      final_price: finalPrice,
+      is_taxable: isTaxable,
+      material_description: pricing.material_description
+    });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 exports.getSaleInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const saleResult = await pool.query(
-      `SELECT s.*, c.name AS customer_name
+      `SELECT s.*, c.name AS customer_name, c.tax_applicability
        FROM sales s
        LEFT JOIN customers c ON c.id = s.customer_id
        WHERE s.id=$1`,

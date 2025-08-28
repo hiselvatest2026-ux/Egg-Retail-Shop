@@ -27,6 +27,7 @@ const Invoice = () => {
         <div className="mb-4">
           <div>Date: {new Date(sale.sale_date).toLocaleString()}</div>
           <div>Customer: {sale.customer_name || `#${sale.customer_id}`}</div>
+          <div>Tax Status: {sale.tax_applicability || 'Taxable'}</div>
         </div>
         <table className="table mb-4">
           <thead>
@@ -50,7 +51,13 @@ const Invoice = () => {
             )}
           </tbody>
         </table>
-        <div className="text-right text-xl font-bold">Grand Total: ₹ {Number(total || 0).toFixed(2)}</div>
+        <div className="text-right">
+          <div className="text-lg">Subtotal: ₹ {Number(total || 0).toFixed(2)}</div>
+          {sale.tax_applicability === 'Taxable' && (
+            <div className="text-lg">GST: ₹ {(Number(total || 0) * 0.18).toFixed(2)}</div>
+          )}
+          <div className="text-xl font-bold">Grand Total: ₹ {sale.tax_applicability === 'Taxable' ? (Number(total || 0) * 1.18).toFixed(2) : Number(total || 0).toFixed(2)}</div>
+        </div>
       </Card>
     </div>
   );
