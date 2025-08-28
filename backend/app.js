@@ -13,6 +13,7 @@ const adjustmentRoutes = require('./routes/adjustmentRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
+const metalRoutes = require('./routes/metalRoutes');
 
 const app = express();
 const ensureSchema = require('./db/ensureSchema');
@@ -34,6 +35,7 @@ app.use('/stock-adjustments', adjustmentRoutes);
 app.use('/inventory', inventoryRoutes);
 app.use('/locations', locationRoutes);
 app.use('/purchase-orders', purchaseOrderRoutes);
+app.use('/metal-master', metalRoutes);
 
 app.get('/', (req, res) => res.send('Egg Retail Shop Backend Running'));
 module.exports = app;

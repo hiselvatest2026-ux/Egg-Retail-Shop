@@ -46,6 +46,12 @@ export const addPurchaseOrderItem = (id, data) => axios.post(`${API_URL}/purchas
 export const receivePurchaseOrder = (id) => axios.post(`${API_URL}/purchase-orders/${id}/receive`);
 export const getReorderSuggestions = () => axios.get(`${API_URL}/purchase-orders/reorder/suggestions`);
 export const getSupplierPerformance = () => axios.get(`${API_URL}/purchase-orders/suppliers/performance`);
+
+// Metal Master
+export const getMetals = () => axios.get(`${API_URL}/metal-master`);
+export const createMetal = (data) => axios.post(`${API_URL}/metal-master`, data);
+export const updateMetal = (id, data) => axios.put(`${API_URL}/metal-master/${id}`, data);
+export const deleteMetal = (id) => axios.delete(`${API_URL}/metal-master/${id}`);
 // Stock adjustments
 export const getAdjustments = () => axios.get(`${API_URL}/stock-adjustments`);
 export const createAdjustment = (data) => axios.post(`${API_URL}/stock-adjustments`, data);

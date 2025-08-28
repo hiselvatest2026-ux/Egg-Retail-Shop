@@ -18,6 +18,7 @@ import PurchaseOrders from './pages/PurchaseOrders';
 import CollectionSettlement from './pages/CollectionSettlement';
 import InvoicePrinting from './pages/InvoicePrinting';
 import MISReports from './pages/MISReports';
+import MetalMaster from './pages/MetalMaster';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <NavLink to="/purchase-orders" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Purchase Orders</NavLink>
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
+            <NavLink to="/metal-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Metal Master</NavLink>
           </nav>
         </aside>
         <main className="content">
@@ -56,6 +58,7 @@ function App() {
             <Route path="/collection" element={<CollectionSettlement />} />
             <Route path="/invoice-print" element={<InvoicePrinting />} />
             <Route path="/mis" element={<MISReports />} />
+            <Route path="/metal-master" element={<MetalMaster />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

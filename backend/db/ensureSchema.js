@@ -51,6 +51,13 @@ async function ensureSchema() {
       quality_note VARCHAR(255),
       received_at TIMESTAMP DEFAULT NOW()
     );`
+    ,`CREATE TABLE IF NOT EXISTS metal_master (
+      id SERIAL PRIMARY KEY,
+      part_code VARCHAR(50) UNIQUE NOT NULL,
+      metal_type VARCHAR(100) NOT NULL,
+      gst_percent NUMERIC(5,2) NOT NULL,
+      description VARCHAR(255)
+    );`
   ];
   for (const sql of alters) {
     try {
