@@ -6,21 +6,30 @@ const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [form, setForm] = useState({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable' , contact_info: ''});
   const [editing, setEditing] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const fetchCustomers = async () => { const res = await getCustomers(); setCustomers(res.data); };
   useEffect(() => { fetchCustomers(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name) return;
-    if (editing) {
-      await updateCustomer(editing, form);
-    } else {
-      await createCustomer(form);
+    setError(''); setSuccess('');
+    if (!form.name) { setError('Customer Name is required.'); return; }
+    try {
+      if (editing) {
+        await updateCustomer(editing, form);
+        setSuccess('Customer updated.');
+      } else {
+        await createCustomer(form);
+        setSuccess('Customer added.');
+      }
+      setForm({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable', contact_info: '' });
+      setEditing(null);
+      await fetchCustomers();
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Save failed.');
     }
-    setForm({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable', contact_info: '' });
-    setEditing(null);
-    fetchCustomers();
   };
 
   const startEdit = (c) => { setEditing(c.id); setForm({ name: c.name || '', phone: c.phone || '', category: c.category || 'Retail', gstin: c.gstin || '', tax_applicability: c.tax_applicability || 'Taxable', contact_info: c.contact_info || '' }); };
@@ -70,6 +79,8 @@ const Customers = () => {
           <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
           {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'' }); }}>Cancel</button>}
         </div>
+        {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
+        {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
       </form>
       </Card>
 
