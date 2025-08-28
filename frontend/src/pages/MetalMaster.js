@@ -4,7 +4,7 @@ import { getMetals, createMetal, updateMetal, deleteMetal } from '../api/api';
 
 const MetalMaster = () => {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ part_code:'', metal_type:'', gst_percent:'', description:'' });
+  const [form, setForm] = useState({ part_code:'', metal_type:'Egg', gst_percent:'', description:'' });
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -14,16 +14,16 @@ const MetalMaster = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); setError(''); setSuccess('');
-    if (!form.part_code || !form.metal_type || !form.gst_percent) { setError('Part Code, Metal Type and GST % are required.'); return; }
+    if (!form.metal_type || !form.gst_percent) { setError('Material Type and GST % are required.'); return; }
     try {
       if (editing) {
         await updateMetal(editing, { metal_type: form.metal_type, description: form.description });
-        setSuccess('Metal updated. (GST % not editable)');
+        setSuccess('Material updated. (GST % not editable)');
       } else {
-        await createMetal({ ...form, gst_percent: Number(form.gst_percent) });
-        setSuccess('Metal created.');
+        await createMetal({ metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description });
+        setSuccess('Material created.');
       }
-      setForm({ part_code:'', metal_type:'', gst_percent:'', description:'' });
+      setForm({ part_code:'', metal_type:'Egg', gst_percent:'', description:'' });
       setEditing(null);
       await load();
     } catch (e) { setError('Save failed.'); }
@@ -33,27 +33,29 @@ const MetalMaster = () => {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Metal Master (GST)</h1>
-          <p className="page-subtitle">Define GST % per metal; fixed at sale time</p>
+          <h1 className="page-title">Material Master (GST)</h1>
+          <p className="page-subtitle">Define GST % per material; fixed at sale time</p>
         </div>
       </div>
 
-      <Card title={editing ? 'Edit Metal' : 'Add Metal'}>
+      <Card title={editing ? 'Edit Material' : 'Add Material'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
           <div className="input-group">
-            <label>Part Code</label>
-            <input className="input" value={form.part_code} onChange={e=>setForm({...form, part_code:e.target.value})} disabled={!!editing} />
+            <label>Material Code</label>
+            <input className="input" value={form.part_code} disabled readOnly placeholder="Auto-generated (MCodexxxxx)" />
           </div>
           <div className="input-group">
-            <label>Metal Type</label>
-            <input className="input" value={form.metal_type} onChange={e=>setForm({...form, metal_type:e.target.value})} />
+            <label>Material Type</label>
+            <select className="input" value={form.metal_type} onChange={e=>setForm({...form, metal_type:e.target.value})}>
+              <option value="Egg">Egg</option>
+            </select>
           </div>
           <div className="input-group">
             <label>GST %</label>
             <input className="input" value={form.gst_percent} onChange={e=>setForm({...form, gst_percent:e.target.value})} inputMode="decimal" disabled={!!editing} />
           </div>
           <div className="input-group">
-            <label>Description</label>
+            <label>Material Description</label>
             <input className="input" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
           </div>
           <div className="actions-row">
@@ -67,9 +69,9 @@ const MetalMaster = () => {
 
       <div style={{height:12}} />
 
-      <Card title="Metals">
+      <Card title="Material">
         <table className="table table-hover">
-          <thead><tr><th>#</th><th>Part Code</th><th>Metal Type</th><th>GST %</th><th>Description</th><th>Actions</th></tr></thead>
+          <thead><tr><th>#</th><th>Material Code</th><th>Material Type</th><th>GST %</th><th>Material Description</th><th>Actions</th></tr></thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.id}>
