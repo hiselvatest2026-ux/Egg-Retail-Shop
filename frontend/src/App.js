@@ -36,6 +36,7 @@ function App() {
             <NavLink to="/purchase-orders" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Purchase Orders</NavLink>
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
+            <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
             <NavLink to="/metal-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
           </nav>
         </aside>

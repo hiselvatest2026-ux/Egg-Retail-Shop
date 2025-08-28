@@ -28,6 +28,10 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Completed';"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) DEFAULT 0;"
+    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS phone VARCHAR(20);"
+    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS category VARCHAR(20);"
+    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS gstin VARCHAR(20);"
+    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS tax_applicability VARCHAR(20);"
     ,`CREATE TABLE IF NOT EXISTS purchase_orders (
       id SERIAL PRIMARY KEY,
       supplier_id INT REFERENCES suppliers(id),
