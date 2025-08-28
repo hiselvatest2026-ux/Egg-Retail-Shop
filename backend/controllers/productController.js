@@ -46,14 +46,18 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-exports.getStock = async (_req, res) => {
+exports.getStock = async (req, res) => {
   try {
+    const { location_id } = req.query;
+    const locPI = location_id ? 'WHERE pi.location_id = $1' : '';
+    const locSI = location_id ? 'WHERE si.location_id = $1' : '';
+    const params = location_id ? [location_id] : [];
     const result = await pool.query(`
       WITH purchase_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM purchase_items GROUP BY product_id
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi ${locPI} GROUP BY product_id
       ),
       sales_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM sale_items GROUP BY product_id
+        SELECT product_id, SUM(quantity) AS qty FROM sale_items si ${locSI} GROUP BY product_id
       ),
       adjustments AS (
         SELECT product_id,
@@ -79,7 +83,7 @@ exports.getStock = async (_req, res) => {
       LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
       LEFT JOIN adjustments adj ON adj.product_id = a.product_id
       ORDER BY name ASC
-    `);
+    `, params);
     res.json(result.rows.map(r => ({
       product_id: r.product_id,
       name: r.name,

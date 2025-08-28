@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import { getStock, getInventoryInsights } from '../api/api';
+import { getStock, getInventoryInsightsByLocation, getLocations } from '../api/api';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
   const [lowCount, setLowCount] = useState(0);
   const [insights, setInsights] = useState({ kpis:{ total_stock_value:0, low_stock_count:0 }, low_stock:[], fast_movers:[], slow_movers:[], reorder_suggestions:[] });
-  useEffect(() => { (async()=>{ try{ const [r, i] = await Promise.all([getStock(), getInventoryInsights()]); setRows(r.data||[]); setLowCount((r.data||[]).filter(x=>Number(x.stock)<=5).length); setInsights(i.data||insights);}catch(e){ console.error('load stock failed', e);} })(); }, []);
+  const [locations, setLocations] = useState([]);
+  const [locationId, setLocationId] = useState('');
+  const load = async (loc) => {
+    try {
+      const params = loc ? { location_id: loc } : undefined;
+      const [r, i] = await Promise.all([
+        getStock(params),
+        getInventoryInsightsByLocation(params)
+      ]);
+      setRows(r.data||[]);
+      setLowCount((r.data||[]).filter(x=>Number(x.stock)<=5).length);
+      setInsights(i.data||insights);
+    } catch (e) { console.error('load stock failed', e); }
+  };
+  useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId]);
 
   const totalSkus = rows.length;
   const totalStock = rows.reduce((s,r)=>s+Number(r.stock||0),0);
@@ -20,6 +34,12 @@ const InventoryManagement = () => {
       </div>
 
       <Card title="Stock Overview">
+        <div className="actions-row" style={{marginBottom:12}}>
+          <select className="input" style={{maxWidth:260}} value={locationId} onChange={e=>setLocationId(e.target.value)}>
+            <option value="">All locations</option>
+            {locations.map(l => (<option key={l.id} value={l.id}>{l.name}</option>))}
+          </select>
+        </div>
         <div className="stat-grid">
           <div className="stat"><div className="stat-label">Total SKUs</div><div className="stat-value">{totalSkus}</div></div>
           <div className="stat warn"><div className="stat-label">Low Stock Items (≤5)</div><div className="stat-value">{lowCount}</div></div>

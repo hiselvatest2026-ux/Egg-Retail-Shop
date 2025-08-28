@@ -32,8 +32,10 @@ export const deletePayment = (id) => axios.delete(`${API_URL}/payments/${id}`);
 
 // Products APIs
 export const getProducts = () => axios.get(`${API_URL}/products`);
-export const getStock = () => axios.get(`${API_URL}/products/stock`);
+export const getStock = (params) => axios.get(`${API_URL}/products/stock`, { params });
 export const getInventoryInsights = () => axios.get(`${API_URL}/inventory/insights`);
+export const getInventoryInsightsByLocation = (params) => axios.get(`${API_URL}/inventory/insights`, { params });
+export const getLocations = () => axios.get(`${API_URL}/locations`);
 // Stock adjustments
 export const getAdjustments = () => axios.get(`${API_URL}/stock-adjustments`);
 export const createAdjustment = (data) => axios.post(`${API_URL}/stock-adjustments`, data);
