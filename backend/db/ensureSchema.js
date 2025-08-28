@@ -62,6 +62,16 @@ async function ensureSchema() {
       gst_percent NUMERIC(5,2) NOT NULL,
       description VARCHAR(255)
     );`
+    ,`CREATE TABLE IF NOT EXISTS pricing_master (
+      id SERIAL PRIMARY KEY,
+      customer_id INT REFERENCES customers(id),
+      category VARCHAR(20) NOT NULL,
+      material_code VARCHAR(50) NOT NULL,
+      base_price NUMERIC(10,2) NOT NULL,
+      gst_percent NUMERIC(5,2) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(customer_id, category, material_code)
+    );`
   ];
   for (const sql of alters) {
     try {

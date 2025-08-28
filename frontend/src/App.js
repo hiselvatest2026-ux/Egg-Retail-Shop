@@ -19,6 +19,7 @@ import CollectionSettlement from './pages/CollectionSettlement';
 import InvoicePrinting from './pages/InvoicePrinting';
 import MISReports from './pages/MISReports';
 import MetalMaster from './pages/MetalMaster';
+import PricingMaster from './pages/PricingMaster';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
             <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
             <NavLink to="/metal-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
+            <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
           </nav>
         </aside>
         <main className="content">
@@ -60,6 +62,7 @@ function App() {
             <Route path="/invoice-print" element={<InvoicePrinting />} />
             <Route path="/mis" element={<MISReports />} />
             <Route path="/metal-master" element={<MetalMaster />} />
+            <Route path="/pricing-master" element={<PricingMaster />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

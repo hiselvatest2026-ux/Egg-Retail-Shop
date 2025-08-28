@@ -65,6 +65,24 @@ export const deleteMetal = (id) => {
   console.log('deleteMetal called with id:', id, 'API_URL:', API_URL);
   return axios.delete(`${API_URL}/metal-master/${id}`);
 };
+
+// Pricing Master
+export const getPricing = () => {
+  console.log('getPricing called, API_URL:', API_URL);
+  return axios.get(`${API_URL}/pricing-master`);
+};
+export const createPricing = (data) => {
+  console.log('createPricing called with data:', data, 'API_URL:', API_URL);
+  return axios.post(`${API_URL}/pricing-master`, data);
+};
+export const updatePricing = (id, data) => {
+  console.log('updatePricing called with id:', id, 'data:', data, 'API_URL:', API_URL);
+  return axios.put(`${API_URL}/pricing-master/${id}`, data);
+};
+export const deletePricing = (id) => {
+  console.log('deletePricing called with id:', id, 'API_URL:', API_URL);
+  return axios.delete(`${API_URL}/pricing-master/${id}`);
+};
 // Stock adjustments
 export const getAdjustments = () => axios.get(`${API_URL}/stock-adjustments`);
 export const createAdjustment = (data) => axios.post(`${API_URL}/stock-adjustments`, data);
