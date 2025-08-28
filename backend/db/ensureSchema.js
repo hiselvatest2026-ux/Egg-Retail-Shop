@@ -19,6 +19,12 @@ async function ensureSchema() {
       note VARCHAR(255),
       created_at TIMESTAMP DEFAULT NOW()
     );`
+    ,`CREATE TABLE IF NOT EXISTS locations (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL
+    );`
+    ,"ALTER TABLE IF EXISTS purchase_items ADD COLUMN IF NOT EXISTS location_id INT REFERENCES locations(id);"
+    ,"ALTER TABLE IF EXISTS sale_items ADD COLUMN IF NOT EXISTS location_id INT REFERENCES locations(id);"
   ];
   for (const sql of alters) {
     try {

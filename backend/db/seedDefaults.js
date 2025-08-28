@@ -41,6 +41,16 @@ async function seedDefaults() {
   } catch (e) {
     console.error('Seeding products failed:', e.message);
   }
+
+  try {
+    const loc = await pool.query('SELECT id FROM locations LIMIT 1');
+    if (loc.rows.length === 0) {
+      await pool.query('INSERT INTO locations (name) VALUES ($1)', ['Main Outlet']);
+      console.log('Seeded default location');
+    }
+  } catch (e) {
+    console.error('Seeding locations failed:', e.message);
+  }
 }
 
 module.exports = seedDefaults;

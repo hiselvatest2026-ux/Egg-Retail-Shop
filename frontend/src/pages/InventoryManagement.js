@@ -67,6 +67,32 @@ const InventoryManagement = () => {
           <div className="stat"><div className="stat-label">Top Slow Movers</div><div className="stat-value">{insights.slow_movers.slice(0,3).map(m=>m.name).join(', ') || '-'}</div></div>
         </div>
       </Card>
+
+      <div style={{height:12}} />
+
+      <Card title="Near Expiry (next 3 days)">
+        <table className="table table-hover">
+          <thead><tr><th>Product</th><th>Expiry</th><th>In Stock</th></tr></thead>
+          <tbody>
+            {(insights.near_expiry||[]).map(e => (
+              <tr key={e.product_id}><td>{e.name} (#{e.product_id})</td><td>{new Date(e.expiry_date).toLocaleDateString()}</td><td>{e.stock}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+
+      <div style={{height:12}} />
+
+      <Card title="Supplier Purchase Value (90 days)">
+        <table className="table table-hover">
+          <thead><tr><th>Supplier</th><th>Purchase Value</th></tr></thead>
+          <tbody>
+            {(insights.supplier_stats||[]).map(s => (
+              <tr key={s.supplier_id}><td>{s.supplier_name}</td><td>₹ {Number(s.purchase_value).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 };
