@@ -84,6 +84,11 @@ async function ensureSchema() {
       credit_terms VARCHAR(50),
       created_at TIMESTAMP DEFAULT NOW()
     );`
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS vendor_id INT REFERENCES vendors(id);"
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS product_name VARCHAR(100);"
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS price_per_unit NUMERIC(10,2);"
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS quantity INT;"
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2);"
   ];
   for (const sql of alters) {
     try {
