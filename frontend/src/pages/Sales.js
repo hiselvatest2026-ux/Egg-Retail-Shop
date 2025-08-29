@@ -5,7 +5,7 @@ import Card from '../components/Card';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1' });
   const [customers, setCustomers] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [pricingInfo, setPricingInfo] = useState(null);
@@ -40,11 +40,13 @@ const Sales = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!form.customer_id) { setError('Please select a customer.'); return; }
-    if (!form.total || Number.isNaN(Number(form.total))) { setError('Please enter a valid total amount.'); return; }
+    if (!form.product_name || !form.material_code) { setError('Please select a product.'); return; }
+    if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }
+    if (!form.total || Number.isNaN(Number(form.total))) { setError('Total could not be calculated.'); return; }
     try {
       const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null };
       if (editing) { await updateSale(editing, payload); } else { await createSale(payload); }
-      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail' });
+      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1' });
       setPricingInfo(null);
       setEditing(null);
       await fetchSales();
@@ -77,6 +79,25 @@ const Sales = () => {
   useEffect(() => {
     fetchPricing();
   }, [form.customer_id, form.material_code, form.category]);
+
+  // Auto-set product_name when material_code changes
+  useEffect(() => {
+    if (!materials || !materials.length) return;
+    const m = materials.find(x => String(x.part_code) === String(form.material_code));
+    if (m && m.metal_type !== form.product_name) {
+      setForm(prev => ({ ...prev, product_name: m.metal_type }));
+    }
+  }, [form.material_code, materials]);
+
+  // Auto-calc total when pricing or quantity changes
+  useEffect(() => {
+    const qty = Number(form.quantity || 0);
+    const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
+    const total = unitFinal * qty;
+    if (isFinite(total)) {
+      setForm(prev => ({ ...prev, total: total.toFixed(2) }));
+    }
+  }, [pricingInfo, form.quantity]);
 
   return (
     <div className="page">
@@ -114,8 +135,12 @@ const Sales = () => {
             </select>
           </div>
           <div className="input-group">
+            <label>Quantity</label>
+            <input className="input" value={form.quantity} onChange={e=>setForm({...form, quantity: e.target.value})} inputMode="numeric" />
+          </div>
+          <div className="input-group">
             <label>Total Amount</label>
-            <input className="input" placeholder="e.g. 1450.00" value={form.total} onChange={e=>setForm({...form, total: e.target.value})} inputMode="decimal" />
+            <input className="input" value={form.total} readOnly />
           </div>
           <div className="input-group">
             <label>Product Name</label>
@@ -132,10 +157,10 @@ const Sales = () => {
               <div style={{background:'#f8f9fa', padding:'12px', borderRadius:'6px', border:'1px solid #e9ecef'}}>
                 <h4 style={{margin:'0 0 8px 0', fontSize:'14px', color:'#495057'}}>Pricing Information</h4>
                 <div style={{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:'8px', fontSize:'12px'}}>
-                  <div><strong>Base Price:</strong> ₹{pricingInfo.base_price}</div>
+                  <div><strong>Base Price (per unit):</strong> ₹{pricingInfo.base_price}</div>
                   <div><strong>GST %:</strong> {pricingInfo.gst_percent}%</div>
-                  <div><strong>GST Amount:</strong> ₹{pricingInfo.gst_amount}</div>
-                  <div><strong>Final Price:</strong> ₹{pricingInfo.final_price}</div>
+                  <div><strong>GST Amount (per unit):</strong> ₹{pricingInfo.gst_amount}</div>
+                  <div><strong>Final Price (per unit):</strong> ₹{pricingInfo.final_price}</div>
                   <div style={{gridColumn:'1/-1'}}>
                     <strong>Tax Status:</strong> {pricingInfo.is_taxable ? 'Taxable' : 'Non-Taxable'}
                   </div>
