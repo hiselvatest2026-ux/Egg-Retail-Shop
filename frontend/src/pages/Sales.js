@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
@@ -13,6 +14,20 @@ const Sales = () => {
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('sales'); // 'sales' | 'payments'
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'payments' || tab === 'sales') setActiveTab(tab);
+  }, [location.search]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (activeTab) {
+      params.set('tab', activeTab);
+      navigate({ search: params.toString() }, { replace: true });
+    }
+  }, [activeTab]);
   const [paymentsList, setPaymentsList] = useState([]);
   const [paymentsFilter, setPaymentsFilter] = useState({ customer_id: '', invoice_id: '' });
   const [recordPaymentNow, setRecordPaymentNow] = useState(false);
