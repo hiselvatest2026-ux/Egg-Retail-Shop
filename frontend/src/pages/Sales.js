@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 
@@ -12,6 +12,11 @@ const Sales = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(null);
+  const [recordPaymentNow, setRecordPaymentNow] = useState(false);
+  const [paymentAtCreate, setPaymentAtCreate] = useState({ amount: '', mode: 'Cash' });
+  const [paymentsByInvoice, setPaymentsByInvoice] = useState({});
+  const [payingSale, setPayingSale] = useState(null);
+  const [payForm, setPayForm] = useState({ amount: '', mode: 'Cash' });
 
   const fetchSales = async () => {
     try {
@@ -30,6 +35,10 @@ const Sales = () => {
         setCustomers(r.data);
         const m = await getMetals();
         setMaterials(m.data);
+        const pays = await getPayments();
+        const map = {};
+        (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
+        setPaymentsByInvoice(map);
       } catch(e){ 
         console.error('data load failed', e);
       } 
@@ -45,11 +54,31 @@ const Sales = () => {
     if (!form.total || Number.isNaN(Number(form.total))) { setError('Total could not be calculated.'); return; }
     try {
       const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null };
-      if (editing) { await updateSale(editing, payload); } else { await createSale(payload); }
+      if (editing) { 
+        await updateSale(editing, payload); 
+      } else { 
+        const res = await createSale(payload);
+        const newSale = res.data;
+        if (recordPaymentNow) {
+          const amt = Number(paymentAtCreate.amount || form.total || 0);
+          const mode = paymentAtCreate.mode || 'Cash';
+          if (amt > 0) {
+            await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
+          }
+        }
+      }
       setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1' });
+      setRecordPaymentNow(false);
+      setPaymentAtCreate({ amount: '', mode: 'Cash' });
       setPricingInfo(null);
       setEditing(null);
       await fetchSales();
+      try {
+        const pays = await getPayments();
+        const map = {};
+        (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
+        setPaymentsByInvoice(map);
+      } catch(e) { /* ignore */ }
       setSuccess('Sale saved successfully.');
     } catch (err) {
       console.error('Failed to submit sale', err);
@@ -109,7 +138,7 @@ const Sales = () => {
       </div>
 
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
-        <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
+        <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
             <label>Customer</label>
             <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
@@ -168,6 +197,28 @@ const Sales = () => {
               </div>
             </div>
           )}
+
+          <div className="input-group" style={{gridColumn:'1/-1'}}>
+            <label style={{display:'flex', alignItems:'center', gap:8}}>
+              <input type="checkbox" checked={recordPaymentNow} onChange={e=>{
+                const checked = e.target.checked; setRecordPaymentNow(checked);
+                if (checked) { setPaymentAtCreate({ amount: form.total, mode: 'Cash' }); }
+                else { setPaymentAtCreate({ amount: '', mode: 'Cash' }); }
+              }} /> Record payment now
+            </label>
+          </div>
+          {recordPaymentNow && (
+            <>
+              <div className="input-group">
+                <label>Amount Received</label>
+                <input className="input" value={paymentAtCreate.amount} onChange={e=>setPaymentAtCreate({...paymentAtCreate, amount: e.target.value})} inputMode="decimal" />
+              </div>
+              <div className="input-group">
+                <label>Payment Mode</label>
+                <input className="input" value={paymentAtCreate.mode} onChange={e=>setPaymentAtCreate({...paymentAtCreate, mode: e.target.value})} placeholder="Cash / Card / UPI" />
+              </div>
+            </>
+          )}
           
           <div className="actions-row">
             <button className="btn" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
@@ -181,7 +232,7 @@ const Sales = () => {
       <Card title="Sales List">
         <table className="table table-hover mt-2">
           <thead>
-            <tr><th>ID</th><th>Customer</th><th>Total</th><th>Product</th><th>Category</th><th style={{width:260}}>Actions</th></tr>
+            <tr><th>ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Product</th><th>Category</th><th style={{width:320}}>Actions</th></tr>
           </thead>
           <tbody>
             {sales.map(s => (
@@ -189,12 +240,20 @@ const Sales = () => {
                 <td>#{s.id}</td>
                 <td><span className="badge">{s.customer_id}</span></td>
                 <td>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>₹ {Number(paymentsByInvoice[String(s.id)]||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                 <td>{s.product_name || s.egg_type || '-'}</td>
                 <td>{s.category || 'Retail'}</td>
                 <td>
                   <div className="btn-group">
                     <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
                     <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
+                    <button className="btn btn-sm" onClick={()=>{
+                      const paid = Number(paymentsByInvoice[String(s.id)]||0);
+                      const bal = Math.max(0, Number(s.total) - paid);
+                      setPayingSale({ id: s.id, customer_id: s.customer_id });
+                      setPayForm({ amount: String(bal.toFixed(2)), mode: 'Cash' });
+                    }}>Pay</button>
                     <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
@@ -204,6 +263,37 @@ const Sales = () => {
           </tbody>
         </table>
       </Card>
+
+      {payingSale && (
+        <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setPayingSale(null)}>
+          <div style={{background:'#fff', padding:20, borderRadius:8, width:'min(480px, 90vw)'}} onClick={e=>e.stopPropagation()}>
+            <h3 style={{margin:'0 0 12px 0'}}>Record Payment for Sale #{payingSale.id}</h3>
+            <div className="form-grid" style={{gridTemplateColumns:'repeat(2, minmax(0,1fr))'}}>
+              <div className="input-group">
+                <label>Amount</label>
+                <input className="input" value={payForm.amount} onChange={e=>setPayForm({...payForm, amount:e.target.value})} inputMode="decimal" />
+              </div>
+              <div className="input-group">
+                <label>Mode</label>
+                <input className="input" value={payForm.mode} onChange={e=>setPayForm({...payForm, mode:e.target.value})} placeholder="Cash / Card / UPI" />
+              </div>
+            </div>
+            <div className="actions-row" style={{marginTop:12}}>
+              <button className="btn" onClick={async()=>{
+                const amt = Number(payForm.amount||0);
+                if (!(amt>0)) return;
+                await createPayment({ customer_id: Number(payingSale.customer_id), invoice_id: Number(payingSale.id), amount: amt, payment_mode: payForm.mode||'Cash' });
+                const pays = await getPayments();
+                const map = {};
+                (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
+                setPaymentsByInvoice(map);
+                setPayingSale(null);
+              }}>Save Payment</button>
+              <button className="btn secondary" onClick={()=>setPayingSale(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

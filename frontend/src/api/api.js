@@ -30,6 +30,7 @@ export const getPayments = () => axios.get(`${API_URL}/payments`);
 export const createPayment = (data) => axios.post(`${API_URL}/payments`, data);
 export const updatePayment = (id, data) => axios.put(`${API_URL}/payments/${id}`, data);
 export const deletePayment = (id) => axios.delete(`${API_URL}/payments/${id}`);
+export const getPaymentsFiltered = (params) => axios.get(`${API_URL}/payments`, { params });
 
 // Products APIs
 export const getProducts = () => axios.get(`${API_URL}/products`);

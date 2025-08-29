@@ -2,7 +2,13 @@ const pool = require('../models/db');
 
 exports.getPayments = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM payments');
+    const { invoice_id, customer_id } = req.query;
+    const clauses = [];
+    const params = [];
+    if (invoice_id) { params.push(invoice_id); clauses.push(`invoice_id = $${params.length}`); }
+    if (customer_id) { params.push(customer_id); clauses.push(`customer_id = $${params.length}`); }
+    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    const result = await pool.query(`SELECT * FROM payments ${where} ORDER BY id DESC`, params);
     res.json(result.rows);
   } catch (err) {
     res.status(500).send(err.message);
