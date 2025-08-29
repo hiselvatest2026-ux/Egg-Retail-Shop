@@ -64,3 +64,17 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_date TIMESTAMP DEFAULT NOW(),
     payment_mode VARCHAR(50)
 );
+
+-- Vendors Table
+CREATE SEQUENCE IF NOT EXISTS vendor_code_seq START 1;
+CREATE TABLE IF NOT EXISTS vendors (
+    id SERIAL PRIMARY KEY,
+    vendor_code VARCHAR(20) UNIQUE NOT NULL DEFAULT ('V' || LPAD(nextval('vendor_code_seq')::text, 6, '0')),
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    address VARCHAR(255),
+    pincode VARCHAR(10),
+    gstin VARCHAR(20),
+    credit_terms VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);

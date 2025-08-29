@@ -115,6 +115,12 @@ export const createSupplier = (data) => axios.post(`${API_URL}/suppliers`, data)
 export const updateSupplier = (id, data) => axios.put(`${API_URL}/suppliers/${id}`, data);
 export const deleteSupplier = (id) => axios.delete(`${API_URL}/suppliers/${id}`);
 
+// Vendors APIs
+export const getVendors = () => axios.get(`${API_URL}/vendors`);
+export const createVendor = (data) => axios.post(`${API_URL}/vendors`, data);
+export const updateVendor = (id, data) => axios.put(`${API_URL}/vendors/${id}`, data);
+export const deleteVendor = (id) => axios.delete(`${API_URL}/vendors/${id}`);
+
 // Invoice detail
 export const getSaleInvoice = (id) => axios.get(`${API_URL}/sales/${id}/invoice`);
 

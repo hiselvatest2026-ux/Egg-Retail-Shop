@@ -72,6 +72,18 @@ async function ensureSchema() {
       created_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(customer_id, category, material_code)
     );`
+    ,`CREATE SEQUENCE IF NOT EXISTS vendor_code_seq START 1;`
+    ,`CREATE TABLE IF NOT EXISTS vendors (
+      id SERIAL PRIMARY KEY,
+      vendor_code VARCHAR(20) UNIQUE NOT NULL DEFAULT ('V' || LPAD(nextval('vendor_code_seq')::text, 6, '0')),
+      name VARCHAR(100) NOT NULL,
+      phone VARCHAR(20),
+      address VARCHAR(255),
+      pincode VARCHAR(10),
+      gstin VARCHAR(20),
+      credit_terms VARCHAR(50),
+      created_at TIMESTAMP DEFAULT NOW()
+    );`
   ];
   for (const sql of alters) {
     try {

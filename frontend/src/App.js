@@ -20,6 +20,7 @@ import InvoicePrinting from './pages/InvoicePrinting';
 import MISReports from './pages/MISReports';
 import MetalMaster from './pages/MetalMaster';
 import PricingMaster from './pages/PricingMaster';
+import Vendors from './pages/Vendors';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
             <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
+            <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
             <NavLink to="/metal-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
             <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
           </nav>
@@ -50,6 +52,7 @@ function App() {
             <Route path="/payments" element={<Payments />} />
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/vendors" element={<Vendors />} />
             <Route path="/suppliers" element={<Suppliers />} />
             <Route path="/invoice/:id" element={<Invoice />} />
             <Route path="/sales/:id/items" element={<SaleItems />} />
