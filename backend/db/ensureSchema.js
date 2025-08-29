@@ -89,6 +89,7 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS price_per_unit NUMERIC(10,2);"
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS quantity INT;"
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2);"
+    ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS product_name VARCHAR(100);"
   ];
   for (const sql of alters) {
     try {

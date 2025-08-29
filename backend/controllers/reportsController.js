@@ -18,11 +18,11 @@ function sendCsv(res, filename, headers, rows) {
 exports.purchasesCsv = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT p.id, p.supplier_id, p.egg_type, p.total, p.purchase_date
+      `SELECT p.id, p.vendor_id, p.product_name, p.price_per_unit, p.quantity, p.gst_percent, p.total, p.purchase_date
        FROM purchases p
        ORDER BY p.id DESC`
     );
-    const headers = ['id','supplier_id','egg_type','total','purchase_date'];
+    const headers = ['id','vendor_id','product_name','price_per_unit','quantity','gst_percent','total','purchase_date'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
@@ -30,11 +30,11 @@ exports.purchasesCsv = async (req, res) => {
 exports.salesCsv = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT s.id, s.customer_id, s.egg_type, s.total, s.sale_date
+      `SELECT s.id, s.customer_id, COALESCE(s.product_name, s.egg_type) AS product_name, s.total, s.sale_date
        FROM sales s
        ORDER BY s.id DESC`
     );
-    const headers = ['id','customer_id','egg_type','total','sale_date'];
+    const headers = ['id','customer_id','product_name','total','sale_date'];
     sendCsv(res, 'sales.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
