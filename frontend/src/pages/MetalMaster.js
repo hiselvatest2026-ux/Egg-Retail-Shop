@@ -4,7 +4,7 @@ import { getMetals, createMetal, updateMetal, deleteMetal } from '../api/api';
 
 const MetalMaster = () => {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ part_code:'', metal_type:'Egg', gst_percent:'', description:'' });
+  const [form, setForm] = useState({ part_code:'', metal_type:'Egg', gst_percent:'0', description:'' });
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -28,7 +28,7 @@ const MetalMaster = () => {
         console.log('Create metal result:', result);
         setSuccess('Material created.');
       }
-      setForm({ part_code:'', metal_type:'Egg', gst_percent:'', description:'' });
+      setForm({ part_code:'', metal_type:'Egg', gst_percent:'0', description:'' });
       setEditing(null);
       await load();
     } catch (e) { 
@@ -54,13 +54,25 @@ const MetalMaster = () => {
           </div>
           <div className="input-group">
             <label>Material Type</label>
-            <select className="input" value={form.metal_type} onChange={e=>setForm({...form, metal_type:e.target.value})}>
+            <select
+              className="input"
+              value={form.metal_type}
+              onChange={e=>{
+                const nextType = e.target.value;
+                const mappedGst = nextType === 'Panner' ? '5' : '0';
+                setForm({...form, metal_type: nextType, gst_percent: mappedGst});
+              }}
+            >
               <option value="Egg">Egg</option>
+              <option value="Panner">Panner</option>
             </select>
           </div>
           <div className="input-group">
             <label>GST %</label>
-            <input className="input" value={form.gst_percent} onChange={e=>setForm({...form, gst_percent:e.target.value})} inputMode="decimal" disabled={!!editing} />
+            <select className="input" value={form.gst_percent} disabled>
+              <option value="0">0</option>
+              <option value="5">5</option>
+            </select>
           </div>
           <div className="input-group">
             <label>Material Description</label>
@@ -90,7 +102,7 @@ const MetalMaster = () => {
                 <td>{r.description || '-'}</td>
                 <td>
                   <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:r.gst_percent, description:r.description||'' }); }}>Edit</button>
+                    <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
                   </div>
                 </td>

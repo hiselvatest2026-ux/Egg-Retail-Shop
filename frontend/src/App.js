@@ -40,7 +40,7 @@ function App() {
             <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
             <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
             <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
-            <NavLink to="/metal-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
+            <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
             <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
           </nav>
         </aside>
@@ -64,7 +64,7 @@ function App() {
             <Route path="/collection" element={<CollectionSettlement />} />
             <Route path="/invoice-print" element={<InvoicePrinting />} />
             <Route path="/mis" element={<MISReports />} />
-            <Route path="/metal-master" element={<MetalMaster />} />
+            <Route path="/Material-master" element={<MetalMaster />} />
             <Route path="/pricing-master" element={<PricingMaster />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
