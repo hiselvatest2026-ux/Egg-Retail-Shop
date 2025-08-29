@@ -12,6 +12,9 @@ const Sales = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(null);
+  const [activeTab, setActiveTab] = useState('sales'); // 'sales' | 'payments'
+  const [paymentsList, setPaymentsList] = useState([]);
+  const [paymentsFilter, setPaymentsFilter] = useState({ customer_id: '', invoice_id: '' });
   const [recordPaymentNow, setRecordPaymentNow] = useState(false);
   const [paymentAtCreate, setPaymentAtCreate] = useState({ amount: '', mode: 'Cash' });
   const [paymentsByInvoice, setPaymentsByInvoice] = useState({});
@@ -39,11 +42,22 @@ const Sales = () => {
         const map = {};
         (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
         setPaymentsByInvoice(map);
+        setPaymentsList(pays.data||[]);
       } catch(e){ 
         console.error('data load failed', e);
       } 
     })(); 
   }, []);
+
+  const reloadPayments = async () => {
+    try {
+      const res = await getPayments();
+      setPaymentsList(res.data || []);
+      const map = {};
+      (res.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
+      setPaymentsByInvoice(map);
+    } catch (e) { /* ignore */ }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,12 +87,7 @@ const Sales = () => {
       setPricingInfo(null);
       setEditing(null);
       await fetchSales();
-      try {
-        const pays = await getPayments();
-        const map = {};
-        (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
-        setPaymentsByInvoice(map);
-      } catch(e) { /* ignore */ }
+      await reloadPayments();
       setSuccess('Sale saved successfully.');
     } catch (err) {
       console.error('Failed to submit sale', err);
@@ -137,6 +146,12 @@ const Sales = () => {
         </div>
       </div>
 
+      <div style={{display:'flex', gap:12, marginBottom:12}}>
+        <button className={`btn ${activeTab==='sales'?'':'secondary'}`} onClick={()=>setActiveTab('sales')}>Sales</button>
+        <button className={`btn ${activeTab==='payments'?'':'secondary'}`} onClick={()=>setActiveTab('payments')}>Payments</button>
+      </div>
+
+      {activeTab === 'sales' && (
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
@@ -228,7 +243,9 @@ const Sales = () => {
           {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
         </form>
       </Card>
+      )}
 
+      {activeTab === 'sales' && (
       <Card title="Sales List">
         <table className="table table-hover mt-2">
           <thead>
@@ -263,6 +280,61 @@ const Sales = () => {
           </tbody>
         </table>
       </Card>
+      )}
+
+      {activeTab === 'payments' && (
+      <Card title="Payments">
+        <div className="form-grid" style={{gridTemplateColumns:'repeat(4, minmax(0,1fr))'}}>
+          <div className="input-group">
+            <label>Customer</label>
+            <select className="input" value={paymentsFilter.customer_id} onChange={e=>setPaymentsFilter({...paymentsFilter, customer_id:e.target.value})}>
+              <option value="">All</option>
+              {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
+            </select>
+          </div>
+          <div className="input-group">
+            <label>Invoice</label>
+            <select className="input" value={paymentsFilter.invoice_id} onChange={e=>setPaymentsFilter({...paymentsFilter, invoice_id:e.target.value})}>
+              <option value="">All</option>
+              {sales.map(s => (<option key={s.id} value={s.id}>#{s.id} - ₹ {Number(s.total||0).toFixed(2)}</option>))}
+            </select>
+          </div>
+          <div className="actions-row" style={{alignItems:'end'}}>
+            <button className="btn" onClick={async()=>{
+              const params = {};
+              if (paymentsFilter.customer_id) params.customer_id = paymentsFilter.customer_id;
+              if (paymentsFilter.invoice_id) params.invoice_id = paymentsFilter.invoice_id;
+              try {
+                const res = await (Object.keys(params).length ? (await import('../api/api')).getPaymentsFiltered(params) : getPayments());
+                setPaymentsList(res.data||[]);
+              } catch(e) { /* ignore */ }
+            }}>Apply</button>
+            <button className="btn secondary" onClick={async()=>{ setPaymentsFilter({ customer_id:'', invoice_id:'' }); await reloadPayments(); }}>Reset</button>
+          </div>
+        </div>
+        <table className="table table-hover mt-2">
+          <thead>
+            <tr><th>ID</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Mode</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            {paymentsList.map(p => (
+              <tr key={p.id}>
+                <td>#{p.id}</td>
+                <td><span className="badge">{p.customer_id}</span></td>
+                <td>#{p.invoice_id}</td>
+                <td>₹ {Number(p.amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>{p.payment_mode || 'Cash'}</td>
+                <td>
+                  <div className="btn-group">
+                    <button className="btn btn-sm" onClick={()=>{ setPayingSale({ id: p.invoice_id, customer_id: p.customer_id }); setPayForm({ amount: '', mode: 'Cash' }); }}>Add Payment</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      )}
 
       {payingSale && (
         <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setPayingSale(null)}>
