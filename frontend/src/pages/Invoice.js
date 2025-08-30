@@ -26,7 +26,12 @@ const Invoice = () => {
       <Card title={`Invoice #${sale.id}`} actions={<button className="btn secondary" onClick={()=>window.print()}>Print</button>}>
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16}}>
           <div>
-            <div className="text-xl font-bold">{company?.company_name || 'Company'}</div>
+            <div style={{display:'flex', alignItems:'center', gap:12}}>
+              {company?.logo_url && (
+                <img src={company.logo_url} alt="Company Logo" width={48} height={48} style={{borderRadius:8, border:'1px solid #243040'}} />
+              )}
+              <div className="text-xl font-bold">{company?.company_name || 'Company'}</div>
+            </div>
             <div style={{whiteSpace:'pre-line'}}>{company?.address || ''}</div>
             <div>GSTIN: {company?.gstin || '-'}</div>
             <div>Phone: {company?.phone || '-'}</div>
