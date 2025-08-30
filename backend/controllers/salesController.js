@@ -11,7 +11,7 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash' } = req.body;
+    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash', route_trip_id } = req.body;
     // Credit limit validation
     if (sale_type === 'Credit' && customer_id) {
       const limRes = await pool.query('SELECT COALESCE(credit_limit,0) AS credit_limit FROM customers WHERE id=$1', [customer_id]);
@@ -34,8 +34,8 @@ exports.createSale = async (req, res) => {
     }
     const pn = product_name || egg_type || null;
     const result = await pool.query(
-      'INSERT INTO sales (customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [customer_id, total, egg_type || null, pn, payment_method || null, status, discount, sale_type]
+      'INSERT INTO sales (customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type, route_trip_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      [customer_id, total, egg_type || null, pn, payment_method || null, status, discount, sale_type, route_trip_id || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -46,11 +46,11 @@ exports.createSale = async (req, res) => {
 exports.updateSale = async (req, res) => {
   try {
     const { id } = req.params;
-    const { customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type } = req.body;
+    const { customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type, route_trip_id } = req.body;
     const pn = product_name || egg_type || null;
     const result = await pool.query(
-      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type), product_name=COALESCE($4, product_name), payment_method=COALESCE($5,payment_method), status=COALESCE($6,status), discount=COALESCE($7,discount), sale_type=COALESCE($8, sale_type) WHERE id=$9 RETURNING *',
-      [customer_id ?? null, total ?? null, egg_type ?? null, pn ?? null, payment_method ?? null, status ?? null, discount ?? null, sale_type ?? null, id]
+      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type), product_name=COALESCE($4, product_name), payment_method=COALESCE($5,payment_method), status=COALESCE($6,status), discount=COALESCE($7,discount), sale_type=COALESCE($8, sale_type), route_trip_id=COALESCE($9, route_trip_id) WHERE id=$10 RETURNING *',
+      [customer_id ?? null, total ?? null, egg_type ?? null, pn ?? null, payment_method ?? null, status ?? null, discount ?? null, sale_type ?? null, route_trip_id ?? null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
