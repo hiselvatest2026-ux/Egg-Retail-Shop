@@ -106,44 +106,44 @@ exports.stockCsv = async (req, res) => {
         SELECT id AS product_id, name FROM products
       ),
       opening_purchases AS (
-        SELECT product_id, SUM(quantity) AS qty
+        SELECT pi.product_id, SUM(pi.quantity) AS qty
         FROM purchase_items pi
         JOIN purchases p ON p.id = pi.purchase_id
         WHERE p.purchase_date < ${startExpr}
-        GROUP BY product_id
+        GROUP BY pi.product_id
       ),
       opening_sales AS (
-        SELECT product_id, SUM(quantity) AS qty
+        SELECT si.product_id, SUM(si.quantity) AS qty
         FROM sale_items si
         JOIN sales s ON s.id = si.sale_id
         WHERE s.sale_date < ${startExpr}
-        GROUP BY product_id
+        GROUP BY si.product_id
       ),
       opening_adj AS (
-        SELECT product_id, SUM(quantity) AS qty
+        SELECT a.product_id, SUM(a.quantity) AS qty
         FROM stock_adjustments a
         WHERE a.created_at < ${startExpr}
-        GROUP BY product_id
+        GROUP BY a.product_id
       ),
       period_purchases AS (
-        SELECT product_id, SUM(quantity) AS qty
+        SELECT pi.product_id, SUM(pi.quantity) AS qty
         FROM purchase_items pi
         JOIN purchases p ON p.id = pi.purchase_id
         WHERE p.purchase_date >= ${startExpr} AND p.purchase_date <= ${endExpr}
-        GROUP BY product_id
+        GROUP BY pi.product_id
       ),
       period_sales AS (
-        SELECT product_id, SUM(quantity) AS qty
+        SELECT si.product_id, SUM(si.quantity) AS qty
         FROM sale_items si
         JOIN sales s ON s.id = si.sale_id
         WHERE s.sale_date >= ${startExpr} AND s.sale_date <= ${endExpr}
-        GROUP BY product_id
+        GROUP BY si.product_id
       ),
       period_adj AS (
-        SELECT product_id, SUM(quantity) AS qty
+        SELECT a.product_id, SUM(a.quantity) AS qty
         FROM stock_adjustments a
         WHERE a.created_at >= ${startExpr} AND a.created_at <= ${endExpr}
-        GROUP BY product_id
+        GROUP BY a.product_id
       )
       SELECT 
         coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id) AS product_id,
