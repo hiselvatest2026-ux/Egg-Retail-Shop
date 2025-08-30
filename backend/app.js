@@ -26,7 +26,14 @@ const seedDefaults = require('./db/seedDefaults');
 app.use(cors());
 app.use(express.json());
 
-ensureSchema().then(()=>seedDefaults()).catch(()=>{});
+ensureSchema()
+  .then(()=>{
+    if (process.env.SEED_ON_BOOT === 'true') {
+      return seedDefaults();
+    }
+    return Promise.resolve();
+  })
+  .catch(()=>{});
 app.use('/purchases', purchaseRoutes);
 app.use('/sales', salesRoutes);
 app.use('/payments', paymentRoutes);
