@@ -27,6 +27,10 @@ async function seedDefaults() {
   try {
     await pool.query(`INSERT INTO route_trips (route_id, service_date, route_name, vehicle_number, status) VALUES (1, CURRENT_DATE, 'North Zone', 'TN-01-AB-1234', 'Planned')`);
   } catch (e) {}
+
+  // Settings and HSN/SAC
+  try { await pool.query(`INSERT INTO settings (company_name, gstin, address, phone, email, logo_url) VALUES ('Egg Retail Shop','33ABCDE1234F1Z5','123 Market Road, Chennai-600001','+91-90000 00000','info@eggretail.test','')`); } catch (e) {}
+  try { await pool.query(`UPDATE metal_master SET hsn_sac = CASE WHEN metal_type='Egg' THEN '0407' WHEN metal_type='Panner' THEN '0406' ELSE hsn_sac END`); } catch (e) {}
 }
 
 module.exports = seedDefaults;

@@ -128,6 +128,16 @@ async function ensureSchema() {
       created_at TIMESTAMP DEFAULT NOW()
     );`
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS route_trip_id INT REFERENCES route_trips(id);"
+    ,`CREATE TABLE IF NOT EXISTS settings (
+      id SERIAL PRIMARY KEY,
+      company_name VARCHAR(150),
+      gstin VARCHAR(20),
+      address TEXT,
+      phone VARCHAR(20),
+      email VARCHAR(100),
+      logo_url TEXT
+    );`
+    ,"ALTER TABLE IF EXISTS metal_master ADD COLUMN IF NOT EXISTS hsn_sac VARCHAR(10);"
   ];
   for (const sql of alters) {
     try {

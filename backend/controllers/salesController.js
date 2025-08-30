@@ -136,9 +136,13 @@ exports.getSaleInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const saleResult = await pool.query(
-      `SELECT s.*, c.name AS customer_name, c.tax_applicability
+      `SELECT s.*, c.name AS customer_name, c.tax_applicability, c.phone AS customer_phone, c.gstin AS customer_gstin,
+              COALESCE(c.customer_code, 'C' || LPAD(CAST(c.id AS TEXT), 6, '0')) AS customer_code,
+              COALESCE(c.contact_info, '') AS customer_address,
+              rt.route_name AS route_name, rt.vehicle_number AS route_vehicle
        FROM sales s
        LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN route_trips rt ON rt.id = s.route_trip_id
        WHERE s.id=$1`,
       [id]
     );
@@ -146,14 +150,27 @@ exports.getSaleInvoice = async (req, res) => {
     const sale = saleResult.rows[0];
 
     const itemsResult = await pool.query(
-      `SELECT si.id,
+      `WITH mm_guess AS (
+         SELECT p.id AS product_id,
+                CASE
+                  WHEN LOWER(p.name) LIKE 'egg%' THEN 'M00001'
+                  WHEN LOWER(p.name) LIKE 'panner%' OR LOWER(p.name) LIKE 'paneer%' THEN 'M00002'
+                  ELSE NULL
+                END AS part_code
+         FROM products p
+       )
+       SELECT si.id,
               si.product_id,
               COALESCE(p.name, 'Product #' || si.product_id) AS product_name,
               si.quantity,
               si.price,
-              (si.quantity * si.price) AS line_total
+              (si.quantity * si.price) AS line_total,
+              mm.hsn_sac,
+              mm.gst_percent
        FROM sale_items si
        LEFT JOIN products p ON p.id = si.product_id
+       LEFT JOIN mm_guess g ON g.product_id = si.product_id
+       LEFT JOIN metal_master mm ON mm.part_code = g.part_code
        WHERE si.sale_id = $1
        ORDER BY si.id ASC`,
       [id]
@@ -167,7 +184,40 @@ exports.getSaleInvoice = async (req, res) => {
     const items = itemsResult.rows;
     const total = (items && items.length > 0) ? computedTotal : (sale.total ?? 0);
 
-    res.json({ sale, items, total });
+    // Company settings
+    const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id ASC LIMIT 1');
+    const company = settingsRes.rows[0] || { company_name: 'Egg Retail Shop' };
+
+    // Payments summary
+    const payRes = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);
+    const paid = Number(payRes.rows[0]?.paid || 0);
+    const balance = Number(total) - paid;
+
+    // Tax breakdown per item (assume intra-state split when taxable)
+    const isTaxable = sale.tax_applicability === 'Taxable';
+    let subtotal = 0, cgst_total = 0, sgst_total = 0, igst_total = 0;
+    const enrichedItems = items.map(it => {
+      const lineTotal = Number(it.line_total || 0);
+      const gstPercent = isTaxable ? Number(it.gst_percent || 0) : 0;
+      let taxableValue = lineTotal;
+      let taxAmt = 0, cgst = 0, sgst = 0, igst = 0;
+      if (isTaxable && gstPercent > 0) {
+        taxableValue = Number((lineTotal / (1 + (gstPercent/100))).toFixed(2));
+        taxAmt = Number((lineTotal - taxableValue).toFixed(2));
+        cgst = Number((taxAmt / 2).toFixed(2));
+        sgst = Number((taxAmt / 2).toFixed(2));
+      }
+      subtotal += taxableValue;
+      cgst_total += cgst;
+      sgst_total += sgst;
+      igst_total += igst;
+      return { ...it, taxable_value: taxableValue, cgst, sgst, igst };
+    });
+
+    const grand_total = subtotal + cgst_total + sgst_total + igst_total;
+    const round_off = Number((total - grand_total).toFixed(2));
+
+    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance } });
   } catch (err) {
     res.status(500).send(err.message);
   }
