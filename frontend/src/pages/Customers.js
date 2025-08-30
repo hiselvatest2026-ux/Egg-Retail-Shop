@@ -4,7 +4,7 @@ import Card from '../components/Card';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
-  const [form, setForm] = useState({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable' , contact_info: ''});
+  const [form, setForm] = useState({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable' , contact_info: '', credit_limit: ''});
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -28,7 +28,7 @@ const Customers = () => {
         console.log('Create result:', result);
         setSuccess('Customer added.');
       }
-      setForm({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable', contact_info: '' });
+      setForm({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable', contact_info: '', credit_limit: '' });
       setEditing(null);
       await fetchCustomers();
     } catch (e) {
@@ -37,7 +37,7 @@ const Customers = () => {
     }
   };
 
-  const startEdit = (c) => { setEditing(c.id); setForm({ name: c.name || '', phone: c.phone || '', category: c.category || 'Retail', gstin: c.gstin || '', tax_applicability: c.tax_applicability || 'Taxable', contact_info: c.contact_info || '' }); };
+  const startEdit = (c) => { setEditing(c.id); setForm({ name: c.name || '', phone: c.phone || '', category: c.category || 'Retail', gstin: c.gstin || '', tax_applicability: c.tax_applicability || 'Taxable', contact_info: c.contact_info || '', credit_limit: c.credit_limit || '' }); };
 
   return (
     <div className="page">
@@ -80,9 +80,13 @@ const Customers = () => {
           <label>Contact</label>
           <input className="input" value={form.contact_info} onChange={e=>setForm({...form, contact_info: e.target.value})} />
         </div>
+        <div className="input-group">
+          <label>Credit Limit</label>
+          <input className="input" value={form.credit_limit} onChange={e=>setForm({...form, credit_limit: e.target.value})} inputMode="decimal" />
+        </div>
         <div className="actions-row">
           <button className="btn" type="submit" onClick={() => console.log('Button clicked!')}>{editing ? 'Update' : 'Add'}</button>
-          {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'' }); }}>Cancel</button>}
+          {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'', credit_limit:'' }); }}>Cancel</button>}
         </div>
         {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
         {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
@@ -91,14 +95,16 @@ const Customers = () => {
 
       <Card title="Customers List">
       <table className="table table-hover mt-2">
-        <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Category</th><th>GSTIN</th><th>Tax Applicability</th><th>Contact</th><th>Actions</th></tr></thead>
+        <thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Phone</th><th>Category</th><th>Credit Limit</th><th>GSTIN</th><th>Tax Applicability</th><th>Contact</th><th>Actions</th></tr></thead>
         <tbody>
           {customers.map(c => (
             <tr key={c.id}>
               <td>{c.id}</td>
+              <td>{c.customer_code || ('C' + String(c.id).padStart(6,'0'))}</td>
               <td>{c.name}</td>
               <td>{c.phone || '-'}</td>
               <td>{c.category || '-'}</td>
+              <td>₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
               <td>{c.gstin || '-'}</td>
               <td>{c.tax_applicability || '-'}</td>
               <td>{c.contact_info || '-'}</td>
