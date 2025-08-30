@@ -16,12 +16,16 @@ exports.getInsights = async (req, res) => {
       ),
       adjustments AS (
         SELECT product_id, SUM(quantity) AS qty FROM stock_adjustments WHERE adjustment_type IN ('Missing','Wastage','Breakage') GROUP BY product_id
+      ),
+      opening AS (
+        SELECT product_id, quantity FROM opening_stocks
       )
-      SELECT p.id, p.name, p.price, COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.qty,0) AS stock
+      SELECT p.id, p.name, p.price, COALESCE(op.quantity,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.qty,0) AS stock
       FROM products p
       LEFT JOIN purchase_qty pq ON pq.product_id = p.id
       LEFT JOIN sales_qty sq ON sq.product_id = p.id
       LEFT JOIN adjustments adj ON adj.product_id = p.id
+      LEFT JOIN opening op ON op.product_id = p.id
     `, params);
     const stockRows = stockRes.rows.map(r => ({ id:r.id, name:r.name, price:Number(r.price||0), stock:Number(r.stock||0), value: Number(r.price||0)*Number(r.stock||0) }));
 

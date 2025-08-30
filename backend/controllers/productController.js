@@ -65,6 +65,9 @@ exports.getStock = async (req, res) => {
         FROM stock_adjustments
         GROUP BY product_id
       ),
+      opening AS (
+        SELECT product_id, quantity FROM opening_stocks
+      ),
       all_ids AS (
         SELECT id AS product_id FROM products
         UNION
@@ -76,12 +79,13 @@ exports.getStock = async (req, res) => {
              COALESCE(p.name, 'Product #' || a.product_id) AS name,
              COALESCE(pq.qty, 0) AS purchased_qty,
              COALESCE(sq.qty, 0) AS sold_qty,
-             COALESCE(pq.qty, 0) - COALESCE(sq.qty, 0) - COALESCE(adj.deducted,0) AS stock
+             COALESCE(op.quantity,0) + COALESCE(pq.qty, 0) - COALESCE(sq.qty, 0) - COALESCE(adj.deducted,0) AS stock
       FROM all_ids a
       LEFT JOIN products p ON p.id = a.product_id
       LEFT JOIN purchase_qty pq ON pq.product_id = a.product_id
       LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
       LEFT JOIN adjustments adj ON adj.product_id = a.product_id
+      LEFT JOIN opening op ON op.product_id = a.product_id
       ORDER BY name ASC
     `, params);
     res.json(result.rows.map(r => ({

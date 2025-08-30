@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import { getStock, getInventoryInsightsByLocation, getLocations, runSeed } from '../api/api';
+import axios from 'axios';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
@@ -8,6 +9,8 @@ const InventoryManagement = () => {
   const [insights, setInsights] = useState({ kpis:{ total_stock_value:0, low_stock_count:0 }, low_stock:[], fast_movers:[], slow_movers:[], reorder_suggestions:[] });
   const [locations, setLocations] = useState([]);
   const [locationId, setLocationId] = useState('');
+  const [tab, setTab] = useState('overview'); // overview | opening
+  const [opening, setOpening] = useState([]);
   const load = async (loc) => {
     try {
       const params = loc ? { location_id: loc } : undefined;
@@ -20,7 +23,9 @@ const InventoryManagement = () => {
       setInsights(i.data||insights);
     } catch (e) { console.error('load stock failed', e); }
   };
-  useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId]);
+  const loadOpening = async () => {
+    try { const r = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/inventory/opening-stocks`); setOpening(r.data||[]);} catch(e){ console.error('load opening failed', e);} }
+  useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
 
   const totalSkus = rows.length;
   const totalStock = rows.reduce((s,r)=>s+Number(r.stock||0),0);
@@ -33,6 +38,13 @@ const InventoryManagement = () => {
         </div>
       </div>
 
+      <div className="actions-row" style={{marginBottom:12}}>
+        <button className={`btn ${tab==='overview'?'':'secondary'}`} onClick={()=>setTab('overview')}>Overview</button>
+        <button className={`btn ${tab==='opening'?'':'secondary'}`} onClick={()=>setTab('opening')}>Opening Stock</button>
+      </div>
+
+      {tab==='overview' && (
+      <>
       <Card title="Stock Overview">
         <div className="actions-row" style={{marginBottom:12}}>
           <select className="input" style={{maxWidth:260}} value={locationId} onChange={e=>setLocationId(e.target.value)}>
@@ -114,6 +126,30 @@ const InventoryManagement = () => {
           </tbody>
         </table>
       </Card>
+      </>
+      )}
+
+      {tab==='opening' && (
+      <Card title="Opening Stock">
+        <div className="form-grid" style={{gridTemplateColumns:'repeat(3, minmax(0,1fr))'}}>
+          {opening.map(item => (
+            <div key={item.product_id} className="input-group">
+              <label>{item.name} (#{item.product_id})</label>
+              <input className="input" value={item.quantity} onChange={e=>{
+                const v = e.target.value; setOpening(prev=>prev.map(x=>x.product_id===item.product_id?{...x, quantity:v}:x));
+              }} inputMode="numeric" />
+            </div>
+          ))}
+        </div>
+        <div className="actions-row">
+          <button className="btn" onClick={async()=>{
+            try { await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/inventory/opening-stocks`, { items: opening.map(o=>({ product_id:o.product_id, quantity: Number(o.quantity||0) })) }); await load(locationId); }
+            catch(e){ console.error('save opening failed', e); }
+          }}>Save Opening Stock</button>
+          <button className="btn secondary" onClick={loadOpening}>Refresh</button>
+        </div>
+      </Card>
+      )}
     </div>
   );
 };

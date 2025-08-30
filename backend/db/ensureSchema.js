@@ -92,6 +92,12 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS product_name VARCHAR(100);"
     ,"UPDATE metal_master SET part_code = 'M' || RIGHT(part_code, 5) WHERE part_code LIKE 'MCode%';"
     ,"UPDATE pricing_master SET material_code = 'M' || RIGHT(material_code, 5) WHERE material_code LIKE 'MCode%';"
+    ,`CREATE TABLE IF NOT EXISTS opening_stocks (
+      id SERIAL PRIMARY KEY,
+      product_id INT REFERENCES products(id) UNIQUE,
+      quantity INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP DEFAULT NOW()
+    );`
   ];
   for (const sql of alters) {
     try {
