@@ -12,7 +12,7 @@ exports.createMetal = async (req, res) => {
     // Generate Material Code like MCode00001 based on next id
     const nextRes = await pool.query('SELECT COALESCE(MAX(id),0)+1 AS next_id FROM metal_master');
     const nextId = Number(nextRes.rows[0]?.next_id || 1);
-    const part_code = `MCode${String(nextId).padStart(5, '0')}`;
+    const part_code = `M${String(nextId).padStart(5, '0')}`;
     const r = await pool.query('INSERT INTO metal_master (part_code, metal_type, gst_percent, description) VALUES ($1,$2,$3,$4) RETURNING *', [part_code, metal_type, gst_percent, description || null]);
     res.status(201).json(r.rows[0]);
   } catch (e) { res.status(500).send(e.message); }

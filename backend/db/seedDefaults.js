@@ -44,8 +44,8 @@ async function seedDefaults() {
     const mm = await pool.query('SELECT id FROM metal_master LIMIT 1');
     if (mm.rows.length === 0) {
       await pool.query(`INSERT INTO metal_master (part_code, metal_type, gst_percent, description) VALUES 
-        ('MCode00001','Egg',0,'Egg products'),
-        ('MCode00002','Panner',5,'Panner products')`);
+        ('M00001','Egg',0,'Egg products'),
+        ('M00002','Panner',5,'Panner products')`);
       console.log('Seeded material (metal) master');
     }
   } catch (e) {
@@ -56,10 +56,10 @@ async function seedDefaults() {
     const pm = await pool.query('SELECT id FROM pricing_master LIMIT 1');
     if (pm.rows.length === 0) {
       await pool.query(`INSERT INTO pricing_master (customer_id, category, material_code, base_price, gst_percent) VALUES 
-        (1, 'Retail', 'MCode00001', 6.00, 0),
-        (1, 'Retail', 'MCode00002', 200.00, 5),
-        (2, 'Retail', 'MCode00001', 5.75, 0),
-        (2, 'Retail', 'MCode00002', 195.00, 5)`);
+        (1, 'Retail', 'M00001', 6.00, 0),
+        (1, 'Retail', 'M00002', 200.00, 5),
+        (2, 'Retail', 'M00001', 5.75, 0),
+        (2, 'Retail', 'M00002', 195.00, 5)`);
       console.log('Seeded pricing master');
     }
   } catch (e) {

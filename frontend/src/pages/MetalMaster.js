@@ -50,7 +50,7 @@ const MetalMaster = () => {
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
           <div className="input-group">
             <label>Material Code</label>
-            <input className="input" value={form.part_code} disabled readOnly placeholder="Auto-generated (MCodexxxxx)" />
+            <input className="input" value={form.part_code} disabled readOnly placeholder="Auto-generated (Mxxxxx)" />
           </div>
           <div className="input-group">
             <label>Material Type</label>
