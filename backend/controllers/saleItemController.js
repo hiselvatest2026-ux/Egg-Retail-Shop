@@ -19,8 +19,11 @@ async function getAvailableStock(productId) {
     ),
     adjustments AS (
       SELECT COALESCE(SUM(quantity),0) AS qty FROM stock_adjustments WHERE product_id=$1 AND adjustment_type IN ('Missing','Wastage','Breakage')
+    ),
+    opening AS (
+      SELECT COALESCE(quantity,0) AS qty FROM opening_stocks WHERE product_id=$1
     )
-    SELECT (SELECT qty FROM purchase_qty) - (SELECT qty FROM sales_qty) - (SELECT qty FROM adjustments) AS available
+    SELECT (COALESCE((SELECT qty FROM opening),0) + (SELECT qty FROM purchase_qty) - (SELECT qty FROM sales_qty) - (SELECT qty FROM adjustments)) AS available
   `, [productId]);
   return Number(res.rows[0]?.available || 0);
 }

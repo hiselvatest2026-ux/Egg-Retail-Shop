@@ -140,7 +140,7 @@ const InventoryManagement = () => {
 
       {tab==='opening' && (
       <>
-      <Card title="Opening Stock">
+      <Card title="Opening Stock (Product)">
         <table className="table table-hover">
           <thead><tr><th>Material Code</th><th>Material Type</th><th>Quantity</th></tr></thead>
           <tbody>
@@ -161,7 +161,7 @@ const InventoryManagement = () => {
           <button className="btn" onClick={async()=>{
             try { await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items: openingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
             catch(e){ console.error('save opening materials failed', e); }
-          }}>Save Opening Stock</button>
+          }}>Save Product Opening</button>
           <button className="btn secondary" onClick={loadOpening}>Refresh</button>
         </div>
       </Card>
