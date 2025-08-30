@@ -98,3 +98,45 @@ exports.getStock = async (req, res) => {
   } catch (err) { res.status(500).send(err.message); }
 };
 
+exports.getAvailable = async (req, res) => {
+  try {
+    const { product_id } = req.query;
+    const params = [];
+    const filter = product_id ? 'WHERE a.product_id = $1' : '';
+    if (product_id) params.push(product_id);
+    const result = await pool.query(`
+      WITH purchase_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items GROUP BY product_id
+      ),
+      sales_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM sale_items GROUP BY product_id
+      ),
+      adjustments AS (
+        SELECT product_id,
+               SUM(CASE WHEN adjustment_type IN ('Missing','Wastage','Breakage') THEN quantity ELSE 0 END) AS deducted
+        FROM stock_adjustments
+        GROUP BY product_id
+      ),
+      opening AS (
+        SELECT product_id, quantity FROM opening_stocks
+      ),
+      all_ids AS (
+        SELECT id AS product_id FROM products
+        UNION
+        SELECT product_id FROM purchase_items
+        UNION
+        SELECT product_id FROM sale_items
+      )
+      SELECT COALESCE(SUM(COALESCE(op.quantity,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.deducted,0)),0) AS available
+      FROM all_ids a
+      LEFT JOIN purchase_qty pq ON pq.product_id = a.product_id
+      LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
+      LEFT JOIN adjustments adj ON adj.product_id = a.product_id
+      LEFT JOIN opening op ON op.product_id = a.product_id
+      ${filter}
+    `, params);
+    const available = Number(result.rows[0]?.available || 0);
+    res.json({ available });
+  } catch (err) { res.status(500).send(err.message); }
+};
+

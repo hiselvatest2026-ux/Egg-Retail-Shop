@@ -35,6 +35,7 @@ export const getPaymentsFiltered = (params) => axios.get(`${API_URL}/payments`, 
 // Products APIs
 export const getProducts = () => axios.get(`${API_URL}/products`);
 export const getStock = (params) => axios.get(`${API_URL}/products/stock`, { params });
+export const getAvailable = (params) => axios.get(`${API_URL}/products/available`, { params });
 export const getInventoryInsights = () => axios.get(`${API_URL}/inventory/insights`);
 export const getInventoryInsightsByLocation = (params) => axios.get(`${API_URL}/inventory/insights`, { params });
 export const getLocations = () => axios.get(`${API_URL}/locations`);
