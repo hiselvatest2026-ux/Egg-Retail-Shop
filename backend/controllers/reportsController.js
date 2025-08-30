@@ -18,11 +18,21 @@ function sendCsv(res, filename, headers, rows) {
 exports.purchasesCsv = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT p.id, p.vendor_id, p.product_name, p.price_per_unit, p.quantity, p.gst_percent, p.total, p.purchase_date
+      `SELECT p.id,
+              p.purchase_date,
+              p.vendor_id,
+              v.vendor_code,
+              v.name AS vendor_name,
+              p.product_name,
+              p.price_per_unit,
+              p.quantity,
+              p.gst_percent,
+              p.total
        FROM purchases p
-       ORDER BY p.id DESC`
+       LEFT JOIN vendors v ON v.id = p.vendor_id
+       ORDER BY p.purchase_date DESC, p.id DESC`
     );
-    const headers = ['id','vendor_id','product_name','price_per_unit','quantity','gst_percent','total','purchase_date'];
+    const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','product_name','price_per_unit','quantity','gst_percent','total'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
@@ -30,11 +40,31 @@ exports.purchasesCsv = async (req, res) => {
 exports.salesCsv = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT s.id, s.customer_id, COALESCE(s.product_name, s.egg_type) AS product_name, s.total, s.sale_date
+      `WITH paid AS (
+         SELECT invoice_id, SUM(amount) AS paid
+         FROM payments
+         GROUP BY invoice_id
+       )
+       SELECT s.id,
+              s.sale_date,
+              s.customer_id,
+              c.name AS customer_name,
+              COALESCE(s.product_name, s.egg_type) AS product_name,
+              COALESCE(s.category, 'Retail') AS category,
+              COALESCE(s.sale_type, 'Cash') AS sale_type,
+              s.payment_method,
+              s.total,
+              COALESCE(p.paid,0) AS paid,
+              (COALESCE(s.total,0) - COALESCE(p.paid,0)) AS balance,
+              rt.route_name,
+              rt.vehicle_number
        FROM sales s
-       ORDER BY s.id DESC`
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN paid p ON p.invoice_id = s.id
+       LEFT JOIN route_trips rt ON rt.id = s.route_trip_id
+       ORDER BY s.sale_date DESC, s.id DESC`
     );
-    const headers = ['id','customer_id','product_name','total','sale_date'];
+    const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','total','paid','balance','route_name','vehicle_number'];
     sendCsv(res, 'sales.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
@@ -42,11 +72,20 @@ exports.salesCsv = async (req, res) => {
 exports.collectionsCsv = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT p.id, p.customer_id, p.invoice_id, p.amount, p.payment_mode, p.payment_date
+      `SELECT p.id,
+              p.payment_date,
+              p.customer_id,
+              c.name AS customer_name,
+              p.invoice_id,
+              s.total AS invoice_total,
+              p.amount,
+              p.payment_mode
        FROM payments p
-       ORDER BY p.id DESC`
+       LEFT JOIN customers c ON c.id = p.customer_id
+       LEFT JOIN sales s ON s.id = p.invoice_id
+       ORDER BY p.payment_date DESC, p.id DESC`
     );
-    const headers = ['id','customer_id','invoice_id','amount','payment_mode','payment_date'];
+    const headers = ['id','payment_date','customer_id','customer_name','invoice_id','invoice_total','amount','payment_mode'];
     sendCsv(res, 'collections.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
