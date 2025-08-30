@@ -12,6 +12,26 @@ exports.getSales = async (req, res) => {
 exports.createSale = async (req, res) => {
   try {
     const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash' } = req.body;
+    // Credit limit validation
+    if (sale_type === 'Credit' && customer_id) {
+      const limRes = await pool.query('SELECT COALESCE(credit_limit,0) AS credit_limit FROM customers WHERE id=$1', [customer_id]);
+      const creditLimit = Number(limRes.rows[0]?.credit_limit || 0);
+      if (creditLimit > 0) {
+        const dueRes = await pool.query(`
+          WITH pay AS (
+            SELECT invoice_id, SUM(amount) AS paid FROM payments GROUP BY invoice_id
+          )
+          SELECT COALESCE(SUM(COALESCE(s.total,0) - COALESCE(p.paid,0)),0) AS outstanding
+          FROM sales s LEFT JOIN pay p ON p.invoice_id = s.id
+          WHERE s.customer_id=$1
+        `, [customer_id]);
+        const currentOutstanding = Number(dueRes.rows[0]?.outstanding || 0);
+        const newOutstanding = currentOutstanding + Number(total || 0);
+        if (newOutstanding > creditLimit) {
+          return res.status(400).json({ message: 'Credit limit exceeded' });
+        }
+      }
+    }
     const pn = product_name || egg_type || null;
     const result = await pool.query(
       'INSERT INTO sales (customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',

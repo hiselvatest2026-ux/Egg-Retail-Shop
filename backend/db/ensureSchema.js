@@ -32,6 +32,10 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS category VARCHAR(20);"
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS gstin VARCHAR(20);"
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS tax_applicability VARCHAR(20);"
+    ,"CREATE SEQUENCE IF NOT EXISTS customer_code_seq START 1;"
+    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS customer_code VARCHAR(20);"
+    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS credit_limit NUMERIC(10,2) DEFAULT 0;"
+    ,"UPDATE customers SET customer_code = COALESCE(customer_code, 'C' || LPAD(CAST(id AS TEXT), 6, '0')) WHERE customer_code IS NULL;"
     ,`CREATE TABLE IF NOT EXISTS purchase_orders (
       id SERIAL PRIMARY KEY,
       supplier_id INT REFERENCES suppliers(id),

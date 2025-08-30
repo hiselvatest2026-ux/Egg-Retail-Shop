@@ -244,6 +244,7 @@ const Sales = () => {
             </div>
           )}
 
+          {form.sale_type === 'Cash' && (
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label style={{display:'flex', alignItems:'center', gap:8}}>
               <input type="checkbox" checked={recordPaymentNow} onChange={e=>{
@@ -253,7 +254,8 @@ const Sales = () => {
               }} /> Record payment now
             </label>
           </div>
-          {recordPaymentNow && (
+          )}
+          {form.sale_type === 'Cash' && recordPaymentNow && (
             <>
               <div className="input-group">
                 <label>Amount Received</label>

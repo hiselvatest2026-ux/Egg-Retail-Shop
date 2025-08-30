@@ -44,11 +44,13 @@ const CreditManagement = () => {
 
       <Card title="Outstanding by Customer">
         <table className="table table-hover">
-          <thead><tr><th>Customer</th><th>Total Due</th><th>Overdue >30d</th></tr></thead>
+          <thead><tr><th>Customer Code</th><th>Customer</th><th>Credit Limit</th><th>Total Due</th><th>Overdue >30d</th></tr></thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.customer_id}>
+                <td>{r.customer_code}</td>
                 <td>{r.customer_name} (#{r.customer_id})</td>
+                <td>₹ {Number(r.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                 <td>₹ {Number(r.total_due||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                 <td>₹ {Number(r.overdue_30||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
               </tr>
