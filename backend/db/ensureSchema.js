@@ -95,6 +95,7 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2);"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS product_name VARCHAR(100);"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'Cash';"
+    ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS category VARCHAR(20);"
     ,"UPDATE metal_master SET part_code = 'M' || RIGHT(part_code, 5) WHERE part_code LIKE 'MCode%';"
     ,"UPDATE pricing_master SET material_code = 'M' || RIGHT(material_code, 5) WHERE material_code LIKE 'MCode%';"
     ,`CREATE TABLE IF NOT EXISTS opening_stocks (
