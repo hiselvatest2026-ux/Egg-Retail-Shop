@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
+  const [trips, setTrips] = useState([]);
+  const [newTrip, setNewTrip] = useState({ route_name: '', vehicle_number: '', service_date: () => new Date().toISOString().slice(0,10) });
   const [available, setAvailable] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -59,6 +61,9 @@ const Sales = () => {
         (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
         setPaymentsByInvoice(map);
         setPaymentsList(pays.data||[]);
+        const today = new Date().toISOString().slice(0,10);
+        const tr = await getRouteTrips({ date: today });
+        setTrips(tr.data||[]);
       } catch(e){ 
         console.error('data load failed', e);
       } 
@@ -95,7 +100,7 @@ const Sales = () => {
       }
     } catch(_){}
     try {
-      const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type };
+      const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null };
       if (editing) { 
         await updateSale(editing, payload); 
       } else { 
@@ -184,6 +189,15 @@ const Sales = () => {
               <option value="">Select product</option>
               {materials.map(m => (
                 <option key={m.id} value={m.metal_type}>{m.metal_type}</option>
+              ))}
+            </select>
+          </div>
+          <div className="input-group">
+            <label>Route (Today)</label>
+            <select className="input" value={form.route_trip_id} onChange={e=>setForm({...form, route_trip_id: e.target.value})}>
+              <option value="">No Route</option>
+              {trips.map(t => (
+                <option key={t.id} value={t.id}>{t.route_name || t.master_route_name || 'Route'} - {t.vehicle_number || '-'} ({new Date(t.service_date).toLocaleDateString()})</option>
               ))}
             </select>
           </div>

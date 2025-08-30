@@ -132,6 +132,9 @@ export const getCreditCollection = (params) => axios.get(`${API_URL}/collection-
 export const getRouteCollection = (params) => axios.get(`${API_URL}/collection-api/routes`, { params });
 export const getWalkinCollection = (params) => axios.get(`${API_URL}/collection-api/walkin`, { params });
 export const getTotalCollection = (params) => axios.get(`${API_URL}/collection-api/total`, { params });
+// Routes and Route Trips
+export const getRouteTrips = (params) => axios.get(`${API_URL}/route-trips`, { params });
+export const createRouteTrip = (data) => axios.post(`${API_URL}/route-trips`, data);
 
 // Sale Items
 export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);
