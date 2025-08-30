@@ -19,6 +19,14 @@ async function seedDefaults() {
   try { const s1 = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (1,120.00,'Egg','Cash','Completed',0,'Cash') RETURNING id`); await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,20,6.00)`, [s1.rows[0].id]); const s2 = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (3,399.00,'Panner','Gpay','Completed',0,'Credit') RETURNING id`); await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,2,2,199.50)`, [s2.rows[0].id]); } catch (e) {}
   try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (1,1,60.00,'Cash')`); } catch (e) {}
   try { await pool.query(`INSERT INTO stock_adjustments (product_id, adjustment_type, quantity, note) VALUES (1,'Breakage',2,'Damaged crate')`); } catch (e) {}
+
+  // Routes and today's trip
+  try {
+    await pool.query(`INSERT INTO routes (route_number, route_name, vehicle_number, active) VALUES ('R001','North Zone','TN-01-AB-1234', true)`);
+  } catch (e) {}
+  try {
+    await pool.query(`INSERT INTO route_trips (route_id, service_date, route_name, vehicle_number, status) VALUES (1, CURRENT_DATE, 'North Zone', 'TN-01-AB-1234', 'Planned')`);
+  } catch (e) {}
 }
 
 module.exports = seedDefaults;
