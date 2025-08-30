@@ -12,6 +12,7 @@ const InventoryManagement = () => {
   const [tab, setTab] = useState('overview'); // overview | opening
   const [opening, setOpening] = useState([]);
   const [openingMaterials, setOpeningMaterials] = useState([]);
+  const [saveMsg, setSaveMsg] = useState('');
   const load = async (loc) => {
     try {
       const params = loc ? { location_id: loc } : undefined;
@@ -161,9 +162,11 @@ const InventoryManagement = () => {
           <button className="btn" onClick={async()=>{
             try { await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items: openingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
             catch(e){ console.error('save opening materials failed', e); }
+          setSaveMsg('Opening stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
           }}>Save Product Opening</button>
           <button className="btn secondary" onClick={loadOpening}>Refresh</button>
         </div>
+        {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
       </Card>
       </>
       )}
