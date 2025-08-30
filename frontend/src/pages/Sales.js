@@ -174,14 +174,25 @@ const Sales = () => {
         </div>
       </div>
 
-      <div style={{display:'flex', gap:12, marginBottom:12}}>
-        <button className={`btn ${activeTab==='sales'?'':'secondary'}`} onClick={()=>setActiveTab('sales')}>Sales</button>
-        
-      </div>
-
-      {activeTab === 'sales' && (
+      
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
+          <div className="input-group">
+            <label>Product Name</label>
+            <select className="input" value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
+              <option value="">Select product</option>
+              {materials.map(m => (
+                <option key={m.id} value={m.metal_type}>{m.metal_type}</option>
+              ))}
+            </select>
+          </div>
+          <div className="input-group">
+            <label>Sales Type</label>
+            <select className="input" value={form.sale_type} onChange={e=>setForm({...form, sale_type:e.target.value})}>
+              <option value="Cash">Cash</option>
+              <option value="Credit">Credit</option>
+            </select>
+          </div>
           <div className="input-group">
             <label>Customer</label>
             <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
@@ -213,22 +224,6 @@ const Sales = () => {
           <div className="input-group">
             <label>Total Amount</label>
             <input className="input" value={form.total} readOnly />
-          </div>
-          <div className="input-group">
-            <label>Product Name</label>
-            <select className="input" value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
-              <option value="">Select product</option>
-              {materials.map(m => (
-                <option key={m.id} value={m.metal_type}>{m.metal_type}</option>
-              ))}
-            </select>
-          </div>
-          <div className="input-group">
-            <label>Sales Type</label>
-            <select className="input" value={form.sale_type} onChange={e=>setForm({...form, sale_type:e.target.value})}>
-              <option value="Cash">Cash</option>
-              <option value="Credit">Credit</option>
-            </select>
           </div>
           
           {pricingInfo && (
@@ -282,9 +277,7 @@ const Sales = () => {
           {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
         </form>
       </Card>
-      )}
 
-      {activeTab === 'sales' && (
       <Card title="Sales List">
         <table className="table table-hover mt-2">
           <thead>
@@ -313,7 +306,6 @@ const Sales = () => {
           </tbody>
         </table>
       </Card>
-      )}
 
       
 
