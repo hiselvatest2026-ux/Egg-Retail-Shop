@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import { getStock, getInventoryInsightsByLocation, getLocations } from '../api/api';
+import { getStock, getInventoryInsightsByLocation, getLocations, runSeed } from '../api/api';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
@@ -39,6 +39,7 @@ const InventoryManagement = () => {
             <option value="">All locations</option>
             {locations.map(l => (<option key={l.id} value={l.id}>{l.name}</option>))}
           </select>
+          <button className="btn secondary" onClick={async()=>{ try { await runSeed(); await load(locationId); } catch(e){ console.error('seed failed', e);} }}>Seed Demo Data</button>
         </div>
         <div className="stat-grid">
           <div className="stat"><div className="stat-label">Total SKUs</div><div className="stat-value">{totalSkus}</div></div>
