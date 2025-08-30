@@ -193,30 +193,6 @@ const Sales = () => {
             </select>
           </div>
           <div className="input-group">
-            <label>Route (Today)</label>
-            <select className="input" value={form.route_trip_id} onChange={e=>setForm({...form, route_trip_id: e.target.value})}>
-              <option value="">No Route</option>
-              {trips.map(t => (
-                <option key={t.id} value={t.id}>{t.route_name || t.master_route_name || 'Route'} - {t.vehicle_number || '-'} ({new Date(t.service_date).toLocaleDateString()})</option>
-              ))}
-            </select>
-          </div>
-          <div className="input-group">
-            <label>Quick Create Route Trip</label>
-            <div style={{display:'flex', gap:8}}>
-              <input className="input" placeholder="Route name" value={newTrip.route_name} onChange={e=>setNewTrip({...newTrip, route_name:e.target.value})} />
-              <input className="input" placeholder="Vehicle" value={newTrip.vehicle_number} onChange={e=>setNewTrip({...newTrip, vehicle_number:e.target.value})} />
-              <button type="button" className="btn" onClick={async()=>{
-                const today = new Date().toISOString().slice(0,10);
-                const r = await createRouteTrip({ service_date: today, route_name: newTrip.route_name || 'Ad-hoc', vehicle_number: newTrip.vehicle_number || null });
-                const tr = await getRouteTrips({ date: today });
-                setTrips(tr.data||[]);
-                setForm(prev=>({...prev, route_trip_id: r.data?.id || ''}));
-                setNewTrip({ route_name:'', vehicle_number:'', service_date: today });
-              }}>Add</button>
-            </div>
-          </div>
-          <div className="input-group">
             <label>Sales Type</label>
             <select className="input" value={form.sale_type} onChange={e=>setForm({...form, sale_type:e.target.value})}>
               <option value="Cash">Cash</option>
@@ -254,6 +230,32 @@ const Sales = () => {
           <div className="input-group">
             <label>Total Amount</label>
             <input className="input" value={form.total} readOnly />
+          </div>
+
+          {/* Route controls (full-width, placed after core fields to maintain alignment) */}
+          <div className="input-group" style={{gridColumn:'1/-1'}}>
+            <label>Route (Today)</label>
+            <select className="input" value={form.route_trip_id} onChange={e=>setForm({...form, route_trip_id: e.target.value})}>
+              <option value="">No Route</option>
+              {trips.map(t => (
+                <option key={t.id} value={t.id}>{t.route_name || t.master_route_name || 'Route'} - {t.vehicle_number || '-'} ({new Date(t.service_date).toLocaleDateString()})</option>
+              ))}
+            </select>
+          </div>
+          <div className="input-group" style={{gridColumn:'1/-1'}}>
+            <label>Quick Create Route Trip</label>
+            <div style={{display:'flex', gap:8}}>
+              <input className="input" placeholder="Route name" value={newTrip.route_name} onChange={e=>setNewTrip({...newTrip, route_name:e.target.value})} />
+              <input className="input" placeholder="Vehicle" value={newTrip.vehicle_number} onChange={e=>setNewTrip({...newTrip, vehicle_number:e.target.value})} />
+              <button type="button" className="btn" onClick={async()=>{
+                const today = new Date().toISOString().slice(0,10);
+                const r = await createRouteTrip({ service_date: today, route_name: newTrip.route_name || 'Ad-hoc', vehicle_number: newTrip.vehicle_number || null });
+                const tr = await getRouteTrips({ date: today });
+                setTrips(tr.data||[]);
+                setForm(prev=>({...prev, route_trip_id: r.data?.id || ''}));
+                setNewTrip({ route_name:'', vehicle_number:'', service_date: today });
+              }}>Add</button>
+            </div>
           </div>
           
           {pricingInfo && (
