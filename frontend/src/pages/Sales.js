@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash' });
+  const [available, setAvailable] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [pricingInfo, setPricingInfo] = useState(null);
@@ -81,8 +82,20 @@ const Sales = () => {
     if (!form.product_name || !form.material_code) { setError('Please select a product.'); return; }
     if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }
     if (!form.total || Number.isNaN(Number(form.total))) { setError('Total could not be calculated.'); return; }
+    // Client-side stock validation
     try {
-      const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null };
+      const pid = materials.find(m=>String(m.metal_type)===String(form.product_name))?.id;
+      if (pid) {
+        const res = await getAvailable({ product_id: pid });
+        const avail = Number(res.data?.available||0);
+        if (Number(form.quantity) > avail) {
+          setError(`Insufficient stock. Available: ${avail}`);
+          return;
+        }
+      }
+    } catch(_){}
+    try {
+      const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type };
       if (editing) { 
         await updateSale(editing, payload); 
       } else { 
@@ -96,7 +109,7 @@ const Sales = () => {
           }
         }
       }
-      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1' });
+      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type:'Cash', payment_mode:'Cash' });
       setRecordPaymentNow(false);
       setPaymentAtCreate({ amount: '', mode: 'Cash' });
       setPricingInfo(null);
@@ -163,7 +176,7 @@ const Sales = () => {
 
       <div style={{display:'flex', gap:12, marginBottom:12}}>
         <button className={`btn ${activeTab==='sales'?'':'secondary'}`} onClick={()=>setActiveTab('sales')}>Sales</button>
-        <button className={`btn ${activeTab==='payments'?'':'secondary'}`} onClick={()=>setActiveTab('payments')}>Payments</button>
+        
       </div>
 
       {activeTab === 'sales' && (
@@ -210,6 +223,13 @@ const Sales = () => {
               ))}
             </select>
           </div>
+          <div className="input-group">
+            <label>Sales Type</label>
+            <select className="input" value={form.sale_type} onChange={e=>setForm({...form, sale_type:e.target.value})}>
+              <option value="Cash">Cash</option>
+              <option value="Credit">Credit</option>
+            </select>
+          </div>
           
           {pricingInfo && (
             <div className="input-group" style={{gridColumn:'1/-1'}}>
@@ -245,7 +265,11 @@ const Sales = () => {
               </div>
               <div className="input-group">
                 <label>Payment Mode</label>
-                <input className="input" value={paymentAtCreate.mode} onChange={e=>setPaymentAtCreate({...paymentAtCreate, mode: e.target.value})} placeholder="Cash / Card / UPI" />
+                <select className="input" value={paymentAtCreate.mode} onChange={e=>setPaymentAtCreate({...paymentAtCreate, mode: e.target.value})}>
+                  <option value="Cash">Cash</option>
+                  <option value="Gpay">Gpay</option>
+                  <option value="Card">Card</option>
+                </select>
               </div>
             </>
           )}
@@ -280,12 +304,6 @@ const Sales = () => {
                   <div className="btn-group">
                     <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
                     <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
-                    <button className="btn btn-sm" onClick={()=>{
-                      const paid = Number(paymentsByInvoice[String(s.id)]||0);
-                      const bal = Math.max(0, Number(s.total) - paid);
-                      setPayingSale({ id: s.id, customer_id: s.customer_id });
-                      setPayForm({ amount: String(bal.toFixed(2)), mode: 'Cash' });
-                    }}>Pay</button>
                     <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
@@ -297,59 +315,7 @@ const Sales = () => {
       </Card>
       )}
 
-      {activeTab === 'payments' && (
-      <Card title="Payments">
-        <div className="form-grid" style={{gridTemplateColumns:'repeat(4, minmax(0,1fr))'}}>
-          <div className="input-group">
-            <label>Customer</label>
-            <select className="input" value={paymentsFilter.customer_id} onChange={e=>setPaymentsFilter({...paymentsFilter, customer_id:e.target.value})}>
-              <option value="">All</option>
-              {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
-            </select>
-          </div>
-          <div className="input-group">
-            <label>Invoice</label>
-            <select className="input" value={paymentsFilter.invoice_id} onChange={e=>setPaymentsFilter({...paymentsFilter, invoice_id:e.target.value})}>
-              <option value="">All</option>
-              {sales.map(s => (<option key={s.id} value={s.id}>#{s.id} - ₹ {Number(s.total||0).toFixed(2)}</option>))}
-            </select>
-          </div>
-          <div className="actions-row" style={{alignItems:'end'}}>
-            <button className="btn" onClick={async()=>{
-              const params = {};
-              if (paymentsFilter.customer_id) params.customer_id = paymentsFilter.customer_id;
-              if (paymentsFilter.invoice_id) params.invoice_id = paymentsFilter.invoice_id;
-              try {
-                const res = await (Object.keys(params).length ? (await import('../api/api')).getPaymentsFiltered(params) : getPayments());
-                setPaymentsList(res.data||[]);
-              } catch(e) { /* ignore */ }
-            }}>Apply</button>
-            <button className="btn secondary" onClick={async()=>{ setPaymentsFilter({ customer_id:'', invoice_id:'' }); await reloadPayments(); }}>Reset</button>
-          </div>
-        </div>
-        <table className="table table-hover mt-2">
-          <thead>
-            <tr><th>ID</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Mode</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {paymentsList.map(p => (
-              <tr key={p.id}>
-                <td>#{p.id}</td>
-                <td><span className="badge">{p.customer_id}</span></td>
-                <td>#{p.invoice_id}</td>
-                <td>₹ {Number(p.amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>{p.payment_mode || 'Cash'}</td>
-                <td>
-                  <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>{ setPayingSale({ id: p.invoice_id, customer_id: p.customer_id }); setPayForm({ amount: '', mode: 'Cash' }); }}>Add Payment</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-      )}
+      
 
       {payingSale && (
         <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setPayingSale(null)}>

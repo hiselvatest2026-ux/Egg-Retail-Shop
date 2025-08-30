@@ -11,11 +11,11 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0 } = req.body;
+    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash' } = req.body;
     const pn = product_name || egg_type || null;
     const result = await pool.query(
-      'INSERT INTO sales (customer_id, total, egg_type, product_name, payment_method, status, discount) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [customer_id, total, egg_type || null, pn, payment_method || null, status, discount]
+      'INSERT INTO sales (customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [customer_id, total, egg_type || null, pn, payment_method || null, status, discount, sale_type]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -26,11 +26,11 @@ exports.createSale = async (req, res) => {
 exports.updateSale = async (req, res) => {
   try {
     const { id } = req.params;
-    const { customer_id, total, egg_type, product_name, payment_method, status, discount } = req.body;
+    const { customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type } = req.body;
     const pn = product_name || egg_type || null;
     const result = await pool.query(
-      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type), product_name=COALESCE($4, product_name), payment_method=COALESCE($5,payment_method), status=COALESCE($6,status), discount=COALESCE($7,discount) WHERE id=$8 RETURNING *',
-      [customer_id ?? null, total ?? null, egg_type ?? null, pn ?? null, payment_method ?? null, status ?? null, discount ?? null, id]
+      'UPDATE sales SET customer_id=COALESCE($1, customer_id), total=COALESCE($2, total), egg_type=COALESCE($3, egg_type), product_name=COALESCE($4, product_name), payment_method=COALESCE($5,payment_method), status=COALESCE($6,status), discount=COALESCE($7,discount), sale_type=COALESCE($8, sale_type) WHERE id=$9 RETURNING *',
+      [customer_id ?? null, total ?? null, egg_type ?? null, pn ?? null, payment_method ?? null, status ?? null, discount ?? null, sale_type ?? null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
