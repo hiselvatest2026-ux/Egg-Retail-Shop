@@ -98,6 +98,11 @@ async function ensureSchema() {
       quantity INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMP DEFAULT NOW()
     );`
+    ,`CREATE TABLE IF NOT EXISTS opening_stocks_material (
+      material_code VARCHAR(50) PRIMARY KEY REFERENCES metal_master(part_code),
+      quantity INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP DEFAULT NOW()
+    );`
   ];
   for (const sql of alters) {
     try {

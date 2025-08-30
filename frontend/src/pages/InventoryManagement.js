@@ -11,6 +11,7 @@ const InventoryManagement = () => {
   const [locationId, setLocationId] = useState('');
   const [tab, setTab] = useState('overview'); // overview | opening
   const [opening, setOpening] = useState([]);
+  const [openingMaterials, setOpeningMaterials] = useState([]);
   const load = async (loc) => {
     try {
       const params = loc ? { location_id: loc } : undefined;
@@ -23,8 +24,16 @@ const InventoryManagement = () => {
       setInsights(i.data||insights);
     } catch (e) { console.error('load stock failed', e); }
   };
+  const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
   const loadOpening = async () => {
-    try { const r = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/inventory/opening-stocks`); setOpening(r.data||[]);} catch(e){ console.error('load opening failed', e);} }
+    try { 
+      const [p, m] = await Promise.all([
+        axios.get(`${baseUrl}/inventory/opening-stocks`),
+        axios.get(`${baseUrl}/inventory/opening-stocks/materials`)
+      ]);
+      setOpening(p.data||[]);
+      setOpeningMaterials(m.data||[]);
+    } catch(e){ console.error('load opening failed', e);} }
   useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
 
   const totalSkus = rows.length;
@@ -130,7 +139,8 @@ const InventoryManagement = () => {
       )}
 
       {tab==='opening' && (
-      <Card title="Opening Stock">
+      <>
+      <Card title="Opening Stock (Products)">
         <div className="form-grid" style={{gridTemplateColumns:'repeat(3, minmax(0,1fr))'}}>
           {opening.map(item => (
             <div key={item.product_id} className="input-group">
@@ -143,12 +153,39 @@ const InventoryManagement = () => {
         </div>
         <div className="actions-row">
           <button className="btn" onClick={async()=>{
-            try { await axios.put(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/inventory/opening-stocks`, { items: opening.map(o=>({ product_id:o.product_id, quantity: Number(o.quantity||0) })) }); await load(locationId); }
+            try { await axios.put(`${baseUrl}/inventory/opening-stocks`, { items: opening.map(o=>({ product_id:o.product_id, quantity: Number(o.quantity||0) })) }); await load(locationId); }
             catch(e){ console.error('save opening failed', e); }
-          }}>Save Opening Stock</button>
+          }}>Save Product Opening</button>
           <button className="btn secondary" onClick={loadOpening}>Refresh</button>
         </div>
       </Card>
+      <div style={{height:12}} />
+      <Card title="Opening Stock (Materials)">
+        <table className="table table-hover">
+          <thead><tr><th>Material Code</th><th>Material Type</th><th>Quantity</th></tr></thead>
+          <tbody>
+            {openingMaterials.map(row => (
+              <tr key={row.material_code}>
+                <td>{row.material_code}</td>
+                <td>{row.material_type}</td>
+                <td>
+                  <input className="input" value={row.quantity} onChange={e=>{
+                    const v = e.target.value; setOpeningMaterials(prev=>prev.map(x=>x.material_code===row.material_code?{...x, quantity:v}:x));
+                  }} inputMode="numeric" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="actions-row">
+          <button className="btn" onClick={async()=>{
+            try { await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items: openingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
+            catch(e){ console.error('save opening materials failed', e); }
+          }}>Save Material Opening</button>
+          <button className="btn secondary" onClick={loadOpening}>Refresh</button>
+        </div>
+      </Card>
+      </>
       )}
     </div>
   );
