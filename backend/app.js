@@ -18,6 +18,7 @@ const vendorRoutes = require('./routes/vendorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const routeRoutes = require('./routes/routeRoutes');
 const routeTripRoutes = require('./routes/routeTripRoutes');
+const collectionRoutes = require('./routes/collectionRoutes');
 
 const app = express();
 const ensureSchema = require('./db/ensureSchema');
@@ -44,6 +45,7 @@ app.use('/vendors', vendorRoutes);
 app.use('/admin', adminRoutes);
 app.use('/routes', routeRoutes);
 app.use('/route-trips', routeTripRoutes);
+app.use('/collection-api', collectionRoutes);
 
 app.get('/', (req, res) => res.send('Egg Retail Shop Backend Running'));
 module.exports = app;

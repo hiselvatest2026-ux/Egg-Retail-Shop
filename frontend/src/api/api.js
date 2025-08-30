@@ -127,6 +127,11 @@ export const getPricingForSale = (params) => {
 
 // Dashboard
 export const getDashboard = () => axios.get(`${API_URL}/dashboard`);
+// Collection APIs
+export const getCreditCollection = (params) => axios.get(`${API_URL}/collection-api/credit`, { params });
+export const getRouteCollection = (params) => axios.get(`${API_URL}/collection-api/routes`, { params });
+export const getWalkinCollection = (params) => axios.get(`${API_URL}/collection-api/walkin`, { params });
+export const getTotalCollection = (params) => axios.get(`${API_URL}/collection-api/total`, { params });
 
 // Sale Items
 export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);
