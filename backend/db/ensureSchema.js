@@ -108,6 +108,25 @@ async function ensureSchema() {
       quantity INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMP DEFAULT NOW()
     );`
+    ,`CREATE TABLE IF NOT EXISTS routes (
+      id SERIAL PRIMARY KEY,
+      route_number VARCHAR(50) UNIQUE NOT NULL,
+      route_name VARCHAR(100) NOT NULL,
+      vehicle_number VARCHAR(50),
+      active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT NOW()
+    );`
+    ,`CREATE TABLE IF NOT EXISTS route_trips (
+      id SERIAL PRIMARY KEY,
+      route_id INT REFERENCES routes(id),
+      service_date DATE NOT NULL,
+      route_name VARCHAR(100),
+      vehicle_number VARCHAR(50),
+      driver VARCHAR(100),
+      status VARCHAR(20) DEFAULT 'Planned',
+      created_at TIMESTAMP DEFAULT NOW()
+    );`
+    ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS route_trip_id INT REFERENCES route_trips(id);"
   ];
   for (const sql of alters) {
     try {
