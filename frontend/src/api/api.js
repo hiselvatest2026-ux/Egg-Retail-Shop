@@ -40,15 +40,7 @@ export const getInventoryInsightsByLocation = (params) => axios.get(`${API_URL}/
 export const getLocations = () => axios.get(`${API_URL}/locations`);
 export const runSeed = () => axios.post(`${API_URL}/admin/seed`);
 
-// Purchase Orders
-export const getPurchaseOrders = () => axios.get(`${API_URL}/purchase-orders`);
-export const createPurchaseOrder = (data) => axios.post(`${API_URL}/purchase-orders`, data);
-export const updatePurchaseOrder = (id, data) => axios.put(`${API_URL}/purchase-orders/${id}`, data);
-export const deletePurchaseOrder = (id) => axios.delete(`${API_URL}/purchase-orders/${id}`);
-export const addPurchaseOrderItem = (id, data) => axios.post(`${API_URL}/purchase-orders/${id}/items`, data);
-export const receivePurchaseOrder = (id) => axios.post(`${API_URL}/purchase-orders/${id}/receive`);
-export const getReorderSuggestions = () => axios.get(`${API_URL}/purchase-orders/reorder/suggestions`);
-export const getSupplierPerformance = () => axios.get(`${API_URL}/purchase-orders/suppliers/performance`);
+// Purchase Orders removed
 
 // Metal Master
 export const getMetals = () => {

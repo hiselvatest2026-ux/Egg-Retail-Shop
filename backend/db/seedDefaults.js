@@ -154,19 +154,7 @@ async function seedDefaults() {
     console.error('Seeding adjustments failed:', e.message);
   }
 
-  // Seed a purchase order with items
-  try {
-    const po = await pool.query('SELECT id FROM purchase_orders LIMIT 1');
-    if (po.rows.length === 0) {
-      const poIns = await pool.query(`INSERT INTO purchase_orders (supplier_id, status, expected_date, notes) VALUES (1, 'Draft', NOW() + INTERVAL '3 days', 'Initial restock') RETURNING id`);
-      await pool.query(`INSERT INTO purchase_order_items (po_id, product_id, quantity, price) VALUES 
-        ($1, 1, 50, 5.80),
-        ($1, 2, 40, 5.30)`, [poIns.rows[0].id]);
-      console.log('Seeded purchase order');
-    }
-  } catch (e) {
-    console.error('Seeding purchase orders failed:', e.message);
-  }
+  // Purchase orders seeding removed
 }
 
 module.exports = seedDefaults;
