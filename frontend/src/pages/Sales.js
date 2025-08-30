@@ -108,6 +108,7 @@ const Sales = () => {
             await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
           }
         }
+        navigate(`/invoice/${newSale.id}`);
       }
       setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type:'Cash', payment_mode:'Cash' });
       setRecordPaymentNow(false);
