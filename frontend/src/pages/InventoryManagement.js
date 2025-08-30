@@ -140,27 +140,7 @@ const InventoryManagement = () => {
 
       {tab==='opening' && (
       <>
-      <Card title="Opening Stock (Products)">
-        <div className="form-grid" style={{gridTemplateColumns:'repeat(3, minmax(0,1fr))'}}>
-          {opening.map(item => (
-            <div key={item.product_id} className="input-group">
-              <label>{item.name} (#{item.product_id})</label>
-              <input className="input" value={item.quantity} onChange={e=>{
-                const v = e.target.value; setOpening(prev=>prev.map(x=>x.product_id===item.product_id?{...x, quantity:v}:x));
-              }} inputMode="numeric" />
-            </div>
-          ))}
-        </div>
-        <div className="actions-row">
-          <button className="btn" onClick={async()=>{
-            try { await axios.put(`${baseUrl}/inventory/opening-stocks`, { items: opening.map(o=>({ product_id:o.product_id, quantity: Number(o.quantity||0) })) }); await load(locationId); }
-            catch(e){ console.error('save opening failed', e); }
-          }}>Save Product Opening</button>
-          <button className="btn secondary" onClick={loadOpening}>Refresh</button>
-        </div>
-      </Card>
-      <div style={{height:12}} />
-      <Card title="Opening Stock (Materials)">
+      <Card title="Opening Stock">
         <table className="table table-hover">
           <thead><tr><th>Material Code</th><th>Material Type</th><th>Quantity</th></tr></thead>
           <tbody>
@@ -181,7 +161,7 @@ const InventoryManagement = () => {
           <button className="btn" onClick={async()=>{
             try { await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items: openingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
             catch(e){ console.error('save opening materials failed', e); }
-          }}>Save Material Opening</button>
+          }}>Save Opening Stock</button>
           <button className="btn secondary" onClick={loadOpening}>Refresh</button>
         </div>
       </Card>
