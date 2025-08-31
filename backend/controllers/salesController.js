@@ -186,7 +186,7 @@ exports.getSaleInvoice = async (req, res) => {
 
     // Company settings
     const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id ASC LIMIT 1');
-    const company = settingsRes.rows[0] || { company_name: 'Egg Retail Shop' };
+    const company = settingsRes.rows[0] || { company_name: 'TRY ZEROEGG POS' };
 
     // Payments summary
     const payRes = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);

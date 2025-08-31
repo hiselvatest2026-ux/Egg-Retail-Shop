@@ -54,5 +54,5 @@ app.use('/routes', routeRoutes);
 app.use('/route-trips', routeTripRoutes);
 app.use('/collection-api', collectionRoutes);
 
-app.get('/', (req, res) => res.send('Egg Retail Shop Backend Running'));
+app.get('/', (req, res) => res.send('TRY ZEROEGG POS Backend Running'));
 module.exports = app;

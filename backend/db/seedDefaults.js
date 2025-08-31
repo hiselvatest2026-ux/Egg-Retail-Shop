@@ -29,7 +29,7 @@ async function seedDefaults() {
   } catch (e) {}
 
   // Settings and HSN/SAC
-  try { await pool.query(`INSERT INTO settings (company_name, gstin, address, phone, email, logo_url) VALUES ('Egg Retail Shop','33ABCDE1234F1Z5','123 Market Road, Chennai-600001','+91-90000 00000','info@eggretail.test','https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/MyCompanyLogo.jpeg')`); } catch (e) {}
+  try { await pool.query(`INSERT INTO settings (company_name, gstin, address, phone, email, logo_url) VALUES ('TRY ZEROEGG POS','33ABCDE1234F1Z5','123 Market Road, Chennai-600001','+91-90000 00000','info@eggretail.test','https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/MyCompanyLogo.jpeg')`); } catch (e) {}
   try { await pool.query(`UPDATE metal_master SET hsn_sac = CASE WHEN metal_type='Egg' THEN '0407' WHEN metal_type='Panner' THEN '0406' ELSE hsn_sac END`); } catch (e) {}
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "egg-retail-backend",
   "version": "1.0.0",
-  "description": "Backend for Egg Retail Shop",
+  "description": "Backend for TRY ZEROEGG POS",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -28,7 +28,7 @@ function App() {
           <div className="brand">
             <div style={{display:'flex', alignItems:'center', gap:8}}>
               <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/MyCompanyLogo.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937'}} />
-              <span>XAnderaEggsPOS</span>
+              <span>TRY ZEROEGG POS</span>
             </div>
           </div>
           <nav className="nav">
