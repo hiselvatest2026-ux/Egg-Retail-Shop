@@ -303,7 +303,7 @@ const Sales = () => {
             </>
           )}
           
-          <div className="actions-row">
+          <div className="actions-row sticky-actions">
             <button className="btn" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '', egg_type: '', material_code: '', category: 'Retail' }); setPricingInfo(null); }}>Cancel</button>}
           </div>

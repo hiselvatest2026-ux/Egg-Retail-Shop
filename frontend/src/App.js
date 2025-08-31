@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard } from 'react-icons/fi';
 import Purchases from './pages/Purchases';
@@ -21,10 +21,19 @@ import PricingMaster from './pages/PricingMaster';
 import Vendors from './pages/Vendors';
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <Router>
       <div className="layout">
-        <aside className="sidebar">
+        <div className="mobile-header">
+          <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu">☰</button>
+          <div style={{display:'flex', alignItems:'center', gap:8}}>
+            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg" alt="Logo" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937'}} />
+            <span style={{fontWeight:800}}>TRY ZEROEGG POS</span>
+          </div>
+        </div>
+        {sidebarOpen && <div className="backdrop" onClick={()=>setSidebarOpen(false)} />}
+        <aside className={"sidebar" + (sidebarOpen ? " open" : "") }>
           <div className="brand">
             <div style={{display:'flex', alignItems:'center', gap:8}}>
               <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937'}} />
@@ -72,6 +81,12 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        <nav className="bottom-tabs">
+          <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
+          <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
+          <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
+          <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
+        </nav>
       </div>
     </Router>
   );

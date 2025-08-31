@@ -106,3 +106,26 @@ body {
   .card-title { font-size:16px; }
   .btn-group { gap:6px; }
 }
+
+/* Off-canvas mobile header and sidebar */
+.mobile-header { display:none; align-items:center; justify-content:space-between; padding:10px 12px; background:#0f172a; border-bottom:1px solid #1f2937; position:sticky; top:0; z-index:40; }
+.backdrop { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:35; }
+.sidebar { transition: transform .2s ease; }
+.sidebar.open { transform: translateX(0); box-shadow:0 10px 30px rgba(0,0,0,.45); }
+
+/* Bottom tab bar */
+.bottom-tabs { display:none; position:sticky; bottom:0; left:0; right:0; background:#0f172a; border-top:1px solid #1f2937; justify-content:space-around; padding:8px; z-index:40; }
+.bottom-tabs a { color:#e2e8f0; text-decoration:none; padding:8px 10px; border-radius:8px; font-size:14px; display:flex; align-items:center; }
+.bottom-tabs a.active, .bottom-tabs a:hover { background:#1d4ed8; color:#fff; }
+
+@media (max-width: 1024px) {
+  .mobile-header { display:flex; }
+  .sidebar { position: fixed; top:0; bottom:0; left:0; width: 78%; max-width:300px; transform: translateX(-100%); z-index: 36; }
+  .sidebar .nav { flex-direction: column; gap: 8px; overflow: auto; white-space: normal; height: calc(100% - 62px); }
+  .bottom-tabs { display:flex; }
+}
+
+.sticky-actions { position: sticky; bottom: 70px; background: rgba(15,19,23,.85); backdrop-filter: blur(6px); padding: 8px; border-radius: 12px; border:1px solid #273140; display:flex; gap:8px; }
+@media (max-width: 640px) {
+  .sticky-actions { bottom: 66px; }
+}
