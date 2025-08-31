@@ -185,7 +185,7 @@ const Sales = () => {
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
             <label>Product Name</label>
-            <select className="input" value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
+            <select className="input" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
               <option value="">Select product</option>
               {materials.map(m => (
                 <option key={m.id} value={m.metal_type}>{m.metal_type}</option>
@@ -201,14 +201,14 @@ const Sales = () => {
           </div>
           <div className="input-group">
             <label>Customer</label>
-            <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
+            <select className="input" title={(customers.find(c=>String(c.id)===String(form.customer_id))?.name) || ''} value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
               <option value="">{customers.length ? 'Select customer' : 'No customers found - add one first'}</option>
               {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
             </select>
           </div>
           <div className="input-group">
             <label>Category</label>
-            <select className="input" value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
+            <select className="input" title={form.category} value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
               <option value="Retail">Retail</option>
               <option value="Wholesale">Wholesale</option>
               <option value="Walk-in">Walk-in</option>
@@ -216,7 +216,7 @@ const Sales = () => {
           </div>
           <div className="input-group">
             <label>Material Code</label>
-            <select className="input" value={form.material_code} onChange={e=>setForm({...form, material_code: e.target.value})}>
+            <select className="input" title={form.material_code || ''} value={form.material_code} onChange={e=>setForm({...form, material_code: e.target.value})}>
               <option value="">Select Material</option>
               {materials.map(m => (
                 <option key={m.id} value={m.part_code}>{m.part_code} - {m.description || m.metal_type}</option>
