@@ -6,6 +6,8 @@ body {
   color: #e8eef4;
 }
 
+:root { --bottom-tabs-height: 60px; --mobile-header-height: 52px; }
+
 /* Simple utility styles */
 .btn { display:inline-block; padding:10px 14px; border-radius:10px; color:#08110a; background:#22c55e; text-decoration:none; border:0; cursor:pointer; transition:all .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.15); }
 .btn:hover { filter:brightness(1.05); transform:translateY(-1px); box-shadow:0 6px 16px rgba(34,197,94,.22); }
@@ -119,7 +121,7 @@ select.input::-ms-expand { display:none; }
 .sidebar.open { transform: translateX(0); box-shadow:0 10px 30px rgba(0,0,0,.45); }
 
 /* Bottom tab bar */
-.bottom-tabs { display:none; position:sticky; bottom:0; left:0; right:0; background:#0f172a; border-top:1px solid #1f2937; justify-content:space-around; padding:8px; z-index:40; }
+.bottom-tabs { display:none; position:sticky; bottom:0; left:0; right:0; background:#0f172a; border-top:1px solid #1f2937; justify-content:space-around; padding:8px; z-index:40; min-height: var(--bottom-tabs-height); box-sizing: border-box; }
 .bottom-tabs a { color:#e2e8f0; text-decoration:none; padding:8px 10px; border-radius:8px; font-size:14px; display:flex; align-items:center; }
 .bottom-tabs a.active, .bottom-tabs a:hover { background:#1d4ed8; color:#fff; }
 
@@ -128,12 +130,10 @@ select.input::-ms-expand { display:none; }
   .sidebar { position: fixed; top:0; bottom:0; left:0; width: 78%; max-width:300px; transform: translateX(-100%); z-index: 36; }
   .sidebar .nav { flex-direction: column; gap: 8px; overflow: auto; white-space: normal; height: calc(100% - 62px); }
   .bottom-tabs { display:flex; }
+  .content { padding-bottom: calc(var(--bottom-tabs-height) + 24px); }
 }
 
-.sticky-actions { position: sticky; bottom: 70px; background: rgba(15,19,23,.85); backdrop-filter: blur(6px); padding: 8px; border-radius: 12px; border:1px solid #273140; display:flex; gap:8px; }
-@media (max-width: 640px) {
-  .sticky-actions { bottom: 66px; }
-}
+.sticky-actions { position: sticky; bottom: calc(var(--bottom-tabs-height) + 12px); background: rgba(15,19,23,.85); backdrop-filter: blur(6px); padding: 8px; border-radius: 12px; border:1px solid #273140; display:flex; gap:8px; }
 
 .hide-on-mobile { display:block; }
 .cards-mobile { display:none; }
