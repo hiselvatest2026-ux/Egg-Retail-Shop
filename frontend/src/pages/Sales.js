@@ -313,32 +313,65 @@ const Sales = () => {
       </Card>
 
       <Card title="Sales List">
-        <table className="table table-hover mt-2">
-          <thead>
-            <tr><th>ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Product</th><th>Category</th><th style={{width:320}}>Actions</th></tr>
-          </thead>
-          <tbody>
-            {sales.map(s => (
-              <tr key={s.id}>
-                <td>#{s.id}</td>
-                <td><span className="badge">{s.customer_id}</span></td>
-                <td>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>₹ {Number(paymentsByInvoice[String(s.id)]||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>{s.product_name || s.egg_type || '-'}</td>
-                <td>{s.category || 'Retail'}</td>
-                <td>
-                  <div className="btn-group">
+        {/* Desktop table */}
+        <div className="hide-on-mobile">
+          <table className="table table-hover mt-2">
+            <thead>
+              <tr><th>ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Product</th><th>Category</th><th style={{width:320}}>Actions</th></tr>
+            </thead>
+            <tbody>
+              {sales.map(s => (
+                <tr key={s.id}>
+                  <td>#{s.id}</td>
+                  <td><span className="badge">{s.customer_id}</span></td>
+                  <td>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>₹ {Number(paymentsByInvoice[String(s.id)]||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>{s.product_name || s.egg_type || '-'}</td>
+                  <td>{s.category || 'Retail'}</td>
+                  <td>
+                    <div className="btn-group">
+                      <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
+                      <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
+                      <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Mobile cards */}
+        <div className="cards-mobile">
+          {sales.map(s => {
+            const paid = Number(paymentsByInvoice[String(s.id)]||0);
+            const balance = Math.max(0, Number(s.total) - paid);
+            return (
+              <div key={s.id} className="card" style={{marginBottom:10}}>
+                <div className="card-body">
+                  <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                    <span>Sale #{s.id}</span>
+                    <span className="badge">{s.category || 'Retail'}</span>
+                  </div>
+                  <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Customer: #{s.customer_id}</div>
+                  <div style={{display:'flex', gap:12, flexWrap:'wrap', fontSize:14}}>
+                    <div><strong>Product:</strong> {s.product_name || '-'}</div>
+                    <div><strong>Total:</strong> ₹ {Number(s.total).toFixed(2)}</div>
+                    <div><strong>Paid:</strong> ₹ {paid.toFixed(2)}</div>
+                    <div><strong>Balance:</strong> ₹ {balance.toFixed(2)}</div>
+                  </div>
+                  <div className="btn-group" style={{marginTop:10}}>
                     <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
                     <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
                     <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </Card>
 
       

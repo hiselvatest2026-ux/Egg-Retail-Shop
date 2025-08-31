@@ -129,3 +129,10 @@ body {
 @media (max-width: 640px) {
   .sticky-actions { bottom: 66px; }
 }
+
+.hide-on-mobile { display:block; }
+.cards-mobile { display:none; }
+@media (max-width: 640px) {
+  .hide-on-mobile { display:none; }
+  .cards-mobile { display:block; }
+}
