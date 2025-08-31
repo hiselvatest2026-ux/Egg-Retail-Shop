@@ -185,8 +185,11 @@ exports.getSaleInvoice = async (req, res) => {
     const total = (items && items.length > 0) ? computedTotal : (sale.total ?? 0);
 
     // Company settings
-    const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id ASC LIMIT 1');
-    const company = settingsRes.rows[0] || { company_name: 'TRY ZEROEGG POS', logo_url: 'https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg' };
+    const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
+    let company = settingsRes.rows[0] || { company_name: 'TRY ZEROEGG POS', logo_url: 'https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg' };
+    if (company.company_name === 'Egg Retail Shop') {
+      company = { ...company, company_name: 'TRY ZEROEGG POS' };
+    }
 
     // Payments summary
     const payRes = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);
