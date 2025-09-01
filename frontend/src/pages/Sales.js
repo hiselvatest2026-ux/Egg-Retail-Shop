@@ -211,7 +211,7 @@ const Sales = () => {
           <div className="input-group">
             <label>Product Name</label>
             <select className="input" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
-              <option value="" disabled hidden>Select product</option>
+              <option value="" disabled>Select product</option>
               {materials.map(m => (
                 <option key={m.id} value={m.metal_type}>{m.metal_type}</option>
               ))}
@@ -227,7 +227,7 @@ const Sales = () => {
           <div className="input-group">
             <label>Customer</label>
             <select className="input" title={(customers.find(c=>String(c.id)===String(form.customer_id))?.name) || ''} value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
-              <option value="" disabled hidden>{customers.length ? 'Select customer' : 'No customers found - add one first'}</option>
+              <option value="" disabled>{customers.length ? 'Select customer' : 'No customers found - add one first'}</option>
               {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
             </select>
           </div>
@@ -242,7 +242,7 @@ const Sales = () => {
           <div className="input-group">
             <label>Material Code</label>
             <select className="input" title={form.material_code || ''} value={form.material_code} onChange={e=>setForm({...form, material_code: e.target.value})}>
-              <option value="" disabled hidden>Select Material</option>
+              <option value="" disabled>Select Material</option>
               {materials.map(m => (
                 <option key={m.id} value={m.part_code}>{m.part_code} - {m.description || m.metal_type}</option>
               ))}
