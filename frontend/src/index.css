@@ -79,7 +79,8 @@ img { max-width: 100%; height: auto; }
 select.input { height:42px; line-height:42px; padding-right:40px; width:100%; max-width:100%; box-sizing:border-box; appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image: linear-gradient(45deg, transparent 50%, #9fb0c2 50%), linear-gradient(135deg, #9fb0c2 50%, transparent 50%);
   background-position: right 18px center, right 12px center; background-size:6px 6px, 6px 6px; background-repeat:no-repeat; }
 select.input::-ms-expand { display:none; }
-select.input option { white-space:normal; }
+select.input option { white-space:normal; color:#e8eef4; background:#1f2330; }
+select.input optgroup { color:#cbd5e1; background:#1f2330; }
 
 /* Helper: wrap long values on mobile inside visible select box via title attribute tooltip */
 label + select.input { cursor:pointer; }
