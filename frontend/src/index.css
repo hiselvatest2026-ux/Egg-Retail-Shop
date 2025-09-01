@@ -183,3 +183,17 @@ details.accordion .accordion-body { padding:12px; }
 .data-pairs { display:flex; flex-wrap:wrap; gap:12px; font-size:14px; }
 .data-pairs .pair { min-width: 120px; }
 .data-pairs .pair strong { color:#cbd5e1; }
+
+/* Print styles for 80mm receipt */
+@media print {
+  @page { size: 80mm auto; margin: 0; }
+  body { background: #fff !important; }
+  .layout, .sidebar, .mobile-header, .bottom-tabs { display: none !important; }
+  .page, .content { padding: 0 !important; }
+  .print-receipt { width: 80mm; margin: 0 auto; color: #000; }
+  .print-receipt .card, .print-receipt .card-header, .print-receipt .card-body { background: #fff; border: 0; box-shadow: none; padding: 0; }
+  .print-receipt h1, .print-receipt h2, .print-receipt h3, .print-receipt .text-xl, .print-receipt .font-bold { font-weight: 700; color:#000; }
+  .print-receipt table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .print-receipt th, .print-receipt td { border: 0; padding: 2px 0; text-align: left; }
+  .no-print { display: none !important; }
+}

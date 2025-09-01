@@ -23,8 +23,12 @@ const Invoice = () => {
 
   return (
     <div className="p-4">
-      <Card title={`Invoice #${sale.id}`} actions={<button className="btn secondary" onClick={()=>window.print()}>Print</button>}>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16}}>
+      <div className="no-print" style={{marginBottom:8}}>
+        <button className="btn secondary" onClick={()=>window.print()}>Print</button>
+      </div>
+      <div className="print-receipt">
+      <Card title={`Invoice #${sale.id}`}>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8}}>
           <div>
             <div style={{display:'flex', alignItems:'center', gap:12}}>
               {company?.logo_url && (
@@ -85,9 +89,9 @@ const Invoice = () => {
           </tbody>
         </table>
 
-        <div style={{display:'grid', gridTemplateColumns:'1fr auto', gap:16}}>
+        <div style={{display:'grid', gridTemplateColumns:'1fr auto', gap:8}}>
           <div>
-            <div style={{marginTop:32}}>Thank you for your business!</div>
+            <div style={{marginTop:8}}>Thank you for your business!</div>
           </div>
           <div>
             <div>Subtotal: ₹ {Number(totals?.subtotal||0).toFixed(2)}</div>
@@ -101,6 +105,7 @@ const Invoice = () => {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 };
