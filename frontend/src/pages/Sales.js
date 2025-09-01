@@ -197,7 +197,7 @@ const Sales = () => {
   }, [filteredSales, currentPage, pageSize]);
 
   return (
-    <div className="page">
+    <div className="page space-y-4">
       <div className="page-header">
         <div>
           <h1 className="page-title">Sales</h1>
@@ -339,16 +339,16 @@ const Sales = () => {
 
       <Card title="Sales List">
         {/* Toolbar */}
-        <div style={{display:'flex', gap:12, alignItems:'center', marginBottom:12, flexWrap:'wrap'}}>
-          <input className="input" style={{maxWidth:280}} placeholder="Search by #, customer, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-          <select className="input" style={{maxWidth:200}} value={categoryFilter} onChange={e=>{ setCategoryFilter(e.target.value); setPage(1); }}>
+        <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
+          <input className="input w-full sm:w-72" placeholder="Search by #, customer, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
+          <select className="input w-full sm:w-52" value={categoryFilter} onChange={e=>{ setCategoryFilter(e.target.value); setPage(1); }}>
             <option value="">All Categories</option>
             <option value="Retail">Retail</option>
             <option value="Wholesale">Wholesale</option>
             <option value="Walk-in">Walk-in</option>
           </select>
-          <div style={{marginLeft:'auto', display:'flex', gap:8, alignItems:'center'}}>
-            <select className="input" style={{width:110}} value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
+          <div className="ml-auto flex items-center gap-3">
+            <select className="input w-28" value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
               <option value={5}>5 / page</option>
               <option value={10}>10 / page</option>
               <option value={20}>20 / page</option>
@@ -361,7 +361,7 @@ const Sales = () => {
           </div>
         </div>
         {/* Desktop table */}
-        <div className="hidden sm:block">
+        <div className="hidden sm:block overflow-x-auto">
           {filteredSales.length === 0 ? (
             <div className="card" style={{padding:16, textAlign:'center'}}>No sales yet. Create your first sale using the form.</div>
           ) : (
@@ -377,7 +377,7 @@ const Sales = () => {
                   <td>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                   <td>₹ {Number(paymentsByInvoice[String(s.id)]||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                   <td>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                  <td>{s.product_name || s.egg_type || '-'}</td>
+                  <td><div className="truncate max-w-[12rem]">{s.product_name || s.egg_type || '-'}</div></td>
                   <td>{s.category || 'Retail'}</td>
                   <td style={{textAlign:'right'}}>
                     <div className="btn-group" style={{justifyContent:'flex-end'}}>
@@ -409,7 +409,7 @@ const Sales = () => {
                     <span className="badge">{s.category || 'Retail'}</span>
                   </div>
                   <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Customer: #{s.customer_id}</div>
-                  <div style={{display:'flex', gap:12, flexWrap:'wrap', fontSize:14}}>
+                  <div className="flex flex-wrap gap-3 text-sm">
                     <div><strong>Product:</strong> {s.product_name || '-'}</div>
                     <div><strong>Total:</strong> ₹ {Number(s.total).toFixed(2)}</div>
                     <div><strong>Paid:</strong> ₹ {paid.toFixed(2)}</div>
