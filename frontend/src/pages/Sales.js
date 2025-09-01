@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip } from '../api/api';
 import { Link } from 'react-router-dom';
@@ -6,6 +6,10 @@ import Card from '../components/Card';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
   const [trips, setTrips] = useState([]);
   const [newTrip, setNewTrip] = useState({ route_name: '', vehicle_number: '', service_date: () => new Date().toISOString().slice(0,10) });
@@ -171,6 +175,27 @@ const Sales = () => {
     }
   }, [pricingInfo, form.quantity]);
 
+  const filteredSales = useMemo(() => {
+    let list = sales || [];
+    if (categoryFilter) list = list.filter(s => (s.category||'').toLowerCase() === categoryFilter.toLowerCase());
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(s =>
+        String(s.id).includes(q)
+        || String(s.customer_id||'').includes(q)
+        || String(s.product_name||s.egg_type||'').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [sales, search, categoryFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSales.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedSales = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredSales.slice(start, start + pageSize);
+  }, [filteredSales, currentPage, pageSize]);
+
   return (
     <div className="page">
       <div className="page-header">
@@ -180,7 +205,7 @@ const Sales = () => {
         </div>
       </div>
 
-      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
@@ -303,8 +328,8 @@ const Sales = () => {
             </>
           )}
           
-          <div className="actions-row sticky-actions">
-            <button className="btn" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
+          <div className="actions-row" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
+            <button className="btn primary" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '', egg_type: '', material_code: '', category: 'Retail' }); setPricingInfo(null); }}>Cancel</button>}
           </div>
           {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
@@ -313,14 +338,39 @@ const Sales = () => {
       </Card>
 
       <Card title="Sales List">
+        {/* Toolbar */}
+        <div style={{display:'flex', gap:12, alignItems:'center', marginBottom:12, flexWrap:'wrap'}}>
+          <input className="input" style={{maxWidth:280}} placeholder="Search by #, customer, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
+          <select className="input" style={{maxWidth:200}} value={categoryFilter} onChange={e=>{ setCategoryFilter(e.target.value); setPage(1); }}>
+            <option value="">All Categories</option>
+            <option value="Retail">Retail</option>
+            <option value="Wholesale">Wholesale</option>
+            <option value="Walk-in">Walk-in</option>
+          </select>
+          <div style={{marginLeft:'auto', display:'flex', gap:8, alignItems:'center'}}>
+            <select className="input" style={{width:110}} value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
+              <option value={5}>5 / page</option>
+              <option value={10}>10 / page</option>
+              <option value={20}>20 / page</option>
+            </select>
+            <div className="btn-group">
+              <button type="button" className="btn secondary btn-sm" onClick={()=>setPage(p=>Math.max(1, p-1))} disabled={currentPage===1}>Prev</button>
+              <button type="button" className="btn secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages, p+1))} disabled={currentPage===totalPages}>Next</button>
+            </div>
+            <div style={{color:'#b6beca', fontSize:12}}>Page {currentPage} / {totalPages}</div>
+          </div>
+        </div>
         {/* Desktop table */}
-        <div className="hide-on-mobile">
-          <table className="table table-hover mt-2">
+        <div className="hidden sm:block">
+          {filteredSales.length === 0 ? (
+            <div className="card" style={{padding:16, textAlign:'center'}}>No sales yet. Create your first sale using the form.</div>
+          ) : (
+          <table className="table table-hover table-zebra mt-2">
             <thead>
-              <tr><th>ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Product</th><th>Category</th><th style={{width:320}}>Actions</th></tr>
+              <tr><th>ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Product</th><th>Category</th><th style={{width:320, textAlign:'right'}}>Actions</th></tr>
             </thead>
             <tbody>
-              {sales.map(s => (
+              {pagedSales.map(s => (
                 <tr key={s.id}>
                   <td>#{s.id}</td>
                   <td><span className="badge">{s.customer_id}</span></td>
@@ -329,22 +379,26 @@ const Sales = () => {
                   <td>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                   <td>{s.product_name || s.egg_type || '-'}</td>
                   <td>{s.category || 'Retail'}</td>
-                  <td>
-                    <div className="btn-group">
-                      <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
+                  <td style={{textAlign:'right'}}>
+                    <div className="btn-group" style={{justifyContent:'flex-end'}}>
+                      <Link className="btn primary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
                       <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
-                      <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>Edit</button>
-                      <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
+                      <button className="btn icon btn-sm" title="Edit" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>✏️</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); setSuccess('Sale deleted.'); setTimeout(()=>setSuccess(''),2000); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          )}
         </div>
         {/* Mobile cards */}
-        <div className="cards-mobile">
-          {sales.map(s => {
+        <div className="block sm:hidden">
+          {filteredSales.length === 0 && (
+            <div className="card" style={{padding:16, textAlign:'center'}}>No sales yet. Create your first sale using the form.</div>
+          )}
+          {pagedSales.map(s => {
             const paid = Number(paymentsByInvoice[String(s.id)]||0);
             const balance = Math.max(0, Number(s.total) - paid);
             return (
@@ -362,10 +416,10 @@ const Sales = () => {
                     <div><strong>Balance:</strong> ₹ {balance.toFixed(2)}</div>
                   </div>
                   <div className="btn-group" style={{marginTop:10}}>
-                    <Link className="btn secondary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
+                    <Link className="btn primary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
                     <Link className="btn secondary btn-sm" to={`/sales/${s.id}/items`}>Items</Link>
-                    <button className="btn btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
+                    <button className="btn icon btn-sm" onClick={()=>{ setEditing(s.id); setForm({ customer_id: s.customer_id, total: s.total, product_name: s.product_name || s.egg_type || '', material_code: s.material_code || '', category: s.category || 'Retail' }); }}>✏️</button>
+                    <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteSale(s.id); await fetchSales(); setSuccess('Sale deleted.'); setTimeout(()=>setSuccess(''),2000); } catch(e) { console.error('Delete failed', e); } }}>Delete</button>
                   </div>
                 </div>
               </div>
@@ -373,8 +427,7 @@ const Sales = () => {
           })}
         </div>
       </Card>
-
-      
+      </div>
 
       {payingSale && (
         <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setPayingSale(null)}>
