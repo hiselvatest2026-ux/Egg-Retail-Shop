@@ -74,14 +74,14 @@ const Purchases = () => {
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
             <label>Vendor</label>
-            <select className="input" title={(vendors.find(v=>String(v.id)===String(form.vendor_id))?.name) || ''} value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
-              <option value="">{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
+            <select className="input" required aria-label="Vendor" title={(vendors.find(v=>String(v.id)===String(form.vendor_id))?.name) || ''} value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
+              <option value="" disabled>{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
               {vendors.map(v => (<option key={v.id} value={v.id}>{v.vendor_code} - {v.name}</option>))}
             </select>
           </div>
           <div className="input-group">
             <label>Product Name</label>
-            <select className="input" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>{
+            <select className="input" required aria-label="Product" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>{
               const name = e.target.value; 
               setForm({...form, product_name: name});
               const m = materials.find(x=>x.metal_type===name);
@@ -90,7 +90,7 @@ const Purchases = () => {
               const total = calcTotal(form.price_per_unit, form.quantity, nextGst);
               setForm(prev=>({...prev, total}));
             }}>
-              <option value="">Select product</option>
+              <option value="" disabled>Select product</option>
               {materials.map(m => (<option key={m.id} value={m.metal_type}>{m.metal_type}</option>))}
             </select>
           </div>
