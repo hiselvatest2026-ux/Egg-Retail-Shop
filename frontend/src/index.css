@@ -10,6 +10,7 @@ body {
   color: #e8eef4;
   line-height: 1.55;
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 :root { --bottom-tabs-height: 60px; --mobile-header-height: 52px; }

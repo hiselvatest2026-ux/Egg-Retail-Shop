@@ -60,10 +60,11 @@ const Dashboard = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Metric title="Total Sales Today" value={`₹ ${Number(data?.metrics?.total_sales_today || 0).toFixed(2)}`} />
         <Metric title="Current Stock Level" value={Number(data?.metrics?.current_stock_level || 0)} />
         <Metric title="Pending Orders" value={Number(data?.metrics?.pending_orders || 0)} />
+        <div className="hidden lg:block" />
       </div>
 
       <div className="flex gap-3 mb-6">
