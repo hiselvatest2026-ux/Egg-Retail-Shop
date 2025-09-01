@@ -117,11 +117,11 @@ const Purchases = () => {
             <input className="input" value={form.total} readOnly />
           </div>
           <div className="actions-row">
-            <button className="btn" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
+            <button className="btn w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
                 type="button"
-                className="btn secondary"
+                className="btn secondary w-full sm:w-auto"
                 onClick={() => { setEditing(null); setForm({ supplier_id: '', total: '', egg_type: '' }); }}
               >
                 Cancel
@@ -134,7 +134,7 @@ const Purchases = () => {
       </Card>
 
       <Card title="Purchases List">
-        <div className="hide-on-mobile">
+        <div className="hidden sm:block">
           <table className="table table-hover mt-2">
             <thead>
               <tr>
@@ -174,7 +174,7 @@ const Purchases = () => {
             </tbody>
           </table>
         </div>
-        <div className="cards-mobile">
+        <div className="block sm:hidden">
           {purchases.map(p => (
             <div key={p.id} className="card" style={{marginBottom:10}}>
               <div className="card-body">

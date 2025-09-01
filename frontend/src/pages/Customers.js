@@ -85,8 +85,8 @@ const Customers = () => {
           <input className="input" value={form.credit_limit} onChange={e=>setForm({...form, credit_limit: e.target.value})} inputMode="decimal" />
         </div>
         <div className="actions-row">
-          <button className="btn" type="submit" onClick={() => console.log('Button clicked!')}>{editing ? 'Update' : 'Add'}</button>
-          {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'', credit_limit:'' }); }}>Cancel</button>}
+          <button className="btn w-full sm:w-auto" type="submit" onClick={() => console.log('Button clicked!')}>{editing ? 'Update' : 'Add'}</button>
+          {editing && <button type="button" className="btn secondary w-full sm:w-auto" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'', credit_limit:'' }); }}>Cancel</button>}
         </div>
         {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
         {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
@@ -94,30 +94,57 @@ const Customers = () => {
       </Card>
 
       <Card title="Customers List">
-      <table className="table table-hover mt-2">
-        <thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Phone</th><th>Category</th><th>Credit Limit</th><th>GSTIN</th><th>Tax Applicability</th><th>Contact</th><th>Actions</th></tr></thead>
-        <tbody>
+        <div className="hidden sm:block">
+          <table className="table table-hover mt-2">
+            <thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Phone</th><th>Category</th><th>Credit Limit</th><th>GSTIN</th><th>Tax Applicability</th><th>Contact</th><th>Actions</th></tr></thead>
+            <tbody>
+              {customers.map(c => (
+                <tr key={c.id}>
+                  <td>{c.id}</td>
+                  <td>{c.customer_code || ('C' + String(c.id).padStart(6,'0'))}</td>
+                  <td>{c.name}</td>
+                  <td>{c.phone || '-'}</td>
+                  <td>{c.category || '-'}</td>
+                  <td>₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>{c.gstin || '-'}</td>
+                  <td>{c.tax_applicability || '-'}</td>
+                  <td>{c.contact_info || '-'}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm" onClick={()=>startEdit(c)}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ await deleteCustomer(c.id); fetchCustomers(); }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="block sm:hidden">
           {customers.map(c => (
-            <tr key={c.id}>
-              <td>{c.id}</td>
-              <td>{c.customer_code || ('C' + String(c.id).padStart(6,'0'))}</td>
-              <td>{c.name}</td>
-              <td>{c.phone || '-'}</td>
-              <td>{c.category || '-'}</td>
-              <td>₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-              <td>{c.gstin || '-'}</td>
-              <td>{c.tax_applicability || '-'}</td>
-              <td>{c.contact_info || '-'}</td>
-              <td>
-                <div className="btn-group">
+            <div key={c.id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Customer #{c.id}</span>
+                  <span className="badge">{c.category || '-'}</span>
+                </div>
+                <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Code: {c.customer_code || ('C' + String(c.id).padStart(6,'0'))}</div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Name:</strong> {c.name}</div>
+                  <div className="pair"><strong>Phone:</strong> {c.phone || '-'}</div>
+                  <div className="pair"><strong>Credit:</strong> ₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                  <div className="pair"><strong>GSTIN:</strong> {c.gstin || '-'}</div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Tax:</strong> {c.tax_applicability || '-'}</div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Contact:</strong> {c.contact_info || '-'}</div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
                   <button className="btn btn-sm" onClick={()=>startEdit(c)}>Edit</button>
                   <button className="btn danger btn-sm" onClick={async()=>{ await deleteCustomer(c.id); fetchCustomers(); }}>Delete</button>
                 </div>
-              </td>
-            </tr>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
       </Card>
     </div>
   );

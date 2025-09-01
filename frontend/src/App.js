@@ -33,7 +33,7 @@ function App() {
           </div>
         </div>
         {sidebarOpen && <div className="backdrop" onClick={()=>setSidebarOpen(false)} />}
-        <aside className={"sidebar" + (sidebarOpen ? " open" : "") }>
+        <aside className={"sidebar" + (sidebarOpen ? " open" : "") } style={{width:'78%', maxWidth:300}}>
           <div className="brand">
             <div style={{display:'flex', alignItems:'center', gap:8}}>
               <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937'}} />

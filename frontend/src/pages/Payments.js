@@ -99,8 +99,8 @@ const Payments = () => {
             <input className="input" placeholder="Cash / Card / UPI" value={form.payment_mode} onChange={e=>setForm({...form, payment_mode: e.target.value})} />
           </div>
           <div className="actions-row">
-            <button className="btn" type="submit">{editing ? 'Update Payment' : 'Add Payment'}</button>
-            {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' }); }}>Cancel</button>}
+            <button className="btn w-full sm:w-auto" type="submit">{editing ? 'Update Payment' : 'Add Payment'}</button>
+            {editing && <button type="button" className="btn secondary w-full sm:w-auto" onClick={()=>{ setEditing(null); setForm({ customer_id: '', invoice_id: '', amount: '', payment_mode: '' }); }}>Cancel</button>}
           </div>
           {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
           {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
@@ -108,28 +108,51 @@ const Payments = () => {
       </Card>
 
       <Card title="Payment Receipts List">
-        <table className="table table-hover mt-2">
-          <thead>
-            <tr><th>ID</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Mode</th><th style={{width:220}}>Actions</th></tr>
-          </thead>
-          <tbody>
-            {payments.map(p => (
-              <tr key={p.id}>
-                <td>#{p.id}</td>
-                <td><span className="badge">{p.customer_id}</span></td>
-                <td>{p.invoice_id}</td>
-                <td>₹ {Number(p.amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>{p.payment_mode || 'Cash'}</td>
-                <td>
-                  <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ try { await deletePayment(p.id); await fetchPayments(); } catch(e){ console.error('delete failed', e);} }}>Delete</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hidden sm:block">
+          <table className="table table-hover mt-2">
+            <thead>
+              <tr><th>ID</th><th>Customer</th><th>Invoice</th><th>Amount</th><th>Mode</th><th style={{width:220}}>Actions</th></tr>
+            </thead>
+            <tbody>
+              {payments.map(p => (
+                <tr key={p.id}>
+                  <td>#{p.id}</td>
+                  <td><span className="badge">{p.customer_id}</span></td>
+                  <td>{p.invoice_id}</td>
+                  <td>₹ {Number(p.amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>{p.payment_mode || 'Cash'}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ try { await deletePayment(p.id); await fetchPayments(); } catch(e){ console.error('delete failed', e);} }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="block sm:hidden">
+          {payments.map(p => (
+            <div key={p.id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Payment #{p.id}</span>
+                  <span className="badge">{p.payment_mode || 'Cash'}</span>
+                </div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Customer:</strong> #{p.customer_id}</div>
+                  <div className="pair"><strong>Invoice:</strong> #{p.invoice_id}</div>
+                  <div className="pair"><strong>Amount:</strong> ₹ {Number(p.amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>{ setEditing(p.id); setForm({ customer_id: p.customer_id, invoice_id: p.invoice_id, amount: p.amount, payment_mode: p.payment_mode }); }}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ try { await deletePayment(p.id); await fetchPayments(); } catch(e){ console.error('delete failed', e);} }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );
