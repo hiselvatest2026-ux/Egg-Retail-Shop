@@ -207,7 +207,7 @@ const Sales = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
-        <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
+        <form onSubmit={handleSubmit} className="form-grid-2">
           <div className="input-group">
             <label>Product Name</label>
             <select className="input" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
@@ -269,10 +269,10 @@ const Sales = () => {
           </div>
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Quick Create Route Trip</label>
-            <div style={{display:'flex', gap:8}}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input className="input" placeholder="Route name" value={newTrip.route_name} onChange={e=>setNewTrip({...newTrip, route_name:e.target.value})} />
               <input className="input" placeholder="Vehicle" value={newTrip.vehicle_number} onChange={e=>setNewTrip({...newTrip, vehicle_number:e.target.value})} />
-              <button type="button" className="btn" onClick={async()=>{
+              <button type="button" className="btn w-full sm:w-auto" onClick={async()=>{
                 const today = new Date().toISOString().slice(0,10);
                 const r = await createRouteTrip({ service_date: today, route_name: newTrip.route_name || 'Ad-hoc', vehicle_number: newTrip.vehicle_number || null });
                 const tr = await getRouteTrips({ date: today });
@@ -329,7 +329,7 @@ const Sales = () => {
           )}
           
           <div className="actions-row" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
-            <button className="btn primary" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
+            <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '', egg_type: '', material_code: '', category: 'Retail' }); setPricingInfo(null); }}>Cancel</button>}
           </div>
           {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
