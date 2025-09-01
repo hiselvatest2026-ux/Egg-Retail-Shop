@@ -233,8 +233,8 @@ const Sales = () => {
           </div>
           <div className="input-group">
             <label>Category</label>
-            <select className="input" required title={form.category || 'Select category'} value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
-              <option value="" disabled>Select category</option>
+            <select className="input" required aria-label="Category" value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
+              <option value="" disabled>{'Select category'}</option>
               <option value="Retail">Retail</option>
               <option value="Wholesale">Wholesale</option>
               <option value="Walk-in">Walk-in</option>
