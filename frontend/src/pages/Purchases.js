@@ -116,7 +116,7 @@ const Purchases = () => {
             <label>Total Amount</label>
             <input className="input" value={form.total} readOnly />
           </div>
-          <div className="actions-row">
+          <div className="actions-row sticky-actions">
             <button className="btn" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
@@ -182,12 +182,12 @@ const Purchases = () => {
                   <span>Purchase #{p.id}</span>
                 </div>
                 <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Vendor: #{p.vendor_id || '-'}</div>
-                <div style={{display:'flex', gap:12, flexWrap:'wrap', fontSize:14}}>
-                  <div><strong>Product:</strong> {p.product_name || '-'}</div>
-                  <div><strong>Price/Unit:</strong> ₹ {p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</div>
-                  <div><strong>Qty:</strong> {p.quantity != null ? p.quantity : '-'}</div>
-                  <div><strong>GST%:</strong> {p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</div>
-                  <div><strong>Total:</strong> ₹ {p.total != null ? Number(p.total).toFixed(2) : '-'}</div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Product:</strong> {p.product_name || '-'}</div>
+                  <div className="pair"><strong>Price/Unit:</strong> ₹ {p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</div>
+                  <div className="pair"><strong>Qty:</strong> {p.quantity != null ? p.quantity : '-'}</div>
+                  <div className="pair"><strong>GST%:</strong> {p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</div>
+                  <div className="pair"><strong>Total:</strong> ₹ {p.total != null ? Number(p.total).toFixed(2) : '-'}</div>
                 </div>
                 <div className="btn-group" style={{marginTop:10}}>
                   <Link className="btn secondary btn-sm" to={`/purchases/${p.id}/items`}>Items</Link>

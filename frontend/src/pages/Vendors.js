@@ -75,7 +75,7 @@ const Vendors = () => {
             <label>Credit Terms</label>
             <input className="input" value={form.credit_terms} onChange={e=>setForm({...form, credit_terms: e.target.value})} placeholder="e.g., Net 30" />
           </div>
-          <div className="actions-row">
+          <div className="actions-row sticky-actions">
             <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ name:'', phone:'', address:'', pincode:'', gstin:'', credit_terms:'' }); }}>Cancel</button>}
           </div>
@@ -85,41 +85,67 @@ const Vendors = () => {
       </Card>
 
       <Card title="Vendors List">
-        <table className="table table-hover mt-2">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Vendor Code</th>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th>Pincode</th>
-              <th>GST#</th>
-              <th>Credit Terms</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vendors.map(v => (
-              <tr key={v.id}>
-                <td>#{v.id}</td>
-                <td>{v.vendor_code}</td>
-                <td>{v.name}</td>
-                <td>{v.phone || '-'}</td>
-                <td>{v.address || '-'}</td>
-                <td>{v.pincode || '-'}</td>
-                <td>{v.gstin || '-'}</td>
-                <td>{v.credit_terms || '-'}</td>
-                <td>
-                  <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>startEdit(v)}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ await deleteVendor(v.id); fetchVendors(); }}>Delete</button>
-                  </div>
-                </td>
+        <div className="hide-on-mobile">
+          <table className="table table-hover mt-2">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vendor Code</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Pincode</th>
+                <th>GST#</th>
+                <th>Credit Terms</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {vendors.map(v => (
+                <tr key={v.id}>
+                  <td>#{v.id}</td>
+                  <td>{v.vendor_code}</td>
+                  <td>{v.name}</td>
+                  <td>{v.phone || '-'}</td>
+                  <td>{v.address || '-'}</td>
+                  <td>{v.pincode || '-'}</td>
+                  <td>{v.gstin || '-'}</td>
+                  <td>{v.credit_terms || '-'}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm" onClick={()=>startEdit(v)}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ await deleteVendor(v.id); fetchVendors(); }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {vendors.map(v => (
+            <div key={v.id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Vendor #{v.id}</span>
+                </div>
+                <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Code: {v.vendor_code || '-'}</div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Name:</strong> {v.name}</div>
+                  <div className="pair"><strong>Phone:</strong> {v.phone || '-'}</div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Address:</strong> {v.address || '-'}</div>
+                  <div className="pair"><strong>Pincode:</strong> {v.pincode || '-'}</div>
+                  <div className="pair"><strong>GST#:</strong> {v.gstin || '-'}</div>
+                  <div className="pair"><strong>Credit:</strong> {v.credit_terms || '-'}</div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>startEdit(v)}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ await deleteVendor(v.id); fetchVendors(); }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );

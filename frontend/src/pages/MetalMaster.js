@@ -78,7 +78,7 @@ const MetalMaster = () => {
             <label>Material Description</label>
             <input className="input" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
           </div>
-          <div className="actions-row">
+          <div className="actions-row sticky-actions">
             <button className="btn" type="submit" onClick={() => console.log('Metal button clicked!')}>{editing ? 'Update' : 'Add'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ part_code:'', metal_type:'', gst_percent:'', description:'' }); }}>Cancel</button>}
           </div>
@@ -90,26 +90,48 @@ const MetalMaster = () => {
       <div style={{height:12}} />
 
       <Card title="Material">
-        <table className="table table-hover">
-          <thead><tr><th>#</th><th>Material Code</th><th>Material Type</th><th>GST %</th><th>Material Description</th><th>Actions</th></tr></thead>
-          <tbody>
-            {rows.map(r => (
-              <tr key={r.id}>
-                <td>#{r.id}</td>
-                <td>{r.part_code}</td>
-                <td>{r.metal_type}</td>
-                <td>{Number(r.gst_percent).toFixed(2)}</td>
-                <td>{r.description || '-'}</td>
-                <td>
-                  <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead><tr><th>#</th><th>Material Code</th><th>Material Type</th><th>GST %</th><th>Material Description</th><th>Actions</th></tr></thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.id}>
+                  <td>#{r.id}</td>
+                  <td>{r.part_code}</td>
+                  <td>{r.metal_type}</td>
+                  <td>{Number(r.gst_percent).toFixed(2)}</td>
+                  <td>{r.description || '-'}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {rows.map(r => (
+            <div key={r.id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>{r.metal_type}</span>
+                  <span className="badge">GST {Number(r.gst_percent).toFixed(0)}%</span>
+                </div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Code:</strong> {r.part_code}</div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Description:</strong> {r.description || '-'}</div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );
