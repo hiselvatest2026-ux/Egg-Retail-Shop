@@ -27,14 +27,22 @@ const Metric = ({ title, value }) => (
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    (async () => {
+  const load = async () => {
+    try {
+      setLoading(true);
+      setErrorMsg('');
       const res = await getDashboard();
       setData(res.data);
+    } catch (e) {
+      setErrorMsg('Failed to load dashboard. Please check the API and try again.');
+    } finally {
       setLoading(false);
-    })();
-  }, []);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
 
   const salesTrendChart = useMemo(() => {
     const labels = data?.sales_trend?.map(d => d.day) ?? [];
@@ -59,6 +67,15 @@ const Dashboard = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      {errorMsg && (
+        <div className="toast" style={{marginBottom:12}}>
+          {errorMsg}
+          <div className="btn-group" style={{marginTop:8}}>
+            <button className="btn primary btn-sm" onClick={load}>Retry</button>
+            <Link className="btn secondary btn-sm" to="/sales">Go to Sales</Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Metric title="Total Sales Today" value={`₹ ${Number(data?.metrics?.total_sales_today || 0).toFixed(2)}`} />
