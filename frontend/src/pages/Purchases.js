@@ -96,14 +96,14 @@ const Purchases = () => {
           </div>
           <div className="input-group">
             <label>Price per unit</label>
-            <input className="input" value={form.price_per_unit} inputMode="decimal" onChange={e=>{
+            <input className="input" type="number" step="0.01" value={form.price_per_unit} inputMode="decimal" onChange={e=>{
               const v = e.target.value; setForm({...form, price_per_unit: v});
               const total = calcTotal(v, form.quantity, gstPercent); setForm(prev=>({...prev, total}));
             }} />
           </div>
           <div className="input-group">
             <label>Quantity</label>
-            <input className="input" value={form.quantity} inputMode="numeric" onChange={e=>{
+            <input className="input" type="number" value={form.quantity} inputMode="numeric" onChange={e=>{
               const v = e.target.value; setForm({...form, quantity: v});
               const total = calcTotal(form.price_per_unit, v, gstPercent); setForm(prev=>({...prev, total}));
             }} />

@@ -92,11 +92,11 @@ const Payments = () => {
           </div>
           <div className="input-group">
             <label>Amount</label>
-            <input className="input" value={form.amount} placeholder="e.g. 500.00" onChange={e=>setForm({...form, amount: e.target.value})} inputMode="decimal" />
+            <input className="input" type="number" step="0.01" value={form.amount} placeholder="e.g. 500.00" onChange={e=>setForm({...form, amount: e.target.value})} inputMode="decimal" />
           </div>
           <div className="input-group">
             <label>Mode</label>
-            <input className="input" placeholder="Cash / Card / UPI" value={form.payment_mode} onChange={e=>setForm({...form, payment_mode: e.target.value})} />
+            <input className="input" type="text" placeholder="Cash / Card / UPI" value={form.payment_mode} onChange={e=>setForm({...form, payment_mode: e.target.value})} />
           </div>
           <div className="actions-row">
             <button className="btn w-full sm:w-auto" type="submit">{editing ? 'Update Payment' : 'Add Payment'}</button>

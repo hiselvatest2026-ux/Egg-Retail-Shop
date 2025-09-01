@@ -55,7 +55,7 @@ const Customers = () => {
         </div>
         <div className="input-group">
           <label>Phone Number</label>
-          <input className="input" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
+          <input className="input" type="tel" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Category</label>
@@ -67,7 +67,7 @@ const Customers = () => {
         </div>
         <div className="input-group">
           <label>GSTIN</label>
-          <input className="input" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} placeholder="If applicable" />
+          <input className="input" type="text" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} placeholder="If applicable" />
         </div>
         <div className="input-group">
           <label>Tax Applicability</label>
@@ -78,11 +78,11 @@ const Customers = () => {
         </div>
         <div className="input-group">
           <label>Contact</label>
-          <input className="input" value={form.contact_info} onChange={e=>setForm({...form, contact_info: e.target.value})} />
+          <input className="input" type="text" value={form.contact_info} onChange={e=>setForm({...form, contact_info: e.target.value})} />
         </div>
         <div className="input-group">
           <label>Credit Limit</label>
-          <input className="input" value={form.credit_limit} onChange={e=>setForm({...form, credit_limit: e.target.value})} inputMode="decimal" />
+          <input className="input" type="number" step="0.01" value={form.credit_limit} onChange={e=>setForm({...form, credit_limit: e.target.value})} inputMode="decimal" />
         </div>
         <div className="actions-row">
           <button className="btn w-full sm:w-auto" type="submit" onClick={() => console.log('Button clicked!')}>{editing ? 'Update' : 'Add'}</button>

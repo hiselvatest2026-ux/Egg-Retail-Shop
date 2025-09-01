@@ -57,23 +57,23 @@ const Vendors = () => {
           </div>
           <div className="input-group">
             <label>Phone Number</label>
-            <input className="input" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
+            <input className="input" type="tel" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
           </div>
           <div className="input-group" style={{gridColumn:'span 2'}}>
             <label>Address</label>
-            <input className="input" value={form.address} onChange={e=>setForm({...form, address: e.target.value})} />
+            <input className="input" type="text" value={form.address} onChange={e=>setForm({...form, address: e.target.value})} />
           </div>
           <div className="input-group">
             <label>Pincode</label>
-            <input className="input" value={form.pincode} onChange={e=>setForm({...form, pincode: e.target.value})} />
+            <input className="input" type="tel" value={form.pincode} onChange={e=>setForm({...form, pincode: e.target.value})} />
           </div>
           <div className="input-group">
             <label>GST#</label>
-            <input className="input" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} placeholder="If applicable" />
+            <input className="input" type="text" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} placeholder="If applicable" />
           </div>
           <div className="input-group">
             <label>Credit Terms</label>
-            <input className="input" value={form.credit_terms} onChange={e=>setForm({...form, credit_terms: e.target.value})} placeholder="e.g., Net 30" />
+            <input className="input" type="text" value={form.credit_terms} onChange={e=>setForm({...form, credit_terms: e.target.value})} placeholder="e.g., Net 30" />
           </div>
           <div className="actions-row">
             <button className="btn w-full sm:w-auto" type="submit">{editing ? 'Update' : 'Add'}</button>

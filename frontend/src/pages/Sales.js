@@ -250,7 +250,7 @@ const Sales = () => {
           </div>
           <div className="input-group">
             <label>Quantity</label>
-            <input className="input" value={form.quantity} onChange={e=>setForm({...form, quantity: e.target.value})} inputMode="numeric" />
+            <input className="input" type="number" value={form.quantity} onChange={e=>setForm({...form, quantity: e.target.value})} inputMode="numeric" />
           </div>
           <div className="input-group">
             <label>Total Amount</label>
@@ -315,7 +315,7 @@ const Sales = () => {
             <>
               <div className="input-group">
                 <label>Amount Received</label>
-                <input className="input" value={paymentAtCreate.amount} onChange={e=>setPaymentAtCreate({...paymentAtCreate, amount: e.target.value})} inputMode="decimal" />
+                <input className="input" type="number" step="0.01" value={paymentAtCreate.amount} onChange={e=>setPaymentAtCreate({...paymentAtCreate, amount: e.target.value})} inputMode="decimal" />
               </div>
               <div className="input-group">
                 <label>Payment Mode</label>

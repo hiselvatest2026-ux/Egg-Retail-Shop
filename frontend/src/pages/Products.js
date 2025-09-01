@@ -35,15 +35,15 @@ const Products = () => {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
         <div>
           <label className="block text-sm">Name</label>
-          <input className="border p-2 w-full" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
+          <input className="border p-2 w-full" type="text" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Price</label>
-          <input className="border p-2 w-full" value={form.price} onChange={e=>setForm({...form, price: e.target.value})} />
+          <input className="border p-2 w-full" type="number" step="0.01" value={form.price} onChange={e=>setForm({...form, price: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Batch</label>
-          <input className="border p-2 w-full" value={form.batch_number} onChange={e=>setForm({...form, batch_number: e.target.value})} />
+          <input className="border p-2 w-full" type="text" value={form.batch_number} onChange={e=>setForm({...form, batch_number: e.target.value})} />
         </div>
         <div>
           <label className="block text-sm">Expiry</label>
