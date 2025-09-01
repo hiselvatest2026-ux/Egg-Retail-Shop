@@ -10,7 +10,7 @@ const Sales = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
   const [trips, setTrips] = useState([]);
   const [newTrip, setNewTrip] = useState({ route_name: '', vehicle_number: '', service_date: () => new Date().toISOString().slice(0,10) });
   const [available, setAvailable] = useState(null);
@@ -119,7 +119,7 @@ const Sales = () => {
         }
         navigate(`/invoice/${newSale.id}`);
       }
-      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: 'Retail', quantity: '1', sale_type:'Cash', payment_mode:'Cash' });
+      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', sale_type:'Cash', payment_mode:'Cash' });
       setRecordPaymentNow(false);
       setPaymentAtCreate({ amount: '', mode: 'Cash' });
       setPricingInfo(null);
@@ -233,7 +233,8 @@ const Sales = () => {
           </div>
           <div className="input-group">
             <label>Category</label>
-            <select className="input" title={form.category} value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
+            <select className="input" required title={form.category || 'Select category'} value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
+              <option value="" disabled>Select category</option>
               <option value="Retail">Retail</option>
               <option value="Wholesale">Wholesale</option>
               <option value="Walk-in">Walk-in</option>
@@ -330,7 +331,7 @@ const Sales = () => {
           
           <div className="actions-row" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
             <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Sale' : 'Add Sale'}</button>
-            {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '', egg_type: '', material_code: '', category: 'Retail' }); setPricingInfo(null); }}>Cancel</button>}
+            {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ customer_id: '', total: '', egg_type: '', material_code: '', category: '' }); setPricingInfo(null); }}>Cancel</button>}
           </div>
           {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
           {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
