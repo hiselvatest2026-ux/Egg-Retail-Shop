@@ -21,6 +21,8 @@ const Invoice = () => {
 
   const { company, sale, items, total, totals } = invoice;
 
+  const logoUrl = "https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg";
+
   return (
     <div className="p-4">
       <div className="no-print" style={{marginBottom:8}}>
@@ -31,10 +33,8 @@ const Invoice = () => {
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8}}>
           <div>
             <div style={{display:'flex', alignItems:'center', gap:12}}>
-              {company?.logo_url && (
-                <img src={company.logo_url} alt="Company Logo" width={48} height={48} style={{borderRadius:8, border:'1px solid #243040'}} />
-              )}
-              <div className="text-xl font-bold">{company?.company_name || 'Company'}</div>
+              <img src={logoUrl} alt="Company Logo" width={48} height={48} style={{borderRadius:8, border:'1px solid #243040', objectFit:'cover'}} />
+              <div className="text-xl font-bold">{company?.company_name || 'MyBharatMart POS'}</div>
             </div>
             <div style={{whiteSpace:'pre-line'}}>{company?.address || ''}</div>
             <div>GSTIN: {company?.gstin || '-'}</div>

@@ -28,16 +28,16 @@ function App() {
         <div className="mobile-header">
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu">☰</button>
           <div style={{display:'flex', alignItems:'center', gap:8}}>
-            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg" alt="Logo" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937'}} />
-            <span style={{fontWeight:800}}>TRY ZEROEGG POS</span>
+            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg" alt="Logo" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937', objectFit:'cover'}} />
+            <span style={{fontWeight:800}}>MyBharatMart POS</span>
           </div>
         </div>
         {sidebarOpen && <div className="backdrop" onClick={()=>setSidebarOpen(false)} />}
         <aside className={"sidebar" + (sidebarOpen ? " open" : "") } style={{width:'78%', maxWidth:300}}>
           <div className="brand">
             <div style={{display:'flex', alignItems:'center', gap:8}}>
-              <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937'}} />
-              <span>TRY ZEROEGG POS</span>
+              <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937', objectFit:'cover'}} />
+              <span>MyBharatMart POS</span>
             </div>
           </div>
           <nav className="nav">
