@@ -140,7 +140,7 @@ const Purchases = () => {
             <label>Total Amount</label>
             <input className="input" value={form.total} readOnly />
           </div>
-          <div className="actions-row" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
+          <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
             <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
