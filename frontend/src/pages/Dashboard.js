@@ -60,7 +60,7 @@ const Dashboard = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="stat-grid" style={{marginBottom:16}}>
         <Metric title="Total Sales Today" value={`₹ ${Number(data?.metrics?.total_sales_today || 0).toFixed(2)}`} />
         <Metric title="Current Stock Level" value={Number(data?.metrics?.current_stock_level || 0)} />
         <Metric title="Pending Orders" value={Number(data?.metrics?.pending_orders || 0)} />
@@ -74,10 +74,14 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Sales Trend">
-          <Line data={salesTrendChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+          <div style={{overflowX:'auto'}}>
+            <Line data={salesTrendChart} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} height={260} />
+          </div>
         </Card>
         <Card title="Low/Current Stock by Product">
-          <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+          <div style={{overflowX:'auto'}}>
+            <Bar data={lowStockChart} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }} height={260} />
+          </div>
         </Card>
       </div>
     </div>

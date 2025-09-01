@@ -139,7 +139,7 @@ const PricingMaster = () => {
             <label>GST %</label>
             <input className="input" value={getSelectedMaterialGST()} disabled readOnly />
           </div>
-          <div className="actions-row">
+          <div className="actions-row sticky-actions">
             <button className="btn" type="submit" onClick={() => console.log('Pricing button clicked!')}>
               {editing ? 'Update' : 'Add'}
             </button>
@@ -160,42 +160,70 @@ const PricingMaster = () => {
       <div style={{height:12}} />
 
       <Card title="Pricing List">
-        <table className="table table-hover">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Customer</th>
-              <th>Category</th>
-              <th>Material Code</th>
-              <th>Material Description</th>
-              <th>Base Price</th>
-              <th>GST %</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pricing.map(p => (
-              <tr key={p.id}>
-                <td>#{p.id}</td>
-                <td>{p.customer_name || 'All Customers'}</td>
-                <td>{p.category}</td>
-                <td>{p.material_code}</td>
-                <td>{p.material_description || '-'}</td>
-                <td>₹{Number(p.base_price).toFixed(2)}</td>
-                <td>{Number(p.gst_percent).toFixed(2)}%</td>
-                <td>
-                  <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>startEdit(p)}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ 
-                      await deletePricing(p.id); 
-                      fetchPricing(); 
-                    }}>Delete</button>
-                  </div>
-                </td>
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Category</th>
+                <th>Material Code</th>
+                <th>Material Description</th>
+                <th>Base Price</th>
+                <th>GST %</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pricing.map(p => (
+                <tr key={p.id}>
+                  <td>#{p.id}</td>
+                  <td>{p.customer_name || 'All Customers'}</td>
+                  <td>{p.category}</td>
+                  <td>{p.material_code}</td>
+                  <td>{p.material_description || '-'}</td>
+                  <td>₹{Number(p.base_price).toFixed(2)}</td>
+                  <td>{Number(p.gst_percent).toFixed(2)}%</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm" onClick={()=>startEdit(p)}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ 
+                        await deletePricing(p.id); 
+                        fetchPricing(); 
+                      }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {pricing.map(p => (
+            <div key={p.id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Pricing #{p.id}</span>
+                  <span className="badge">{p.category}</span>
+                </div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Customer:</strong> {p.customer_name || 'All Customers'}</div>
+                  <div className="pair"><strong>Material Code:</strong> {p.material_code}</div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Description:</strong> {p.material_description || '-'}</div>
+                  <div className="pair"><strong>Base Price:</strong> ₹{Number(p.base_price).toFixed(2)}</div>
+                  <div className="pair"><strong>GST %:</strong> {Number(p.gst_percent).toFixed(2)}%</div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>startEdit(p)}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ 
+                    await deletePricing(p.id); 
+                    fetchPricing(); 
+                  }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );

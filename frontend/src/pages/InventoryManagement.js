@@ -74,32 +74,60 @@ const InventoryManagement = () => {
       <div style={{height:12}} />
 
       <Card title="Stock Details (FIFO: sell older batches first)">
-        <table className="table table-hover">
-          <thead><tr><th>Product</th><th>Purchased</th><th>Sold</th><th>In Stock</th></tr></thead>
-          <tbody>
-            {rows.map(r => (
-              <tr key={r.product_id}>
-                <td>{r.name} (#{r.product_id})</td>
-                <td>{r.purchased_qty}</td>
-                <td>{r.sold_qty}</td>
-                <td>{r.stock}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead><tr><th>Product</th><th>Purchased</th><th>Sold</th><th>In Stock</th></tr></thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.product_id}>
+                  <td>{r.name} (#{r.product_id})</td>
+                  <td>{r.purchased_qty}</td>
+                  <td>{r.sold_qty}</td>
+                  <td>{r.stock}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {rows.map(r => (
+            <details key={r.product_id} className="accordion">
+              <summary>{r.name} (#{r.product_id})</summary>
+              <div className="accordion-body">
+                <div className="data-pairs">
+                  <div className="pair"><strong>Purchased:</strong> {r.purchased_qty}</div>
+                  <div className="pair"><strong>Sold:</strong> {r.sold_qty}</div>
+                  <div className="pair"><strong>In Stock:</strong> {r.stock}</div>
+                </div>
+              </div>
+            </details>
+          ))}
+        </div>
       </Card>
 
       <div style={{height:12}} />
 
       <Card title="Reorder Suggestions">
-        <table className="table table-hover">
-          <thead><tr><th>Product</th><th>Current Stock</th></tr></thead>
-          <tbody>
-            {insights.reorder_suggestions.map(r => (
-              <tr key={r.product_id}><td>{r.name} (#{r.product_id})</td><td>{r.stock}</td></tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead><tr><th>Product</th><th>Current Stock</th></tr></thead>
+            <tbody>
+              {insights.reorder_suggestions.map(r => (
+                <tr key={r.product_id}><td>{r.name} (#{r.product_id})</td><td>{r.stock}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {insights.reorder_suggestions.map(r => (
+            <div key={r.product_id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title">{r.name} (#{r.product_id})</div>
+                <div className="data-pairs"><div className="pair"><strong>Current Stock:</strong> {r.stock}</div></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
 
       <div style={{height:12}} />
@@ -114,27 +142,54 @@ const InventoryManagement = () => {
       <div style={{height:12}} />
 
       <Card title="Near Expiry (next 3 days)">
-        <table className="table table-hover">
-          <thead><tr><th>Product</th><th>Expiry</th><th>In Stock</th></tr></thead>
-          <tbody>
-            {(insights.near_expiry||[]).map(e => (
-              <tr key={e.product_id}><td>{e.name} (#{e.product_id})</td><td>{new Date(e.expiry_date).toLocaleDateString()}</td><td>{e.stock}</td></tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead><tr><th>Product</th><th>Expiry</th><th>In Stock</th></tr></thead>
+            <tbody>
+              {(insights.near_expiry||[]).map(e => (
+                <tr key={e.product_id}><td>{e.name} (#{e.product_id})</td><td>{new Date(e.expiry_date).toLocaleDateString()}</td><td>{e.stock}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {(insights.near_expiry||[]).map(e => (
+            <div key={e.product_id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title">{e.name} (#{e.product_id})</div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Expiry:</strong> {new Date(e.expiry_date).toLocaleDateString()}</div>
+                  <div className="pair"><strong>In Stock:</strong> {e.stock}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
 
       <div style={{height:12}} />
 
       <Card title="Supplier Purchase Value (90 days)">
-        <table className="table table-hover">
-          <thead><tr><th>Supplier</th><th>Purchase Value</th></tr></thead>
-          <tbody>
-            {(insights.supplier_stats||[]).map(s => (
-              <tr key={s.supplier_id}><td>{s.supplier_name}</td><td>₹ {Number(s.purchase_value).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td></tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead><tr><th>Supplier</th><th>Purchase Value</th></tr></thead>
+            <tbody>
+              {(insights.supplier_stats||[]).map(s => (
+                <tr key={s.supplier_id}><td>{s.supplier_name}</td><td>₹ {Number(s.purchase_value).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {(insights.supplier_stats||[]).map(s => (
+            <div key={s.supplier_id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title">{s.supplier_name}</div>
+                <div className="data-pairs"><div className="pair"><strong>Purchase Value:</strong> ₹ {Number(s.purchase_value).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
       </>
       )}
@@ -142,23 +197,42 @@ const InventoryManagement = () => {
       {tab==='opening' && (
       <>
       <Card title="Opening Stock (Product)">
-        <table className="table table-hover">
-          <thead><tr><th>Material Code</th><th>Material Type</th><th>Quantity</th></tr></thead>
-          <tbody>
-            {openingMaterials.map(row => (
-              <tr key={row.material_code}>
-                <td>{row.material_code}</td>
-                <td>{row.material_type}</td>
-                <td>
-                  <input className="input" value={row.quantity} onChange={e=>{
-                    const v = e.target.value; setOpeningMaterials(prev=>prev.map(x=>x.material_code===row.material_code?{...x, quantity:v}:x));
-                  }} inputMode="numeric" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="actions-row">
+        <div className="hide-on-mobile">
+          <table className="table table-hover">
+            <thead><tr><th>Material Code</th><th>Material Type</th><th>Quantity</th></tr></thead>
+            <tbody>
+              {openingMaterials.map(row => (
+                <tr key={row.material_code}>
+                  <td>{row.material_code}</td>
+                  <td>{row.material_type}</td>
+                  <td>
+                    <input className="input" value={row.quantity} onChange={e=>{
+                      const v = e.target.value; setOpeningMaterials(prev=>prev.map(x=>x.material_code===row.material_code?{...x, quantity:v}:x));
+                    }} inputMode="numeric" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {openingMaterials.map(row => (
+            <div key={row.material_code} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title">{row.material_type} ({row.material_code})</div>
+                <div className="data-pairs">
+                  <div className="pair" style={{flexBasis:'100%'}}>
+                    <strong>Quantity:</strong>
+                    <input className="input" value={row.quantity} onChange={e=>{
+                      const v = e.target.value; setOpeningMaterials(prev=>prev.map(x=>x.material_code===row.material_code?{...x, quantity:v}:x));
+                    }} inputMode="numeric" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="actions-row sticky-actions">
           <button className="btn" onClick={async()=>{
             try { await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items: openingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
             catch(e){ console.error('save opening materials failed', e); }

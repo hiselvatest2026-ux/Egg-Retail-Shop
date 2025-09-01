@@ -65,7 +65,7 @@ const SaleItems = () => {
             <label>Price</label>
             <input className="input" value={form.price} onChange={e=>setForm({...form, price: e.target.value})} inputMode="decimal" />
           </div>
-          <div className="actions-row">
+          <div className="actions-row sticky-actions">
             <button className="btn" type="submit">{editing ? 'Update' : 'Add'}</button>
             {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ product_id: '', quantity: '', price: '' }); }}>Cancel</button>}
           </div>
@@ -75,26 +75,49 @@ const SaleItems = () => {
       </Card>
 
       <Card title="Items List">
-        <table className="table table-hover mt-2">
-          <thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th>Actions</th></tr></thead>
-          <tbody>
-            {items.map(it => (
-              <tr key={it.id}>
-                <td>#{it.id}</td>
-                <td>{it.product_name} (#{it.product_id})</td>
-                <td>{it.quantity}</td>
-                <td>₹ {Number(it.price).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>₹ {Number(it.line_total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                <td>
-                  <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>{ setEditing(it.id); setForm({ product_id: it.product_id, quantity: it.quantity, price: it.price }); }}>Edit</button>
-                    <button className="btn danger btn-sm" onClick={async()=>{ try{ await deleteSaleItem(id, it.id); await fetchItems(); }catch(e){ console.error('delete failed', e);} }}>Delete</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="hide-on-mobile">
+          <table className="table table-hover mt-2">
+            <thead><tr><th>ID</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th>Actions</th></tr></thead>
+            <tbody>
+              {items.map(it => (
+                <tr key={it.id}>
+                  <td>#{it.id}</td>
+                  <td>{it.product_name} (#{it.product_id})</td>
+                  <td>{it.quantity}</td>
+                  <td>₹ {Number(it.price).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>₹ {Number(it.line_total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm" onClick={()=>{ setEditing(it.id); setForm({ product_id: it.product_id, quantity: it.quantity, price: it.price }); }}>Edit</button>
+                      <button className="btn danger btn-sm" onClick={async()=>{ try{ await deleteSaleItem(id, it.id); await fetchItems(); }catch(e){ console.error('delete failed', e);} }}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="cards-mobile">
+          {items.map(it => (
+            <div key={it.id} className="card" style={{marginBottom:10}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Item #{it.id}</span>
+                </div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Product:</strong> {it.product_name} (#{it.product_id})</div>
+                  <div className="pair"><strong>Qty:</strong> {it.quantity}</div>
+                  <div className="pair"><strong>Price:</strong> ₹ {Number(it.price).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                  <div className="pair"><strong>Total:</strong> ₹ {Number(it.line_total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>{ setEditing(it.id); setForm({ product_id: it.product_id, quantity: it.quantity, price: it.price }); }}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ try{ await deleteSaleItem(id, it.id); await fetchItems(); }catch(e){ console.error('delete failed', e);} }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );
