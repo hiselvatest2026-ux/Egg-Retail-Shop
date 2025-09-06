@@ -173,8 +173,7 @@ const Purchases = () => {
 
       <Card title="Purchases List">
         <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
-          <input className="input w-full sm:w-72" placeholder="Search by #, vendor, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-          <div style={{minWidth: '12rem', overflow:'visible'}}>
+          <div className="w-full sm:w-52" style={{overflow:'visible'}}>
             <Dropdown
               value={vendorFilter}
               onChange={v=>{ setVendorFilter(v); setPage(1); }}
@@ -182,6 +181,7 @@ const Purchases = () => {
               options={[{value:'', label:'All Vendors'}, ...vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))]}
             />
           </div>
+          <input className="input w-full sm:w-72" placeholder="Search by #, vendor, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
           <div className="ml-auto flex items-center gap-3">
             <select className="input w-28" value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
               <option value={5}>5 / page</option>
