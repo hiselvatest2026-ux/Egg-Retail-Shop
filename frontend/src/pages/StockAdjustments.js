@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import Dropdown from '../components/Dropdown';
 import { getProducts, getAdjustments, createAdjustment, deleteAdjustmentApi } from '../api/api';
 
 const StockAdjustments = () => {
@@ -43,21 +44,23 @@ const StockAdjustments = () => {
 
       <Card title="Add Adjustment">
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Product</label>
-            <select className="input" value={form.product_id} onChange={e=>setForm({...form, product_id: e.target.value})}>
-              <option value="">{products.length ? 'Select product' : 'No products found'}</option>
-              {products.map(p => (<option key={p.id} value={p.id}>{p.name} (#{p.id})</option>))}
-            </select>
+            <Dropdown
+              value={form.product_id}
+              onChange={(v)=>setForm({...form, product_id: v})}
+              placeholder={products.length ? 'Select product' : 'No products found'}
+              options={products.map(p=>({ value:String(p.id), label:`${p.name} (#${p.id})` }))}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Type</label>
-            <select className="input" value={form.adjustment_type} onChange={e=>setForm({...form, adjustment_type: e.target.value})}>
-              <option value="">Select type</option>
-              <option value="Missing">Missing</option>
-              <option value="Wastage">Wastage</option>
-              <option value="Breakage">Breakage</option>
-            </select>
+            <Dropdown
+              value={form.adjustment_type}
+              onChange={(v)=>setForm({...form, adjustment_type: v})}
+              placeholder={'Select type'}
+              options={[{value:'Missing', label:'Missing'},{value:'Wastage', label:'Wastage'},{value:'Breakage', label:'Breakage'}]}
+            />
           </div>
           <div className="input-group">
             <label>Quantity</label>
