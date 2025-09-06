@@ -196,6 +196,10 @@ const Sales = () => {
     const start = (currentPage - 1) * pageSize;
     return filteredSales.slice(start, start + pageSize);
   }, [filteredSales, currentPage, pageSize]);
+  const visibleSales = useMemo(() => {
+    const count = page * pageSize;
+    return filteredSales.slice(0, count);
+  }, [filteredSales, page, pageSize]);
 
   return (
     <div className="page space-y-4">
@@ -402,27 +406,27 @@ const Sales = () => {
           </table>
           )}
         </div>
-        {/* Mobile cards */}
+        {/* Mobile cards with Load More */}
         <div className="block sm:hidden">
           {filteredSales.length === 0 && (
             <div className="card" style={{padding:16, textAlign:'center'}}>No sales yet. Create your first sale using the form.</div>
           )}
-          {pagedSales.map(s => {
+          {visibleSales.map(s => {
             const paid = Number(paymentsByInvoice[String(s.id)]||0);
             const balance = Math.max(0, Number(s.total) - paid);
             return (
-              <div key={s.id} className="card" style={{marginBottom:10}}>
+              <div key={s.id} className="card" style={{marginBottom:12}}>
                 <div className="card-body">
                   <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
                     <span>Sale #{s.id}</span>
                     <span className="badge">{s.category || 'Retail'}</span>
                   </div>
-                  <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Customer: #{s.customer_id}</div>
-                  <div className="flex flex-wrap gap-3 text-sm">
-                    <div><strong>Product:</strong> {s.product_name || '-'}</div>
-                    <div><strong>Total:</strong> ₹ {Number(s.total).toFixed(2)}</div>
-                    <div><strong>Paid:</strong> ₹ {paid.toFixed(2)}</div>
-                    <div><strong>Balance:</strong> ₹ {balance.toFixed(2)}</div>
+                  <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Customer: {customers.find(c=>String(c.id)===String(s.customer_id))?.name || `#${s.customer_id}`}</div>
+                  <div className="data-pairs">
+                    <div className="pair"><strong>Product</strong><div>{s.product_name || '-'}</div></div>
+                    <div className="pair" style={{textAlign:'right'}}><strong>Total</strong><div>₹ {Number(s.total).toFixed(2)}</div></div>
+                    <div className="pair" style={{textAlign:'right'}}><strong>Paid</strong><div>₹ {paid.toFixed(2)}</div></div>
+                    <div className="pair" style={{textAlign:'right'}}><strong>Balance</strong><div>₹ {balance.toFixed(2)}</div></div>
                   </div>
                   <div className="btn-group" style={{marginTop:10}}>
                     <Link className="btn primary btn-sm" to={`/invoice/${s.id}`}>Invoice</Link>
@@ -434,6 +438,13 @@ const Sales = () => {
               </div>
             );
           })}
+          {visibleSales.length < filteredSales.length && (
+            <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+              <button type="button" className="btn primary w-full" onClick={()=> setPage(p => p + 1)}>
+                Load More
+              </button>
+            </div>
+          )}
         </div>
       </Card>
       </div>
