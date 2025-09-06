@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getCustomers, createCustomer, updateCustomer, deleteCustomer } from '../api/api';
 import Card from '../components/Card';
+import Dropdown from '../components/Dropdown';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
@@ -57,24 +58,25 @@ const Customers = () => {
           <label>Phone Number</label>
           <input className="input" type="tel" value={form.phone} onChange={e=>setForm({...form, phone: e.target.value})} />
         </div>
-        <div className="input-group">
+        <div className="input-group" style={{overflow:'visible'}}>
           <label>Category</label>
-          <select className="input" value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
-            <option value="Retail">Retail</option>
-            <option value="Wholesale">Wholesale</option>
-            <option value="Walk-in">Walk-in</option>
-          </select>
+          <Dropdown
+            value={form.category}
+            onChange={(v)=>setForm({...form, category: v})}
+            options={[{value:'Retail',label:'Retail'},{value:'Wholesale',label:'Wholesale'},{value:'Walk-in',label:'Walk-in'}]}
+          />
         </div>
         <div className="input-group">
           <label>GSTIN</label>
           <input className="input" type="text" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} placeholder="If applicable" />
         </div>
-        <div className="input-group">
+        <div className="input-group" style={{overflow:'visible'}}>
           <label>Tax Applicability</label>
-          <select className="input" value={form.tax_applicability} onChange={e=>setForm({...form, tax_applicability: e.target.value})}>
-            <option value="Taxable">Taxable</option>
-            <option value="Non-Taxable">Non-Taxable</option>
-          </select>
+          <Dropdown
+            value={form.tax_applicability}
+            onChange={(v)=>setForm({...form, tax_applicability: v})}
+            options={[{value:'Taxable',label:'Taxable'},{value:'Non-Taxable',label:'Non-Taxable'}]}
+          />
         </div>
         <div className="input-group">
           <label>Contact</label>

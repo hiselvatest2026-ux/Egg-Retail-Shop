@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import Dropdown from '../components/Dropdown';
 import { getPricing, createPricing, updatePricing, deletePricing, getCustomers, getMetals } from '../api/api';
 
 const PricingMaster = () => {
@@ -105,31 +106,31 @@ const PricingMaster = () => {
 
       <Card title={editing ? 'Edit Pricing' : 'Add Pricing'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Customer</label>
-            <select className="input" value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
-              <option value="">All Customers</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <Dropdown
+              value={form.customer_id}
+              onChange={(v)=>setForm({...form, customer_id: v})}
+              placeholder={'All Customers'}
+              options={[{value:'', label:'All Customers'}, ...customers.map(c=>({ value:String(c.id), label:c.name }))]}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Category</label>
-            <select className="input" value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
-              <option value="Retail">Retail</option>
-              <option value="Wholesale">Wholesale</option>
-              <option value="Walk-in">Walk-in</option>
-            </select>
+            <Dropdown
+              value={form.category}
+              onChange={(v)=>setForm({...form, category: v})}
+              options={[{value:'Retail',label:'Retail'},{value:'Wholesale',label:'Wholesale'},{value:'Walk-in',label:'Walk-in'}]}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Material Code</label>
-            <select className="input" value={form.material_code} onChange={e=>setForm({...form, material_code: e.target.value})}>
-              <option value="">Select Material</option>
-              {materials.map(m => (
-                <option key={m.id} value={m.part_code}>{m.part_code} - {m.description || m.metal_type}</option>
-              ))}
-            </select>
+            <Dropdown
+              value={form.material_code}
+              onChange={(v)=>setForm({...form, material_code: v})}
+              placeholder={'Select Material'}
+              options={materials.map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.description || m.metal_type}` }))}
+            />
           </div>
           <div className="input-group">
             <label>Base Price</label>

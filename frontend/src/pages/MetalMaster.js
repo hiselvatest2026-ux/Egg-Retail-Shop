@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import Dropdown from '../components/Dropdown';
 import { getMetals, createMetal, updateMetal, deleteMetal } from '../api/api';
 
 const MetalMaster = () => {
@@ -52,27 +53,20 @@ const MetalMaster = () => {
             <label>Material Code</label>
             <input className="input" value={form.part_code} disabled readOnly placeholder="Auto-generated (Mxxxxx)" />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Material Type</label>
-            <select
-              className="input"
+            <Dropdown
               value={form.metal_type}
-              onChange={e=>{
-                const nextType = e.target.value;
+              onChange={(nextType)=>{
                 const mappedGst = nextType === 'Panner' ? '5' : '0';
                 setForm({...form, metal_type: nextType, gst_percent: mappedGst});
               }}
-            >
-              <option value="Egg">Egg</option>
-              <option value="Panner">Panner</option>
-            </select>
+              options={[{value:'Egg',label:'Egg'},{value:'Panner',label:'Panner'}]}
+            />
           </div>
           <div className="input-group">
             <label>GST %</label>
-            <select className="input" value={form.gst_percent} disabled>
-              <option value="0">0</option>
-              <option value="5">5</option>
-            </select>
+            <input className="input" value={form.gst_percent} disabled readOnly />
           </div>
           <div className="input-group">
             <label>Material Description</label>
