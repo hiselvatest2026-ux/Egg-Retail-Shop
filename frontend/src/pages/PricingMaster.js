@@ -95,6 +95,9 @@ const PricingMaster = () => {
     return material ? material.gst_percent : 0;
   };
 
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const visiblePricing = pricing.slice(0, page * pageSize);
   return (
     <div className="page">
       <div className="page-header">
@@ -104,6 +107,7 @@ const PricingMaster = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Pricing' : 'Add Pricing'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
           <div className="input-group" style={{overflow:'visible'}}>
@@ -175,15 +179,15 @@ const PricingMaster = () => {
             </tr>
           </thead>
           <tbody>
-            {pricing.map(p => (
+            {visiblePricing.map(p => (
               <tr key={p.id}>
                 <td>#{p.id}</td>
                 <td>{p.customer_name || 'All Customers'}</td>
                 <td>{p.category}</td>
                 <td>{p.material_code}</td>
                 <td>{p.material_description || '-'}</td>
-                <td>₹{Number(p.base_price).toFixed(2)}</td>
-                <td>{Number(p.gst_percent).toFixed(2)}%</td>
+                <td style={{textAlign:'right'}}>₹{Number(p.base_price).toFixed(2)}</td>
+                <td style={{textAlign:'right'}}>{Number(p.gst_percent).toFixed(2)}%</td>
                 <td>
                   <div className="btn-group">
                     <button className="btn btn-sm" onClick={()=>startEdit(p)}>Edit</button>
@@ -197,7 +201,36 @@ const PricingMaster = () => {
             ))}
           </tbody>
         </table>
+        {/* Mobile cards */}
+        <div className="block sm:hidden">
+          {visiblePricing.map(p => (
+            <div key={p.id} className="card" style={{marginTop:12}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Pricing #{p.id}</span>
+                </div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Customer</strong><div>{p.customer_name || 'All Customers'}</div></div>
+                  <div className="pair"><strong>Category</strong><div>{p.category}</div></div>
+                  <div className="pair"><strong>Material</strong><div>{p.material_code}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>Base Price</strong><div>₹{Number(p.base_price).toFixed(2)}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>GST %</strong><div>{Number(p.gst_percent).toFixed(2)}%</div></div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>startEdit(p)}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ await deletePricing(p.id); fetchPricing(); }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {visiblePricing.length < pricing.length && (
+            <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+              <button type="button" className="btn primary w-full" onClick={()=> setPage(p=>p+1)}>Load More</button>
+            </div>
+          )}
+        </div>
       </Card>
+      </div>
     </div>
   );
 };

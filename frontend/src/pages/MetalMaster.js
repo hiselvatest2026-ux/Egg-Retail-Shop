@@ -38,6 +38,9 @@ const MetalMaster = () => {
     }
   };
 
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const visibleRows = rows.slice(0, page * pageSize);
   return (
     <div className="page">
       <div className="page-header">
@@ -47,6 +50,7 @@ const MetalMaster = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Material' : 'Add Material'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
           <div className="input-group">
@@ -87,7 +91,7 @@ const MetalMaster = () => {
         <table className="table table-hover">
           <thead><tr><th>#</th><th>Material Code</th><th>Material Type</th><th>GST %</th><th>Material Description</th><th>Actions</th></tr></thead>
           <tbody>
-            {rows.map(r => (
+            {visibleRows.map(r => (
               <tr key={r.id}>
                 <td>#{r.id}</td>
                 <td>{r.part_code}</td>
@@ -104,7 +108,35 @@ const MetalMaster = () => {
             ))}
           </tbody>
         </table>
+        {/* Mobile cards */}
+        <div className="block sm:hidden">
+          {visibleRows.map(r => (
+            <div key={r.id} className="card" style={{marginTop:12}}>
+              <div className="card-body">
+                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
+                  <span>Material #{r.id}</span>
+                </div>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Code</strong><div>{r.part_code}</div></div>
+                  <div className="pair"><strong>Type</strong><div>{r.metal_type}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>GST %</strong><div>{Number(r.gst_percent).toFixed(2)}</div></div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Description</strong><div>{r.description || '-'}</div></div>
+                </div>
+                <div className="btn-group" style={{marginTop:10}}>
+                  <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
+                  <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {visibleRows.length < rows.length && (
+            <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+              <button type="button" className="btn primary w-full" onClick={()=> setPage(p=>p+1)}>Load More</button>
+            </div>
+          )}
+        </div>
       </Card>
+      </div>
     </div>
   );
 };

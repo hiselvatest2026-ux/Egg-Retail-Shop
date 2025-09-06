@@ -40,6 +40,9 @@ const Customers = () => {
 
   const startEdit = (c) => { setEditing(c.id); setForm({ name: c.name || '', phone: c.phone || '', category: c.category || 'Retail', gstin: c.gstin || '', tax_applicability: c.tax_applicability || 'Taxable', contact_info: c.contact_info || '', credit_limit: c.credit_limit || '' }); };
 
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const visibleCustomers = customers.slice(0, page * pageSize);
   return (
     <div className="page">
       <div className="page-header">
@@ -48,6 +51,7 @@ const Customers = () => {
           <p className="page-subtitle">Manage customer taxation and profiles</p>
         </div>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Customer' : 'Add Customer'}>
       <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
         <div className="input-group">
@@ -123,8 +127,8 @@ const Customers = () => {
           </table>
         </div>
         <div className="block sm:hidden">
-          {customers.map(c => (
-            <div key={c.id} className="card" style={{marginBottom:10}}>
+          {visibleCustomers.map(c => (
+            <div key={c.id} className="card" style={{marginBottom:12}}>
               <div className="card-body">
                 <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
                   <span>Customer #{c.id}</span>
@@ -134,7 +138,7 @@ const Customers = () => {
                 <div className="data-pairs">
                   <div className="pair"><strong>Name:</strong> {c.name}</div>
                   <div className="pair"><strong>Phone:</strong> {c.phone || '-'}</div>
-                  <div className="pair"><strong>Credit:</strong> ₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>Credit:</strong><div>₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
                   <div className="pair"><strong>GSTIN:</strong> {c.gstin || '-'}</div>
                   <div className="pair" style={{flexBasis:'100%'}}><strong>Tax:</strong> {c.tax_applicability || '-'}</div>
                   <div className="pair" style={{flexBasis:'100%'}}><strong>Contact:</strong> {c.contact_info || '-'}</div>
@@ -146,8 +150,14 @@ const Customers = () => {
               </div>
             </div>
           ))}
+          {visibleCustomers.length < customers.length && (
+            <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+              <button type="button" className="btn primary w-full" onClick={()=> setPage(p=>p+1)}>Load More</button>
+            </div>
+          )}
         </div>
       </Card>
+      </div>
     </div>
   );
 };
