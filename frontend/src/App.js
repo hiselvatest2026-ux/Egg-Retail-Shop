@@ -97,7 +97,6 @@ function App() {
           <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
-      </div>
       </ShopProvider>
     </Router>
   );
