@@ -31,21 +31,31 @@ const InventoryManagement = () => {
   const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
   const loadOpening = async () => {
     try { 
+      const params = locationId ? { params: { location_id: locationId } } : undefined;
       const [p, m] = await Promise.all([
-        axios.get(`${baseUrl}/inventory/opening-stocks`),
-        axios.get(`${baseUrl}/inventory/opening-stocks/materials`)
+        axios.get(`${baseUrl}/inventory/opening-stocks`, params),
+        axios.get(`${baseUrl}/inventory/opening-stocks/materials`, params)
       ]);
       setOpening(p.data||[]);
       setOpeningMaterials(m.data||[]);
     } catch(e){ console.error('load opening failed', e);} }
   const loadClosing = async () => {
     try { 
+      const params = locationId ? { params: { location_id: locationId } } : undefined;
       const [p, m] = await Promise.all([
-        axios.get(`${baseUrl}/inventory/closing-stocks`),
-        axios.get(`${baseUrl}/inventory/closing-stocks/materials`)
+        axios.get(`${baseUrl}/inventory/closing-stocks`, params),
+        axios.get(`${baseUrl}/inventory/closing-stocks/materials`, params)
       ]);
+      const list = m.data||[];
       setClosing(p.data||[]);
-      setClosingMaterials(m.data||[]);
+      if (!list.length) {
+        // Prefill with opening materials structure (quantities empty) when no saved closing yet
+        if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
+        const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity:'' }));
+        setClosingMaterials(prefill);
+      } else {
+        setClosingMaterials(list);
+      }
     } catch(e){ console.error('load closing failed', e);} }
   useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
 
@@ -209,11 +219,22 @@ const InventoryManagement = () => {
         </table>
         <div className="actions-row">
           <button className="btn" onClick={async()=>{
-            try { await axios.put(`${baseUrl}/inventory/closing-stocks/materials`, { items: closingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
+            try { 
+              const cfg = locationId ? { params: { location_id: locationId } } : undefined;
+              await axios.put(`${baseUrl}/inventory/closing-stocks/materials`, { items: closingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }, cfg); 
+              await load(locationId); 
+            }
             catch(e){ console.error('save closing materials failed', e); }
           setSaveMsg('Closing stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
           }}>Save Closing</button>
           <button className="btn secondary" onClick={loadClosing}>Refresh</button>
+          {!closingMaterials.length && (
+            <button className="btn secondary" onClick={async()=>{
+              if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
+              const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity:'' }));
+              setClosingMaterials(prefill);
+            }}>Prefill from Opening</button>
+          )}
         </div>
         {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
       </Card>
