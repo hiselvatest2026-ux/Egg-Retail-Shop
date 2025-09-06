@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendors, getMetals } from '../api/api';
 import Card from '../components/Card';
 import { Link } from 'react-router-dom';
+import Dropdown from '../components/Dropdown';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -106,27 +107,30 @@ const Purchases = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
         <form onSubmit={handleSubmit} className="form-grid-2">
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Vendor</label>
-            <select className="input" required aria-label="Vendor" title={(vendors.find(v=>String(v.id)===String(form.vendor_id))?.name) || ''} value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
-              <option value="" disabled>{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
-              {vendors.map(v => (<option key={v.id} value={v.id}>{v.vendor_code} - {v.name}</option>))}
-            </select>
+            <Dropdown
+              value={form.vendor_id}
+              onChange={v=>setForm({...form, vendor_id: v})}
+              placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
+              options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Product Name</label>
-            <select className="input" required aria-label="Product" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>{
-              const name = e.target.value; 
-              setForm({...form, product_name: name});
-              const m = materials.find(x=>x.metal_type===name);
-              const nextGst = m ? Number(m.gst_percent) : 0;
-              setGstPercent(nextGst);
-              const total = calcTotal(form.price_per_unit, form.quantity, nextGst);
-              setForm(prev=>({...prev, total}));
-            }}>
-              <option value="" disabled>Select product</option>
-              {materials.map(m => (<option key={m.id} value={m.metal_type}>{m.metal_type}</option>))}
-            </select>
+            <Dropdown
+              value={form.product_name}
+              onChange={(name)=>{
+                setForm({...form, product_name: name});
+                const m = materials.find(x=>x.metal_type===name);
+                const nextGst = m ? Number(m.gst_percent) : 0;
+                setGstPercent(nextGst);
+                const total = calcTotal(form.price_per_unit, form.quantity, nextGst);
+                setForm(prev=>({...prev, total}));
+              }}
+              placeholder={'Select product'}
+              options={materials.map(m=>({ value: m.metal_type, label: m.metal_type }))}
+            />
           </div>
           <div className="input-group">
             <label>Price per unit</label>
@@ -170,10 +174,14 @@ const Purchases = () => {
       <Card title="Purchases List">
         <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
           <input className="input w-full sm:w-72" placeholder="Search by #, vendor, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-          <select className="input w-full sm:w-52" value={vendorFilter} onChange={e=>{ setVendorFilter(e.target.value); setPage(1); }}>
-            <option value="">All Vendors</option>
-            {vendors.map(v => (<option key={v.id} value={v.id}>{v.vendor_code} - {v.name}</option>))}
-          </select>
+          <div style={{minWidth: '12rem', overflow:'visible'}}>
+            <Dropdown
+              value={vendorFilter}
+              onChange={v=>{ setVendorFilter(v); setPage(1); }}
+              placeholder={'All Vendors'}
+              options={[{value:'', label:'All Vendors'}, ...vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))]}
+            />
+          </div>
           <div className="ml-auto flex items-center gap-3">
             <select className="input w-28" value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
               <option value={5}>5 / page</option>

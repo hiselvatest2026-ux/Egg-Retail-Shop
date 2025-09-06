@@ -54,7 +54,7 @@ img { max-width: 100%; height: auto; }
 .content { flex:1; padding:24px; }
 
 /* Cards */
-.card { background:#2A2A3C; border:1px solid #3A3A4D; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden; transition: box-shadow .15s ease, border-color .15s ease; }
+.card { background:#2A2A3C; border:1px solid #3A3A4D; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:visible; transition: box-shadow .15s ease, border-color .15s ease; }
 .card-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid #3A3A4D; background:#26263A; }
 .card-title { font-weight:800; color:#e8eef4; letter-spacing:.2px; }
 .card-actions { display:flex; align-items:center; gap:8px; }
