@@ -78,6 +78,11 @@ const Purchases = () => {
     }
     return list;
   }, [purchases, search, vendorFilter]);
+  const getVendorLabel = (vendorId) => {
+    const v = vendors.find(x => String(x.id) === String(vendorId));
+    if (!v) return '-';
+    return `${v.vendor_code} - ${v.name}`;
+  };
   const totalPages = Math.max(1, Math.ceil(filteredPurchases.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedPurchases = useMemo(() => {
@@ -99,7 +104,7 @@ const Purchases = () => {
           <div className="input-group">
             <label>Vendor</label>
             <select className="input" required aria-label="Vendor" title={(vendors.find(v=>String(v.id)===String(form.vendor_id))?.name) || ''} value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
-              <option value="">{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
+              <option value="" disabled>{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
               {vendors.map(v => (<option key={v.id} value={v.id}>{v.vendor_code} - {v.name}</option>))}
             </select>
           </div>
@@ -114,7 +119,7 @@ const Purchases = () => {
               const total = calcTotal(form.price_per_unit, form.quantity, nextGst);
               setForm(prev=>({...prev, total}));
             }}>
-              <option value="">Select product</option>
+              <option value="" disabled>Select product</option>
               {materials.map(m => (<option key={m.id} value={m.metal_type}>{m.metal_type}</option>))}
             </select>
           </div>
@@ -195,7 +200,7 @@ const Purchases = () => {
               {pagedPurchases.map(p => (
                 <tr key={p.id}>
                   <td>#{p.id}</td>
-                  <td><span className="badge">{p.vendor_id || '-'}</span></td>
+                  <td><span className="badge">{getVendorLabel(p.vendor_id)}</span></td>
                   <td>{p.product_name || '-'}</td>
                   <td>{p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</td>
                   <td>{p.quantity != null ? p.quantity : '-'}</td>
@@ -227,7 +232,7 @@ const Purchases = () => {
                 <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
                   <span>Purchase #{p.id}</span>
                 </div>
-                <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Vendor: #{p.vendor_id || '-'}</div>
+                <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Vendor: {getVendorLabel(p.vendor_id)}</div>
                 <div className="flex flex-col gap-1 text-sm">
                   <div><strong>Product:</strong> {p.product_name || '-'}</div>
                   <div><strong>Price/Unit:</strong> ₹ {p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</div>
