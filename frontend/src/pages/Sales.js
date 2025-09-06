@@ -267,14 +267,13 @@ const Sales = () => {
           </div>
 
           {/* Route controls (full-width, placed after core fields to maintain alignment) */}
-          <div className="input-group" style={{gridColumn:'1/-1'}}>
+          <div className="input-group" style={{gridColumn:'1/-1', overflow:'visible'}}>
             <label>Route (Today)</label>
-            <select className="input" value={form.route_trip_id} onChange={e=>setForm({...form, route_trip_id: e.target.value})}>
-              <option value="">No Route</option>
-              {trips.map(t => (
-                <option key={t.id} value={t.id}>{t.route_name || t.master_route_name || 'Route'} - {t.vehicle_number || '-'} ({new Date(t.service_date).toLocaleDateString()})</option>
-              ))}
-            </select>
+            <Dropdown
+              value={form.route_trip_id}
+              onChange={(v)=>setForm({...form, route_trip_id: v})}
+              options={[{ value:'', label:'No Route (Today)' }, ...trips.map(t=>({ value:String(t.id), label:`${t.route_name || t.master_route_name || 'Route'} - ${t.vehicle_number || '-'} (${new Date(t.service_date).toLocaleDateString()})` }))]}
+            />
           </div>
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Quick Create Route Trip</label>
