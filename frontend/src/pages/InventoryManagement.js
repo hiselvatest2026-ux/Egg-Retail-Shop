@@ -10,9 +10,11 @@ const InventoryManagement = () => {
   const [insights, setInsights] = useState({ kpis:{ total_stock_value:0, low_stock_count:0 }, low_stock:[], fast_movers:[], slow_movers:[], reorder_suggestions:[] });
   const [locations, setLocations] = useState([]);
   const [locationId, setLocationId] = useState('');
-  const [tab, setTab] = useState('overview'); // overview | opening
+  const [tab, setTab] = useState('overview'); // overview | opening | closing
   const [opening, setOpening] = useState([]);
   const [openingMaterials, setOpeningMaterials] = useState([]);
+  const [closing, setClosing] = useState([]);
+  const [closingMaterials, setClosingMaterials] = useState([]);
   const [saveMsg, setSaveMsg] = useState('');
   const load = async (loc) => {
     try {
@@ -36,7 +38,16 @@ const InventoryManagement = () => {
       setOpening(p.data||[]);
       setOpeningMaterials(m.data||[]);
     } catch(e){ console.error('load opening failed', e);} }
-  useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
+  const loadClosing = async () => {
+    try { 
+      const [p, m] = await Promise.all([
+        axios.get(`${baseUrl}/inventory/closing-stocks`),
+        axios.get(`${baseUrl}/inventory/closing-stocks/materials`)
+      ]);
+      setClosing(p.data||[]);
+      setClosingMaterials(m.data||[]);
+    } catch(e){ console.error('load closing failed', e);} }
+  useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
 
   const totalSkus = rows.length;
   const totalStock = rows.reduce((s,r)=>s+Number(r.stock||0),0);
@@ -52,6 +63,7 @@ const InventoryManagement = () => {
       <div className="actions-row" style={{marginBottom:12}}>
         <button className={`btn ${tab==='overview'?'':'secondary'}`} onClick={()=>setTab('overview')}>Overview</button>
         <button className={`btn ${tab==='opening'?'':'secondary'}`} onClick={()=>setTab('opening')}>Opening Stock</button>
+        <button className={`btn ${tab==='closing'?'':'secondary'}`} onClick={()=>setTab('closing')}>Closing Stock</button>
       </div>
 
       {tab==='overview' && (
@@ -170,6 +182,38 @@ const InventoryManagement = () => {
           setSaveMsg('Opening stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
           }}>Save Product Opening</button>
           <button className="btn secondary" onClick={loadOpening}>Refresh</button>
+        </div>
+        {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
+      </Card>
+      </>
+      )}
+
+      {tab==='closing' && (
+      <>
+      <Card title="Closing Stock (Product)">
+        <table className="table table-hover">
+          <thead><tr><th>Material Code</th><th>Material Type</th><th>Quantity</th></tr></thead>
+          <tbody>
+            {closingMaterials.map(row => (
+              <tr key={row.material_code}>
+                <td>{row.material_code}</td>
+                <td>{row.material_type}</td>
+                <td>
+                  <input className="input" value={row.quantity} onChange={e=>{
+                    const v = e.target.value; setClosingMaterials(prev=>prev.map(x=>x.material_code===row.material_code?{...x, quantity:v}:x));
+                  }} inputMode="numeric" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="actions-row">
+          <button className="btn" onClick={async()=>{
+            try { await axios.put(`${baseUrl}/inventory/closing-stocks/materials`, { items: closingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
+            catch(e){ console.error('save closing materials failed', e); }
+          setSaveMsg('Closing stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
+          }}>Save Closing</button>
+          <button className="btn secondary" onClick={loadClosing}>Refresh</button>
         </div>
         {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
       </Card>
