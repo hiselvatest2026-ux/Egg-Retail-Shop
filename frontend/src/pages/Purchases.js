@@ -182,12 +182,18 @@ const Purchases = () => {
             />
           </div>
           <input className="input w-full sm:w-72" placeholder="Search by #, vendor, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-          <div className="ml-auto flex items-center gap-3">
-            <select className="input w-28" value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
-              <option value={5}>5 / page</option>
-              <option value={10}>10 / page</option>
-              <option value={20}>20 / page</option>
-            </select>
+          <div className="ml-auto flex items-center gap-3" style={{overflow:'visible'}}>
+            <div className="w-36" style={{minWidth:'9rem'}}>
+              <Dropdown
+                value={String(pageSize)}
+                onChange={(v)=>{ setPageSize(Number(v)); setPage(1); }}
+                options={[
+                  { value: '5', label: '5 / page' },
+                  { value: '10', label: '10 / page' },
+                  { value: '20', label: '20 / page' }
+                ]}
+              />
+            </div>
           </div>
         </div>
         {/* Desktop table */}
