@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import { getStock, getInventoryInsightsByLocation, getLocations, runSeed } from '../api/api';
 import axios from 'axios';
+import Dropdown from '../components/Dropdown';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
@@ -56,11 +57,15 @@ const InventoryManagement = () => {
       {tab==='overview' && (
       <>
       <Card title="Stock Overview">
-        <div className="actions-row" style={{marginBottom:12}}>
-          <select className="input" style={{maxWidth:260}} value={locationId} onChange={e=>setLocationId(e.target.value)}>
-            <option value="">All locations</option>
-            {locations.map(l => (<option key={l.id} value={l.id}>{l.name}</option>))}
-          </select>
+        <div className="actions-row" style={{marginBottom:12, overflow:'visible'}}>
+          <div style={{minWidth:260, width:260}}>
+            <Dropdown
+              value={String(locationId)}
+              onChange={(v)=>setLocationId(v)}
+              placeholder={'All locations'}
+              options={[{ value:'', label:'All locations' }, ...locations.map(l=>({ value:String(l.id), label:l.name }))]}
+            />
+          </div>
           <button className="btn secondary" onClick={async()=>{ try { await runSeed(); await load(locationId); } catch(e){ console.error('seed failed', e);} }}>Seed Demo Data</button>
         </div>
         <div className="stat-grid">
