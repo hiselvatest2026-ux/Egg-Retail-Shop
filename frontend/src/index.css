@@ -88,7 +88,10 @@ img { max-width: 100%; height: auto; }
 select.input { height:42px; line-height:42px; padding-right:40px; width:100%; max-width:100%; box-sizing:border-box; appearance:none; -webkit-appearance:none; -moz-appearance:none; background-image: linear-gradient(45deg, transparent 50%, #9fb0c2 50%), linear-gradient(135deg, #9fb0c2 50%, transparent 50%);
   background-position: right 18px center, right 12px center; background-size:6px 6px, 6px 6px; background-repeat:no-repeat; }
 select.input::-ms-expand { display:none; }
-select.input option { white-space:normal; color:#e8eef4; background-color:#1f2330; }
+select.input { position: relative; z-index: 50; }
+select.input:focus { z-index: 60; }
+select.input option { white-space:normal; color:#ffffff; background-color:#2A2A3C; border:1px solid #3A3A4C; padding:8px 12px; }
+select.input option:hover, select.input option:checked, select.input option:focus { background-color:#3A3A4C; color:#ffffff; }
 select.input:invalid { color:#9fb0c2; }
 select.input optgroup { color:#cbd5e1; background:#1f2330; }
 
@@ -97,6 +100,7 @@ label + select.input { cursor:pointer; }
 
 @media (max-width: 640px) {
   select.input { background-image: none; padding-right: 12px; appearance:auto; -webkit-appearance:auto; -moz-appearance:auto; color:inherit; background-color:inherit; }
+  select.input option { padding:12px; line-height:44px; min-height:44px; }
   .btn { min-height: 44px; padding: 12px 16px; }
   .input { height: 44px; }
 }
