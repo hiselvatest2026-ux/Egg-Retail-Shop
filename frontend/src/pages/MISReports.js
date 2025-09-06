@@ -1,20 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '../components/Card';
 
-const ReportCard = ({ title, desc, onDownload }) => (
-  <div className="card">
-    <div className="card-body">
-      <div className="card-title">{title}</div>
-      <div style={{color:'#475569', marginTop:4, fontSize:13}}>{desc}</div>
-      <div className="btn-group" style={{marginTop:12}}>
-        <button className="btn" onClick={onDownload}>Download CSV</button>
-      </div>
+const parseCsv = (text) => {
+  const lines = text.trim().split(/\r?\n/);
+  return lines.map(line => line.split(","));
+};
+
+const DataTable = ({ rows }) => {
+  if (!rows || rows.length === 0) return null;
+  const [head, ...body] = rows;
+  return (
+    <div className="hidden sm:block overflow-x-auto">
+      <table className="table table-hover table-zebra mt-2">
+        <thead>
+          <tr>{head.map((h, i) => (<th key={i}>{h}</th>))}</tr>
+        </thead>
+        <tbody>
+          {body.map((r, idx) => (
+            <tr key={idx}>{r.map((c, i) => (<td key={i}>{c}</td>))}</tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  </div>
-);
+  );
+};
 
 const MISReports = () => {
   const API_URL = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace('frontend','backend') : '');
+  const [reportRows, setReportRows] = useState({ purchases: null, sales: null, collections: null, stock: null });
+  const [loading, setLoading] = useState({});
+
   const download = (path) => {
     const url = `${API_URL}/reports/${path}`;
     const a = document.createElement('a');
@@ -24,6 +39,22 @@ const MISReports = () => {
     a.click();
     a.remove();
   };
+
+  const loadReport = async (key, path) => {
+    try {
+      setLoading(prev=>({ ...prev, [key]: true }));
+      const res = await fetch(`${API_URL}/reports/${path}`);
+      const text = await res.text();
+      const rows = parseCsv(text);
+      setReportRows(prev=>({ ...prev, [key]: rows }));
+    } catch (e) {
+      console.error('load report failed', key, e);
+      setReportRows(prev=>({ ...prev, [key]: [['Error'], ['Failed to load report']] }));
+    } finally {
+      setLoading(prev=>({ ...prev, [key]: false }));
+    }
+  };
+
   return (
     <div className="page">
       <div className="page-header">
@@ -32,14 +63,40 @@ const MISReports = () => {
           <p className="page-subtitle">Analyze performance across purchases, sales, collection, and stock</p>
         </div>
       </div>
-      <Card title="Reports">
-        <div className="stat-grid">
-          <ReportCard title="Purchase Report" desc="Date-wise purchases with supplier totals" onDownload={()=>download('purchases.csv')} />
-          <ReportCard title="Sales Report" desc="Daily sales, customer breakup, and top items" onDownload={()=>download('sales.csv')} />
-          <ReportCard title="Collection Report" desc="Receipts by mode and invoice mapping" onDownload={()=>download('collections.csv')} />
-          <ReportCard title="Stock Report" desc="Closing = Opening + Purchase - Sales - Adjustments" onDownload={()=>download('stock.csv')} />
-        </div>
-      </Card>
+
+      <div className="grid grid-cols-1 gap-4">
+        <Card title="Purchase Report">
+          <div className="btn-group">
+            <button className="btn" onClick={()=>loadReport('purchases','purchases.csv')} disabled={!!loading.purchases}>{loading.purchases ? 'Loading...' : 'Load'}</button>
+            <button className="btn secondary" onClick={()=>download('purchases.csv')}>Download CSV</button>
+          </div>
+          <DataTable rows={reportRows.purchases} />
+        </Card>
+
+        <Card title="Sales Report">
+          <div className="btn-group">
+            <button className="btn" onClick={()=>loadReport('sales','sales.csv')} disabled={!!loading.sales}>{loading.sales ? 'Loading...' : 'Load'}</button>
+            <button className="btn secondary" onClick={()=>download('sales.csv')}>Download CSV</button>
+          </div>
+          <DataTable rows={reportRows.sales} />
+        </Card>
+
+        <Card title="Collection Report">
+          <div className="btn-group">
+            <button className="btn" onClick={()=>loadReport('collections','collections.csv')} disabled={!!loading.collections}>{loading.collections ? 'Loading...' : 'Load'}</button>
+            <button className="btn secondary" onClick={()=>download('collections.csv')}>Download CSV</button>
+          </div>
+          <DataTable rows={reportRows.collections} />
+        </Card>
+
+        <Card title="Stock Report">
+          <div className="btn-group">
+            <button className="btn" onClick={()=>loadReport('stock','stock.csv')} disabled={!!loading.stock}>{loading.stock ? 'Loading...' : 'Load'}</button>
+            <button className="btn secondary" onClick={()=>download('stock.csv')}>Download CSV</button>
+          </div>
+          <DataTable rows={reportRows.stock} />
+        </Card>
+      </div>
     </div>
   );
 };
