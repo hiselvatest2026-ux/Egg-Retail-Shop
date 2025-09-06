@@ -28,7 +28,9 @@ img { max-width: 100%; height: auto; }
 .btn-sm { padding:8px 10px; border-radius:6px; font-size: 13px; }
 .btn-group { display:flex; gap:8px; flex-wrap:wrap; }
 .btn.primary { background:#3B82F6; color:#fff; }
-.btn.primary:hover { filter:brightness(1.06); box-shadow:0 6px 16px rgba(59,130,246,.25); }
+.btn.primary { box-shadow: 0 2px 6px rgba(59,130,246,.35); }
+.btn.primary:active { box-shadow:0 2px 8px rgba(59,130,246,.35) inset; }
+.btn.primary:hover { filter:brightness(1.06); box-shadow:0 6px 16px rgba(59,130,246,.35); }
 .btn.icon { background:transparent; color:#cbd5e1; border:1px solid #3A3A4D; }
 .btn.icon:hover { background:rgba(59,130,246,.08); color:#fff; border-color:#3B82F6; }
 
@@ -51,11 +53,17 @@ img { max-width: 100%; height: auto; }
 .content { flex:1; padding:24px; }
 
 /* Cards */
-.card { background:#2A2A3B; border:1px solid #3A3A4D; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden; }
+.card { background:#2A2A3B; border:1px solid #3A3A4D; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden; transition: box-shadow .15s ease, border-color .15s ease; }
 .card-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid #3A3A4D; background:#26263A; }
 .card-title { font-weight:800; color:#e8eef4; letter-spacing:.2px; }
 .card-actions { display:flex; align-items:center; gap:8px; }
 .card-body { padding:18px; color:#e5e7eb; }
+
+/* Hover states for web */
+.card:hover { box-shadow:0 14px 36px rgba(0,0,0,.45); border-color:#46506a; }
+
+/* Utility for right aligned numbers */
+.text-right { text-align: right; }
 
 /* Page header */
 .page { padding: 8px; }
@@ -188,7 +196,8 @@ details.accordion .accordion-body { padding:12px; }
 
 /* Touch friendly large buttons on mobile */
 @media (max-width: 640px) {
-  .btn { min-height: 48px; padding: 14px 18px; border-radius: 12px; }
+  .btn { min-height: 48px; padding: 14px 18px; border-radius: 14px; }
+  .card { border-radius:16px; }
 }
 
 /* Print styles for 80mm receipt */
