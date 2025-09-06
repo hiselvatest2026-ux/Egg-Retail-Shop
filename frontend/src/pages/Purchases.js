@@ -10,7 +10,7 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', product_name: '', price_per_unit: '', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
+  const [form, setForm] = useState({ vendor_id: '', product_name: '', price_per_unit: '', price_basis: 'PerPiece', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -34,6 +34,10 @@ const Purchases = () => {
     if (!isFinite(total)) return '';
     return total.toFixed(2);
   };
+  const getPerPiecePrice = () => {
+    const input = Number(form.price_per_unit || 0);
+    return String(form.price_basis) === 'PerTray' ? input / 30 : input;
+  };
   const getEffectiveQty = () => {
     const isTray = String(form.quantity_unit) === 'Tray';
     const trays = Number(form.trays || 0);
@@ -52,18 +56,18 @@ const Purchases = () => {
     setError(''); setSuccess('');
     if (!form.vendor_id) { setError('Please select a vendor.'); return; }
     if (!form.product_name) { setError('Please select a product.'); return; }
-    if (!form.price_per_unit || Number.isNaN(Number(form.price_per_unit))) { setError('Please enter a valid price per unit.'); return; }
-    if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }
+    if (!form.price_per_unit || Number.isNaN(Number(form.price_per_unit))) { setError('Please enter a valid price.'); return; }
+    if (!getEffectiveQty() || Number.isNaN(Number(getEffectiveQty()))) { setError('Please enter a valid quantity.'); return; }
     try {
       const payload = { 
         vendor_id: Number(form.vendor_id), 
         product_name: form.product_name,
-        price_per_unit: Number(form.price_per_unit),
+        price_per_unit: Number(getPerPiecePrice()),
         quantity: Number(getEffectiveQty()),
         gst_percent: Number(gstPercent)
       };
       if (editing) { await updatePurchase(editing, payload); } else { await createPurchase(payload); }
-      setForm({ vendor_id: '', product_name: '', price_per_unit: '', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
+      setForm({ vendor_id: '', product_name: '', price_per_unit: '', price_basis: 'PerPiece', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
       setEditing(null);
       await fetchPurchases();
       setSuccess('Purchase saved successfully.');
@@ -131,7 +135,7 @@ const Purchases = () => {
                 const m = materials.find(x=>x.metal_type===name);
                 const nextGst = m ? Number(m.gst_percent) : 0;
                 setGstPercent(nextGst);
-                const total = calcTotal(form.price_per_unit, form.quantity, nextGst);
+                const total = calcTotal(getPerPiecePrice(), getEffectiveQty(), nextGst);
                 setForm(prev=>({...prev, total}));
               }}
               placeholder={'Select product'}
@@ -139,17 +143,31 @@ const Purchases = () => {
             />
           </div>
           <div className="input-group">
-            <label>Price per unit</label>
+            <label>{form.price_basis==='PerTray' ? 'Price per tray' : 'Price per piece'}</label>
             <input className="input" type="number" step="0.01" value={form.price_per_unit} inputMode="decimal" onChange={e=>{
               const v = e.target.value; setForm({...form, price_per_unit: v});
-              const total = calcTotal(v, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
+              const perPiece = String(form.price_basis)==='PerTray' ? (Number(v||0)/30) : Number(v||0);
+              const total = calcTotal(perPiece, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
             }} />
+          </div>
+          <div className="input-group" style={{overflow:'visible'}}>
+            <label>Price basis</label>
+            <Dropdown
+              value={form.price_basis}
+              onChange={(v)=>{
+                setForm(prev=>({ ...prev, price_basis: v }));
+                const perPiece = v==='PerTray' ? (Number(form.price_per_unit||0)/30) : Number(form.price_per_unit||0);
+                const total = calcTotal(perPiece, getEffectiveQty(), gstPercent);
+                setForm(prev=>({...prev, total}));
+              }}
+              options={[{value:'PerPiece',label:'Per piece'},{value:'PerTray',label:'Per tray (30 pcs)'}]}
+            />
           </div>
           <div className="input-group">
             <label>Quantity (pieces)</label>
             <input className="input" type="number" value={form.quantity} inputMode="numeric" onChange={e=>{
               const v = e.target.value; setForm({...form, quantity: v});
-              const total = calcTotal(form.price_per_unit, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
+              const total = calcTotal(getPerPiecePrice(), getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
             }} />
           </div>
           <div className="input-group" style={{overflow:'visible'}}>
@@ -162,13 +180,13 @@ const Purchases = () => {
                   const pieces = Number(form.quantity||0);
                   const trays = Math.ceil(pieces/30);
                   setForm(prev=>({ ...prev, quantity_unit: v, trays: String(trays) }));
-                  const total = calcTotal(form.price_per_unit, trays*30, gstPercent);
+                  const total = calcTotal(getPerPiecePrice(), trays*30, gstPercent);
                   setForm(prev=>({...prev, total}));
                 } else {
                   const trays = Number(form.trays||0);
                   const pieces = trays*30;
                   setForm(prev=>({ ...prev, quantity_unit: v, quantity: String(pieces) }));
-                  const total = calcTotal(form.price_per_unit, pieces, gstPercent);
+                  const total = calcTotal(getPerPiecePrice(), pieces, gstPercent);
                   setForm(prev=>({...prev, total}));
                 }
               }}
@@ -179,7 +197,7 @@ const Purchases = () => {
             <label>Number of Trays</label>
             <input className="input" type="number" value={form.trays} inputMode="numeric" onChange={e=>{
               const v = e.target.value; setForm({...form, trays: v});
-              const total = calcTotal(form.price_per_unit, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
+              const total = calcTotal(getPerPiecePrice(), getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
             }} />
           </div>
           <div className="input-group">
