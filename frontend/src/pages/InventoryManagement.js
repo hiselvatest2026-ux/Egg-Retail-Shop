@@ -49,9 +49,9 @@ const InventoryManagement = () => {
       const list = m.data||[];
       setClosing(p.data||[]);
       if (!list.length) {
-        // Prefill with opening materials structure (quantities empty) when no saved closing yet
+        // Prefill with opening materials quantities when no saved closing yet
         if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
-        const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity:'' }));
+        const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity: String(o.quantity || 0) }));
         setClosingMaterials(prefill);
       } else {
         setClosingMaterials(list);
@@ -231,7 +231,7 @@ const InventoryManagement = () => {
           {!closingMaterials.length && (
             <button className="btn secondary" onClick={async()=>{
               if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
-              const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity:'' }));
+              const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity: String(o.quantity || 0) }));
               setClosingMaterials(prefill);
             }}>Prefill from Opening</button>
           )}
