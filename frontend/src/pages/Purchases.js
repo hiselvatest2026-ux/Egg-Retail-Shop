@@ -99,7 +99,7 @@ const Purchases = () => {
           <div className="input-group">
             <label>Vendor</label>
             <select className="input" required aria-label="Vendor" title={(vendors.find(v=>String(v.id)===String(form.vendor_id))?.name) || ''} value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
-              <option value="" disabled>{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
+              <option value="">{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
               {vendors.map(v => (<option key={v.id} value={v.id}>{v.vendor_code} - {v.name}</option>))}
             </select>
           </div>
@@ -114,7 +114,7 @@ const Purchases = () => {
               const total = calcTotal(form.price_per_unit, form.quantity, nextGst);
               setForm(prev=>({...prev, total}));
             }}>
-              <option value="" disabled>Select product</option>
+              <option value="">Select product</option>
               {materials.map(m => (<option key={m.id} value={m.metal_type}>{m.metal_type}</option>))}
             </select>
           </div>
