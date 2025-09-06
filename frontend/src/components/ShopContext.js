@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getShops } from '../api/api';
+import { getLocations } from '../api/api';
 
 const ShopContext = createContext({ currentShop: null, shops: [], setShop: () => {} });
 
@@ -10,7 +10,7 @@ export const ShopProvider = ({ children }) => {
   useEffect(() => {
     (async()=>{
       try {
-        const res = await getShops();
+        const res = await getLocations();
         const list = res.data || [];
         setShops(list);
         const saved = typeof window !== 'undefined' ? window.localStorage.getItem('currentShopId') : null;
