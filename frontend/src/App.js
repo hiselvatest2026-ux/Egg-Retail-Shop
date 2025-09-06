@@ -45,6 +45,9 @@ function App() {
               <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937', objectFit:'cover'}} />
               <span>MyBharatMart POS</span>
             </div>
+            <div style={{marginTop:10}}>
+              <ShopSwitcher />
+            </div>
           </div>
           <nav className="nav">
             <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
