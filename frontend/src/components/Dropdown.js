@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Listbox, Transition, Portal } from '@headlessui/react';
+import { Listbox, Transition } from '@headlessui/react';
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -15,8 +15,7 @@ const Dropdown = ({ value, onChange, options, placeholder = 'Select', renderLabe
             <span aria-hidden className="ml-2">▾</span>
           </Listbox.Button>
           <Transition as={Fragment} show={open} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-            <Portal>
-              <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[#3A3A4C] bg-[#2A2A3C] focus:outline-none shadow-xl">
+            <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[#3A3A4C] bg-[#2A2A3C] focus:outline-none shadow-xl">
               {options.length === 0 && (
                 <div className="px-3 py-2 text-sm text-[#cbd5e1]">No options</div>
               )}
@@ -33,8 +32,7 @@ const Dropdown = ({ value, onChange, options, placeholder = 'Select', renderLabe
                   {renderLabel ? renderLabel(opt) : opt.label}
                 </Listbox.Option>
               ))}
-              </Listbox.Options>
-            </Portal>
+            </Listbox.Options>
           </Transition>
         </div>
       )}
