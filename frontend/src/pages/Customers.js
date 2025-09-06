@@ -18,6 +18,23 @@ const Customers = () => {
     console.log('Form submitted:', form);
     setError(''); setSuccess('');
     if (!form.name) { setError('Customer Name is required.'); return; }
+    // Indian phone validation (optional if provided)
+    const normalizeIndianPhone = (value) => {
+      const digits = String(value || '').replace(/\D/g, '');
+      if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+      if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+      return digits;
+    };
+    const isValidIndianMobile = (value) => /^[6-9]\d{9}$/.test(value);
+    if (form.phone) {
+      const normalized = normalizeIndianPhone(form.phone);
+      if (!isValidIndianMobile(normalized)) { setError('Enter a valid Indian mobile number (10 digits, starts with 6-9).'); return; }
+    }
+    // GSTIN validation (optional if provided)
+    const isValidGSTIN = (value) => /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[0-9A-Z]{1}$/.test(String(value||'').toUpperCase());
+    if (form.gstin) {
+      if (!isValidGSTIN(form.gstin)) { setError('Enter a valid GSTIN (e.g., 22AAAAA0000A1Z5).'); return; }
+    }
     try {
       if (editing) {
         console.log('Updating customer:', editing, form);

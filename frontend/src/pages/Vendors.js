@@ -16,6 +16,18 @@ const Vendors = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!form.name) { setError('Vendor Name is required.'); return; }
+    // Optional Indian phone validation
+    const normalizeIndianPhone = (value) => {
+      const digits = String(value || '').replace(/\D/g, '');
+      if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+      if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+      return digits;
+    };
+    const isValidIndianMobile = (value) => /^[6-9]\d{9}$/.test(value);
+    if (form.phone) {
+      const normalized = normalizeIndianPhone(form.phone);
+      if (!isValidIndianMobile(normalized)) { setError('Enter a valid Indian mobile number (10 digits, starts with 6-9).'); return; }
+    }
     const payload = { ...form };
     if (editing) {
       await updateVendor(editing, payload);
