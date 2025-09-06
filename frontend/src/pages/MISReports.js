@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import ShopChip from '../components/ShopChip';
+import axios from 'axios';
 
 const parseCsv = (text) => {
   const lines = text.trim().split(/\r?\n/);
@@ -30,9 +31,10 @@ const MISReports = () => {
   const API_URL = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace('frontend','backend') : '');
   const [reportRows, setReportRows] = useState({ purchases: null, sales: null, collections: null, stock: null });
   const [loading, setLoading] = useState({});
+  const [allShops, setAllShops] = useState(false);
 
   const download = (path) => {
-    const url = `${API_URL}/reports/${path}`;
+    const url = `${API_URL}/reports/${path}${allShops ? '?all_shops=1' : ''}`;
     const a = document.createElement('a');
     a.href = url;
     a.download = '';
@@ -44,8 +46,9 @@ const MISReports = () => {
   const loadReport = async (key, path) => {
     try {
       setLoading(prev=>({ ...prev, [key]: true }));
-      const res = await fetch(`${API_URL}/reports/${path}`);
-      const text = await res.text();
+      const params = allShops ? { all_shops: 1 } : undefined;
+      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text', params });
+      const text = res.data;
       const rows = parseCsv(text);
       setReportRows(prev=>({ ...prev, [key]: rows }));
     } catch (e) {
@@ -64,6 +67,12 @@ const MISReports = () => {
           <p className="page-subtitle">Analyze performance across purchases, sales, collection, and stock</p>
         </div>
         <ShopChip />
+      </div>
+
+      <div className="actions-row" style={{marginBottom:12}}>
+        <label style={{display:'flex', alignItems:'center', gap:8}}>
+          <input type="checkbox" checked={allShops} onChange={e=>setAllShops(e.target.checked)} /> All shops (HO)
+        </label>
       </div>
 
       <div className="grid grid-cols-1 gap-4">

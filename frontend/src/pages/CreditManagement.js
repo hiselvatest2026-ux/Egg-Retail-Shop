@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import axios from 'axios';
 
 const Stat = ({ label, value, tone }) => (
   <div className={`stat ${tone || ''}`}>
@@ -15,8 +16,8 @@ const CreditManagement = () => {
     (async()=>{
       try {
         const base = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace('frontend','backend') : '');
-        const res = await fetch(`${base}/credit-summary/summary`);
-        const data = await res.json();
+        const res = await axios.get(`${base}/credit-summary/summary`);
+        const data = res.data || {};
         setKpis(data.kpis || { total_customers_with_dues: 0, total_outstanding: 0, total_overdue_30: 0 });
         setRows(data.customers || []);
       } catch (e) { console.error('load credit summary failed', e); }
