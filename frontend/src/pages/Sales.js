@@ -217,7 +217,14 @@ const Sales = () => {
             <label>Product Name</label>
             <Dropdown
               value={form.product_name}
-              onChange={(v)=>setForm({...form, product_name: v})}
+              onChange={(v)=>{
+                const found = materials.find(m=>String(m.metal_type)===String(v));
+                setForm(prev=>({
+                  ...prev,
+                  product_name: v,
+                  material_code: found ? String(found.part_code) : prev.material_code
+                }));
+              }}
               placeholder={'Select product'}
               options={materials.map(m=>({ value: m.metal_type, label: m.metal_type }))}
             />
