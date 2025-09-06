@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
+import Dropdown from '../components/Dropdown';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
@@ -208,46 +209,49 @@ const Sales = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Sale' : 'Add Sale'}>
         <form onSubmit={handleSubmit} className="form-grid-2">
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Product Name</label>
-            <select className="input" title={form.product_name || 'Select product'} value={form.product_name} onChange={e=>setForm({...form, product_name: e.target.value})}>
-              <option value="" disabled>Select product</option>
-              {materials.map(m => (
-                <option key={m.id} value={m.metal_type}>{m.metal_type}</option>
-              ))}
-            </select>
+            <Dropdown
+              value={form.product_name}
+              onChange={(v)=>setForm({...form, product_name: v})}
+              placeholder={'Select product'}
+              options={materials.map(m=>({ value: m.metal_type, label: m.metal_type }))}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Sales Type</label>
-            <select className="input" value={form.sale_type} onChange={e=>setForm({...form, sale_type:e.target.value})}>
-              <option value="Cash">Cash</option>
-              <option value="Credit">Credit</option>
-            </select>
+            <Dropdown
+              value={form.sale_type}
+              onChange={(v)=>setForm({...form, sale_type: v})}
+              options={[{value:'Cash', label:'Cash'},{value:'Credit', label:'Credit'}]}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Customer</label>
-            <select className="input" title={(customers.find(c=>String(c.id)===String(form.customer_id))?.name) || ''} value={form.customer_id} onChange={e=>setForm({...form, customer_id: e.target.value})}>
-              <option value="" disabled>{customers.length ? 'Select customer' : 'No customers found - add one first'}</option>
-              {customers.map(c => (<option key={c.id} value={c.id}>{c.name} (#{c.id})</option>))}
-            </select>
+            <Dropdown
+              value={form.customer_id}
+              onChange={(v)=>setForm({...form, customer_id: v})}
+              placeholder={customers.length ? 'Select customer' : 'No customers found - add one first'}
+              options={customers.map(c=>({ value: String(c.id), label: `${c.name} (#${c.id})` }))}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Category</label>
-            <select className="input" required aria-label="Category" value={form.category} onChange={e=>setForm({...form, category: e.target.value})}>
-              <option value="" disabled>{'Select category'}</option>
-              <option value="Retail">Retail</option>
-              <option value="Wholesale">Wholesale</option>
-              <option value="Walk-in">Walk-in</option>
-            </select>
+            <Dropdown
+              value={form.category}
+              onChange={(v)=>setForm({...form, category: v})}
+              placeholder={'Select category'}
+              options={[{value:'Retail', label:'Retail'},{value:'Wholesale', label:'Wholesale'},{value:'Walk-in', label:'Walk-in'}]}
+            />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Material Code</label>
-            <select className="input" title={form.material_code || ''} value={form.material_code} onChange={e=>setForm({...form, material_code: e.target.value})}>
-              <option value="" disabled>Select Material</option>
-              {materials.map(m => (
-                <option key={m.id} value={m.part_code}>{m.part_code} - {m.description || m.metal_type}</option>
-              ))}
-            </select>
+            <Dropdown
+              value={form.material_code}
+              onChange={(v)=>setForm({...form, material_code: v})}
+              placeholder={'Select Material'}
+              options={materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
+            />
           </div>
           <div className="input-group">
             <label>Quantity</label>
@@ -342,18 +346,22 @@ const Sales = () => {
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
           <input className="input w-full sm:w-72" placeholder="Search by #, customer, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-          <select className="input w-full sm:w-52" value={categoryFilter} onChange={e=>{ setCategoryFilter(e.target.value); setPage(1); }}>
-            <option value="">All Categories</option>
-            <option value="Retail">Retail</option>
-            <option value="Wholesale">Wholesale</option>
-            <option value="Walk-in">Walk-in</option>
-          </select>
-          <div className="ml-auto flex items-center gap-3">
-            <select className="input w-28" value={pageSize} onChange={e=>{ setPageSize(Number(e.target.value)); setPage(1); }}>
-              <option value={5}>5 / page</option>
-              <option value={10}>10 / page</option>
-              <option value={20}>20 / page</option>
-            </select>
+          <div className="w-full sm:w-52" style={{overflow:'visible'}}>
+            <Dropdown
+              value={categoryFilter}
+              onChange={(v)=>{ setCategoryFilter(v); setPage(1); }}
+              placeholder={'All Categories'}
+              options={[{value:'',label:'All Categories'},{value:'Retail',label:'Retail'},{value:'Wholesale',label:'Wholesale'},{value:'Walk-in',label:'Walk-in'}]}
+            />
+          </div>
+          <div className="ml-auto flex items-center gap-3" style={{overflow:'visible'}}>
+            <div className="w-36" style={{minWidth:'9rem'}}>
+              <Dropdown
+                value={String(pageSize)}
+                onChange={(v)=>{ setPageSize(Number(v)); setPage(1); }}
+                options={[{value:'5',label:'5 / page'},{value:'10',label:'10 / page'},{value:'20',label:'20 / page'}]}
+              />
+            </div>
             <div className="btn-group">
               <button type="button" className="btn secondary btn-sm" onClick={()=>setPage(p=>Math.max(1, p-1))} disabled={currentPage===1}>Prev</button>
               <button type="button" className="btn secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages, p+1))} disabled={currentPage===totalPages}>Next</button>
@@ -374,10 +382,10 @@ const Sales = () => {
               {pagedSales.map(s => (
                 <tr key={s.id}>
                   <td>#{s.id}</td>
-                  <td><span className="badge">{s.customer_id}</span></td>
-                  <td>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                  <td>₹ {Number(paymentsByInvoice[String(s.id)]||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-                  <td>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td><span className="badge">{customers.find(c=>String(c.id)===String(s.customer_id))?.name || `#${s.customer_id}`}</span></td>
+                  <td style={{textAlign:'right'}}>₹ {Number(s.total).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td style={{textAlign:'right'}}>₹ {Number(paymentsByInvoice[String(s.id)]||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                  <td style={{textAlign:'right'}}>₹ {Math.max(0, Number(s.total) - Number(paymentsByInvoice[String(s.id)]||0)).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                   <td><div className="truncate max-w-[12rem]">{s.product_name || s.egg_type || '-'}</div></td>
                   <td>{s.category || 'Retail'}</td>
                   <td style={{textAlign:'right'}}>
