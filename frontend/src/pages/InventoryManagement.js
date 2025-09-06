@@ -49,9 +49,14 @@ const InventoryManagement = () => {
       const list = m.data||[];
       setClosing(p.data||[]);
       if (!list.length) {
-        // Prefill with opening materials quantities when no saved closing yet
+        // Prefill using formula: Closing = Opening + Purchases - Sales - Adjustments
+        // We approximate via current stock rows for the selected location
+        const nameToStock = new Map((rows||[]).map(r => [String(r.name||'').toLowerCase(), Number(r.stock||0)]));
         if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
-        const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity: String(o.quantity || 0) }));
+        const prefill = (openingMaterials||[]).map(o=>{
+          const stock = nameToStock.get(String(o.material_type||'').toLowerCase()) || 0;
+          return { material_code:o.material_code, material_type:o.material_type, quantity: String(stock) };
+        });
         setClosingMaterials(prefill);
       } else {
         setClosingMaterials(list);
