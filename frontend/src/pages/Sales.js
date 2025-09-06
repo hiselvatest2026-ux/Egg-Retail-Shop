@@ -325,13 +325,13 @@ const Sales = () => {
                 <label>Amount Received</label>
                 <input className="input" type="number" step="0.01" value={paymentAtCreate.amount} onChange={e=>setPaymentAtCreate({...paymentAtCreate, amount: e.target.value})} inputMode="decimal" />
               </div>
-              <div className="input-group">
+              <div className="input-group" style={{overflow:'visible'}}>
                 <label>Payment Mode</label>
-                <select className="input" value={paymentAtCreate.mode} onChange={e=>setPaymentAtCreate({...paymentAtCreate, mode: e.target.value})}>
-                  <option value="Cash">Cash</option>
-                  <option value="Gpay">Gpay</option>
-                  <option value="Card">Card</option>
-                </select>
+                <Dropdown
+                  value={paymentAtCreate.mode}
+                  onChange={(v)=>setPaymentAtCreate({...paymentAtCreate, mode: v})}
+                  options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]}
+                />
               </div>
             </>
           )}
@@ -457,9 +457,14 @@ const Sales = () => {
                 <label>Amount</label>
                 <input className="input" value={payForm.amount} onChange={e=>setPayForm({...payForm, amount:e.target.value})} inputMode="decimal" />
               </div>
-              <div className="input-group">
+              <div className="input-group" style={{overflow:'visible'}}>
                 <label>Mode</label>
-                <input className="input" value={payForm.mode} onChange={e=>setPayForm({...payForm, mode:e.target.value})} placeholder="Cash / Card / UPI" />
+                <Dropdown
+                  value={payForm.mode}
+                  onChange={(v)=>setPayForm({...payForm, mode: v})}
+                  placeholder={'Payment Mode'}
+                  options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]}
+                />
               </div>
             </div>
             <div className="actions-row" style={{marginTop:12}}>
