@@ -3,6 +3,7 @@ import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendor
 import Card from '../components/Card';
 import { Link } from 'react-router-dom';
 import Dropdown from '../components/Dropdown';
+import ShopChip from '../components/ShopChip';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -112,6 +113,7 @@ const Purchases = () => {
           <h1 className="page-title">Purchases</h1>
           <p className="page-subtitle">Create and manage supplier purchases</p>
         </div>
+        <ShopChip />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

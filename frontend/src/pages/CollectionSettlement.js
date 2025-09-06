@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import ShopChip from '../components/ShopChip';
 import Dropdown from '../components/Dropdown';
 import { getCreditCollection, getRouteCollection, getWalkinCollection, getTotalCollection } from '../api/api';
 
@@ -33,6 +34,7 @@ const CollectionSettlement = () => {
           <h1 className="page-title">Collection</h1>
           <p className="page-subtitle">Daily collections by Credit, Route, and Walk-in</p>
         </div>
+        <ShopChip />
       </div>
 
       <Card title="Filters">

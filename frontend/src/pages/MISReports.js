@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
+import ShopChip from '../components/ShopChip';
 
 const parseCsv = (text) => {
   const lines = text.trim().split(/\r?\n/);
@@ -62,6 +63,7 @@ const MISReports = () => {
           <h1 className="page-title">MIS Reports</h1>
           <p className="page-subtitle">Analyze performance across purchases, sales, collection, and stock</p>
         </div>
+        <ShopChip />
       </div>
 
       <div className="grid grid-cols-1 gap-4">

@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import { getStock, getInventoryInsightsByLocation, getLocations, runSeed } from '../api/api';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown';
+import ShopChip from '../components/ShopChip';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
@@ -73,6 +74,7 @@ const InventoryManagement = () => {
           <h1 className="page-title">Inventory Management</h1>
           <p className="page-subtitle">Live stock by product</p>
         </div>
+        <ShopChip />
       </div>
 
       <div className="actions-row" style={{marginBottom:12}}>
