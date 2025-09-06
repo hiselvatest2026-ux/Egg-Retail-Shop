@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
+import Dropdown from '../components/Dropdown';
 import { getCreditCollection, getRouteCollection, getWalkinCollection, getTotalCollection } from '../api/api';
 
 const CollectionSettlement = () => {
@@ -40,13 +41,17 @@ const CollectionSettlement = () => {
             <label>Date</label>
             <input className="input" type="date" value={date} onChange={e=>setDate(e.target.value)} />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{overflow:'visible'}}>
             <label>Type</label>
-            <select className="input" value={type} onChange={e=>setType(e.target.value)}>
-              <option value="Credit">Credit Collection</option>
-              <option value="Route">Route Collection</option>
-              <option value="Walkin">Walk-in Collection</option>
-            </select>
+            <Dropdown
+              value={type}
+              onChange={(v)=>setType(v)}
+              options={[
+                { value:'Credit', label:'Credit Collection' },
+                { value:'Route', label:'Route Collection' },
+                { value:'Walkin', label:'Walk-in Collection' }
+              ]}
+            />
           </div>
         </div>
       </Card>
