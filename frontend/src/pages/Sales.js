@@ -11,7 +11,7 @@ const Sales = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit: 'Piece', trays: '', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
   const [trips, setTrips] = useState([]);
   const [newTrip, setNewTrip] = useState({ route_name: '', vehicle_number: '', service_date: () => new Date().toISOString().slice(0,10) });
   const [available, setAvailable] = useState(null);
@@ -166,15 +166,15 @@ const Sales = () => {
     }
   }, [form.material_code, materials]);
 
-  // Auto-calc total when pricing or quantity changes
+  // Auto-calc total when pricing or quantity changes (with trays conversion)
   useEffect(() => {
-    const qty = Number(form.quantity || 0);
+    const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
     const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
     const total = unitFinal * qty;
     if (isFinite(total)) {
       setForm(prev => ({ ...prev, total: total.toFixed(2) }));
     }
-  }, [pricingInfo, form.quantity]);
+  }, [pricingInfo, form.quantity, form.quantity_unit, form.trays]);
 
   const filteredSales = useMemo(() => {
     let list = sales || [];
@@ -265,8 +265,20 @@ const Sales = () => {
             />
           </div>
           <div className="input-group">
-            <label>Quantity</label>
+            <label>Quantity (pieces)</label>
             <input className="input" type="number" value={form.quantity} onChange={e=>setForm({...form, quantity: e.target.value})} inputMode="numeric" />
+          </div>
+          <div className="input-group" style={{overflow:'visible'}}>
+            <label>Quantity Unit</label>
+            <Dropdown
+              value={form.quantity_unit}
+              onChange={(v)=>setForm({...form, quantity_unit: v})}
+              options={[{value:'Piece',label:'Single Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
+            />
+          </div>
+          <div className="input-group">
+            <label>Number of Trays</label>
+            <input className="input" type="number" value={form.trays} onChange={e=>setForm({...form, trays: e.target.value})} inputMode="numeric" />
           </div>
           <div className="input-group">
             <label>Total Amount</label>

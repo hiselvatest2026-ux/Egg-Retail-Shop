@@ -10,7 +10,7 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', product_name: '', price_per_unit: '', quantity: '', total: '' });
+  const [form, setForm] = useState({ vendor_id: '', product_name: '', price_per_unit: '', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -34,6 +34,12 @@ const Purchases = () => {
     if (!isFinite(total)) return '';
     return total.toFixed(2);
   };
+  const getEffectiveQty = () => {
+    const isTray = String(form.quantity_unit) === 'Tray';
+    const trays = Number(form.trays || 0);
+    const pieces = Number(form.quantity || 0);
+    return isTray ? trays * 30 : pieces;
+  };
   useEffect(() => { 
     fetchPurchases(); 
     (async()=>{ 
@@ -53,11 +59,11 @@ const Purchases = () => {
         vendor_id: Number(form.vendor_id), 
         product_name: form.product_name,
         price_per_unit: Number(form.price_per_unit),
-        quantity: Number(form.quantity),
+        quantity: Number(getEffectiveQty()),
         gst_percent: Number(gstPercent)
       };
       if (editing) { await updatePurchase(editing, payload); } else { await createPurchase(payload); }
-      setForm({ vendor_id: '', product_name: '', price_per_unit: '', quantity: '', total: '' });
+      setForm({ vendor_id: '', product_name: '', price_per_unit: '', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
       setEditing(null);
       await fetchPurchases();
       setSuccess('Purchase saved successfully.');
@@ -136,15 +142,38 @@ const Purchases = () => {
             <label>Price per unit</label>
             <input className="input" type="number" step="0.01" value={form.price_per_unit} inputMode="decimal" onChange={e=>{
               const v = e.target.value; setForm({...form, price_per_unit: v});
-              const total = calcTotal(v, form.quantity, gstPercent); setForm(prev=>({...prev, total}));
+              const total = calcTotal(v, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
             }} />
           </div>
           <div className="input-group">
-            <label>Quantity</label>
+            <label>Quantity (pieces)</label>
             <input className="input" type="number" value={form.quantity} inputMode="numeric" onChange={e=>{
               const v = e.target.value; setForm({...form, quantity: v});
-              const total = calcTotal(form.price_per_unit, v, gstPercent); setForm(prev=>({...prev, total}));
+              const total = calcTotal(form.price_per_unit, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
             }} />
+          </div>
+          <div className="input-group" style={{overflow:'visible'}}>
+            <label>Quantity Unit</label>
+            <Dropdown
+              value={form.quantity_unit}
+              onChange={(v)=>{
+                setForm(prev=>({ ...prev, quantity_unit: v }));
+                const total = calcTotal(form.price_per_unit, v==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0), gstPercent);
+                setForm(prev=>({...prev, total}));
+              }}
+              options={[{value:'Piece',label:'Single Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
+            />
+          </div>
+          <div className="input-group">
+            <label>Number of Trays</label>
+            <input className="input" type="number" value={form.trays} inputMode="numeric" onChange={e=>{
+              const v = e.target.value; setForm({...form, trays: v});
+              const total = calcTotal(form.price_per_unit, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
+            }} />
+          </div>
+          <div className="input-group">
+            <label>Effective Qty (pcs)</label>
+            <input className="input" value={getEffectiveQty()} readOnly />
           </div>
           <div className="input-group">
             <label>GST %</label>
