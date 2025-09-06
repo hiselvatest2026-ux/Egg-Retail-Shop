@@ -89,6 +89,11 @@ const Purchases = () => {
     const start = (currentPage - 1) * pageSize;
     return filteredPurchases.slice(start, start + pageSize);
   }, [filteredPurchases, currentPage, pageSize]);
+  const visiblePurchases = useMemo(() => {
+    // Load-More model: show items up to current page * pageSize
+    const count = page * pageSize;
+    return filteredPurchases.slice(0, count);
+  }, [filteredPurchases, page, pageSize]);
   return (
     <div className="page space-y-4">
       <div className="page-header">
@@ -175,84 +180,46 @@ const Purchases = () => {
               <option value={10}>10 / page</option>
               <option value={20}>20 / page</option>
             </select>
-            <div className="btn-group">
-              <button type="button" className="btn secondary btn-sm" onClick={()=>setPage(p=>Math.max(1, p-1))} disabled={currentPage===1}>Prev</button>
-              <button type="button" className="btn secondary btn-sm" onClick={()=>setPage(p=>Math.min(totalPages, p+1))} disabled={currentPage===totalPages}>Next</button>
-            </div>
-            <div style={{color:'#b6beca', fontSize:12}}>Page {currentPage} / {totalPages}</div>
           </div>
         </div>
-        <div className="hidden sm:block overflow-x-auto">
-          <table className="table table-hover table-zebra mt-2">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Vendor</th>
-                <th>Product</th>
-                <th>Price/Unit</th>
-                <th>Qty</th>
-                <th>GST%</th>
-                <th>Total</th>
-                <th style={{ width: 240, textAlign:'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedPurchases.map(p => (
-                <tr key={p.id}>
-                  <td>#{p.id}</td>
-                  <td><span className="badge">{getVendorLabel(p.vendor_id)}</span></td>
-                  <td>{p.product_name || '-'}</td>
-                  <td>{p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</td>
-                  <td>{p.quantity != null ? p.quantity : '-'}</td>
-                  <td>{p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</td>
-                  <td>₹ {p.total != null ? Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
-                  <td style={{textAlign:'right'}}>
-                    <div className="btn-group" style={{justifyContent:'flex-end'}}>
-                      <Link className="btn secondary btn-sm" to={`/purchases/${p.id}/items`}>Items</Link>
-                      <button className="btn icon btn-sm" title="Edit" onClick={() => { 
-                        setEditing(p.id); 
-                        setGstPercent(p.gst_percent || 0);
-                        setForm({ vendor_id: p.vendor_id || '', product_name: p.product_name || '', price_per_unit: p.price_per_unit || '', quantity: p.quantity || '', total: p.total || '' });
-                      }}>✏️</button>
-                      <button className="btn danger btn-sm" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="block sm:hidden">
-          {filteredPurchases.length === 0 && (
-            <div className="card" style={{padding:16, textAlign:'center'}}>No purchases yet. Use the form to add.</div>
-          )}
-          {pagedPurchases.map(p => (
-            <div key={p.id} className="card" style={{marginBottom:10}}>
+        {visiblePurchases.length === 0 && (
+          <div className="card" style={{padding:16, textAlign:'center'}}>No purchases yet. Use the form to add.</div>
+        )}
+        <div className="grid grid-cols-1 gap-3">
+          {visiblePurchases.map(p => (
+            <div key={p.id} className="card" style={{marginBottom:0}}>
               <div className="card-body">
                 <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
                   <span>Purchase #{p.id}</span>
+                  <div className="btn-group">
+                    <Link className="btn secondary btn-sm" to={`/purchases/${p.id}/items`}>Items</Link>
+                    <button className="btn icon btn-sm" title="Edit" onClick={() => { 
+                      setEditing(p.id); 
+                      setGstPercent(p.gst_percent || 0);
+                      setForm({ vendor_id: p.vendor_id || '', product_name: p.product_name || '', price_per_unit: p.price_per_unit || '', quantity: p.quantity || '', total: p.total || '' });
+                    }}>✏️</button>
+                    <button className="btn danger btn-sm" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
+                  </div>
                 </div>
-                <div style={{fontSize:13, color:'#9fb0c2', marginBottom:8}}>Vendor: {getVendorLabel(p.vendor_id)}</div>
-                <div className="flex flex-col gap-1 text-sm">
-                  <div><strong>Product:</strong> {p.product_name || '-'}</div>
-                  <div><strong>Price/Unit:</strong> ₹ {p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</div>
-                  <div><strong>Qty:</strong> {p.quantity != null ? p.quantity : '-'}</div>
-                  <div><strong>GST%:</strong> {p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</div>
-                  <div><strong>Total:</strong> ₹ {p.total != null ? Number(p.total).toFixed(2) : '-'}</div>
-                </div>
-                <div className="btn-group" style={{marginTop:10}}>
-                  <Link className="btn secondary btn-sm" to={`/purchases/${p.id}/items`}>Items</Link>
-                  <button className="btn icon btn-sm" onClick={() => { 
-                    setEditing(p.id); 
-                    setGstPercent(p.gst_percent || 0);
-                    setForm({ vendor_id: p.vendor_id || '', product_name: p.product_name || '', price_per_unit: p.price_per_unit || '', quantity: p.quantity || '', total: p.total || '' });
-                  }}>✏️</button>
-                  <button className="btn danger btn-sm" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
+                <div className="data-pairs">
+                  <div className="pair"><strong>Vendor</strong><div>{getVendorLabel(p.vendor_id)}</div></div>
+                  <div className="pair"><strong>Product</strong><div>{p.product_name || '-'}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>Price/Unit</strong><div>₹ {p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>Qty</strong><div>{p.quantity != null ? p.quantity : '-'}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>GST%</strong><div>{p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</div></div>
+                  <div className="pair" style={{textAlign:'right'}}><strong>Total</strong><div>₹ {p.total != null ? Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</div></div>
                 </div>
               </div>
             </div>
           ))}
         </div>
+        {visiblePurchases.length < filteredPurchases.length && (
+          <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+            <button type="button" className="btn primary" onClick={()=> setPage(p => p + 1)}>
+              Load More
+            </button>
+          </div>
+        )}
       </Card>
     </div>
     </div>
