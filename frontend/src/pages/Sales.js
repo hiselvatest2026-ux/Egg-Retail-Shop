@@ -272,7 +272,17 @@ const Sales = () => {
             <label>Quantity Unit</label>
             <Dropdown
               value={form.quantity_unit}
-              onChange={(v)=>setForm({...form, quantity_unit: v})}
+              onChange={(v)=>{
+                if (v==='Tray') {
+                  const pieces = Number(form.quantity||0);
+                  const trays = Math.ceil(pieces/30);
+                  setForm(prev=>({ ...prev, quantity_unit: v, trays: String(trays) }));
+                } else {
+                  const trays = Number(form.trays||0);
+                  const pieces = trays*30;
+                  setForm(prev=>({ ...prev, quantity_unit: v, quantity: String(pieces) }));
+                }
+              }}
               options={[{value:'Piece',label:'Single Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
             />
           </div>

@@ -157,9 +157,20 @@ const Purchases = () => {
             <Dropdown
               value={form.quantity_unit}
               onChange={(v)=>{
-                setForm(prev=>({ ...prev, quantity_unit: v }));
-                const total = calcTotal(form.price_per_unit, v==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0), gstPercent);
-                setForm(prev=>({...prev, total}));
+                // convert values when switching units
+                if (v==='Tray') {
+                  const pieces = Number(form.quantity||0);
+                  const trays = Math.ceil(pieces/30);
+                  setForm(prev=>({ ...prev, quantity_unit: v, trays: String(trays) }));
+                  const total = calcTotal(form.price_per_unit, trays*30, gstPercent);
+                  setForm(prev=>({...prev, total}));
+                } else {
+                  const trays = Number(form.trays||0);
+                  const pieces = trays*30;
+                  setForm(prev=>({ ...prev, quantity_unit: v, quantity: String(pieces) }));
+                  const total = calcTotal(form.price_per_unit, pieces, gstPercent);
+                  setForm(prev=>({...prev, total}));
+                }
               }}
               options={[{value:'Piece',label:'Single Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
             />
