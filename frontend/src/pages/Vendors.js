@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getVendors, createVendor, updateVendor, deleteVendor } from '../api/api';
 import Card from '../components/Card';
 
@@ -40,6 +40,9 @@ const Vendors = () => {
     });
   };
 
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const visibleVendors = useMemo(()=> vendors.slice(0, page * pageSize), [vendors, page]);
   return (
     <div className="page">
       <div className="page-header">
@@ -49,6 +52,7 @@ const Vendors = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Vendor' : 'Add Vendor'}>
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
@@ -123,8 +127,8 @@ const Vendors = () => {
           </table>
         </div>
         <div className="block sm:hidden">
-          {vendors.map(v => (
-            <div key={v.id} className="card" style={{marginBottom:10}}>
+          {visibleVendors.map(v => (
+            <div key={v.id} className="card" style={{marginBottom:12}}>
               <div className="card-body">
                 <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
                   <span>Vendor #{v.id}</span>
@@ -145,8 +149,14 @@ const Vendors = () => {
               </div>
             </div>
           ))}
+          {visibleVendors.length < vendors.length && (
+            <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
+              <button type="button" className="btn primary w-full" onClick={()=> setPage(p=>p+1)}>Load More</button>
+            </div>
+          )}
         </div>
       </Card>
+      </div>
     </div>
   );
 };
