@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ShopProvider } from './components/ShopContext';
+import ShopSwitcher from './components/ShopSwitcher';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard } from 'react-icons/fi';
 import Purchases from './pages/Purchases';
@@ -24,12 +26,16 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <Router>
+      <ShopProvider>
       <div className="layout">
         <div className="mobile-header">
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu">☰</button>
           <div style={{display:'flex', alignItems:'center', gap:8}}>
             <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg" alt="Logo" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937', objectFit:'cover'}} />
             <span style={{fontWeight:800}}>MyBharatMart POS</span>
+          </div>
+          <div style={{marginLeft:12, flex:1, display:'flex', justifyContent:'flex-end'}}>
+            <ShopSwitcher />
           </div>
         </div>
         {sidebarOpen && <div className="backdrop" onClick={()=>setSidebarOpen(false)} />}
@@ -88,6 +94,8 @@ function App() {
           <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
+      </div>
+      </ShopProvider>
     </Router>
   );
 }

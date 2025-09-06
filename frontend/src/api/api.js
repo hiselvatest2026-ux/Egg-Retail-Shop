@@ -14,6 +14,18 @@ if (!API_URL) {
   API_URL = 'http://localhost:5000';
 }
 console.log('API_URL resolved to:', API_URL);
+
+// Attach current shop header to every request
+axios.interceptors.request.use((config) => {
+  try {
+    const shopId = (typeof window !== 'undefined') ? window.localStorage.getItem('currentShopId') : null;
+    if (shopId) {
+      config.headers = config.headers || {};
+      config.headers['X-Shop-Id'] = shopId;
+    }
+  } catch (_) {}
+  return config;
+});
 export const getPurchases = () => axios.get(`${API_URL}/purchases`);
 export const createPurchase = (data) => axios.post(`${API_URL}/purchases`, data);
 export const updatePurchase = (id, data) => axios.put(`${API_URL}/purchases/${id}`, data);
@@ -115,6 +127,9 @@ export const getVendors = () => axios.get(`${API_URL}/vendors`);
 export const createVendor = (data) => axios.post(`${API_URL}/vendors`, data);
 export const updateVendor = (id, data) => axios.put(`${API_URL}/vendors/${id}`, data);
 export const deleteVendor = (id) => axios.delete(`${API_URL}/vendors/${id}`);
+
+// Shops
+export const getShops = () => axios.get(`${API_URL}/shops`);
 
 // Invoice detail
 export const getSaleInvoice = (id) => axios.get(`${API_URL}/sales/${id}/invoice`);
