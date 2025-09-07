@@ -215,7 +215,7 @@ const Purchases = () => {
             {/* Add Item compact form */}
             <div className="card" style={{marginTop:8}}>
               <div className="card-body">
-                <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
                   <div style={{overflow:'visible'}}>
                     <Dropdown
                       value={addForm.material_code}
