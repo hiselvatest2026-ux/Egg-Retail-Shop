@@ -195,10 +195,10 @@ const Sales = () => {
       if (hasItems) {
         const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null });
         const newSale = res.data;
-        for (const it of lineItems) {
+        const tasks = lineItems.map(async (it) => {
           const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : (it.effectiveQty != null ? Number(it.effectiveQty||0) : Number(it.qty_pieces||0));
           const price = Number(it.price_per_piece || 0);
-          if (!(effQty>0)) continue;
+          if (!(effQty>0)) return null;
           let pid = it.product_id ? Number(it.product_id) : null;
           if (!pid && it.material_code) {
             const mat = materials.find(m=> String(m.part_code)===String(it.material_code));
@@ -211,9 +211,10 @@ const Sales = () => {
             const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(it.material_type||'').toLowerCase());
             if (prod2) pid = Number(prod2.id);
           }
-          if (!pid) continue;
-          await createSaleItem(newSale.id, { product_id: pid, quantity: effQty, price });
-        }
+          if (!pid) return null;
+          return createSaleItem(newSale.id, { product_id: pid, quantity: effQty, price });
+        });
+        await Promise.all(tasks);
         if (recordPaymentNow) {
           const sum = lineItems.reduce((s,li)=> s + (Number(li.price_per_piece||0) * (li.qty_unit==='Tray' ? Number(li.trays||0)*30 : Number(li.qty_pieces||0))), 0);
           const amt = Number(paymentAtCreate.amount || sum || 0);

@@ -142,6 +142,9 @@ async function ensureSchema() {
       logo_url TEXT
     );`
     ,"ALTER TABLE IF EXISTS metal_master ADD COLUMN IF NOT EXISTS hsn_sac VARCHAR(10);"
+    // Performance indexes for faster invoice loads
+    ,"CREATE INDEX IF NOT EXISTS idx_sale_items_sale_id ON sale_items(sale_id);"
+    ,"CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON payments(invoice_id);"
   ];
   for (const sql of alters) {
     try {
