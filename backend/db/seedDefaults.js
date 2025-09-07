@@ -7,7 +7,7 @@ async function seedDefaults() {
     await pool.query('COMMIT');
   } catch (e) { try { await pool.query('ROLLBACK'); } catch(_){} }
 
-  try { await pool.query(`INSERT INTO locations (name) VALUES ('Selva-Shop'), ('Ratinam-Shop')`); } catch (e) {}
+  try { await pool.query(`INSERT INTO locations (name) VALUES ('Selva'), ('Ratinam')`); } catch (e) {}
   // Fetch locations for multi-shop seeding
   let locs = [];
   try { const r = await pool.query(`SELECT id, name FROM locations ORDER BY id ASC`); locs = r.rows; } catch (e) {}
