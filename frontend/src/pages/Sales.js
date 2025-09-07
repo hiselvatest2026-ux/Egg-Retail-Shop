@@ -308,6 +308,18 @@ const Sales = () => {
     fetchPricing();
   }, [form.customer_id, form.material_code, form.category]);
 
+  // When category or customer changes and a material is already picked, refresh addForm price from Pricing Master
+  useEffect(() => {
+    const code = addForm.material_code;
+    if (!code) return;
+    getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
+      .then(r=>{
+        const base = Number(r?.data?.base_price || 0);
+        if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+      })
+      .catch(()=>{});
+  }, [form.customer_id, form.category]);
+
   // Auto-set product_name when material_code changes
   useEffect(() => {
     if (!materials || !materials.length) return;
@@ -428,14 +440,28 @@ const Sales = () => {
                     onChange={(code)=>{
                       const mat = sortedMaterials.find(m=> String(m.part_code)===String(code));
                       setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
-                      // Auto-fill price from latest Purchase for this material
+                      // Auto-fill price from Pricing Master base price for this material & category
                       if (code) {
-                        getLastPurchasePrice({ material_code: code })
+                        getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
                           .then(r=>{
-                            const price = Number(r?.data?.price || 0);
-                            if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                            const base = Number(r?.data?.base_price || 0);
+                            if (base > 0) {
+                              setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+                            } else {
+                              // Fallback: try last purchase price
+                              return getLastPurchasePrice({ material_code: code }).then(rr=>{
+                                const price = Number(rr?.data?.price || 0);
+                                if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                              }).catch(()=>{});
+                            }
                           })
-                          .catch(()=>{});
+                          .catch(()=>{
+                            // Fallback on failure: last purchase price
+                            getLastPurchasePrice({ material_code: code }).then(rr=>{
+                              const price = Number(rr?.data?.price || 0);
+                              if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                            }).catch(()=>{});
+                          });
                       }
                     }}
                     placeholder={'Product Code *'}
@@ -443,7 +469,7 @@ const Sales = () => {
                   />
                 </div>
                 <input className="input" placeholder="Product Name" value={addForm.material_type||''} readOnly />
-                <input className="input" placeholder="Price / unit *" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" />
+                <input className="input" placeholder="Price / unit *" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" readOnly />
                 <div style={{overflow:'visible'}}>
                   <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
