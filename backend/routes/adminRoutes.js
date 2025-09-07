@@ -44,3 +44,20 @@ router.post('/seed/ratinam', async (_req, res) => {
   }
 });
 
+// Clear all transactional data (sales/purchases) and related items/payments
+router.post('/clear-transactions', async (_req, res) => {
+  try {
+    await pool.query('BEGIN');
+    try { await pool.query('DELETE FROM payments'); } catch(_) {}
+    try { await pool.query('DELETE FROM sale_items'); } catch(_) {}
+    try { await pool.query('DELETE FROM sales'); } catch(_) {}
+    try { await pool.query('DELETE FROM purchase_items'); } catch(_) {}
+    try { await pool.query('DELETE FROM purchases'); } catch(_) {}
+    await pool.query('COMMIT');
+    res.json({ message: 'Transactions cleared (purchases, purchase_items, sales, sale_items, payments)' });
+  } catch (e) {
+    try { await pool.query('ROLLBACK'); } catch(_) {}
+    res.status(500).json({ message: e.message });
+  }
+});
+
