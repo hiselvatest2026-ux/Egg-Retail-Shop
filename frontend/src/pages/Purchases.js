@@ -16,6 +16,22 @@ const Purchases = () => {
   const [materials, setMaterials] = useState([]);
   const [products, setProducts] = useState([]);
   const [rows, setRows] = useState([]);
+  const sortedMaterials = useMemo(() => {
+    const source = Array.isArray(materials) ? [...materials] : [];
+    const priority = (m) => {
+      const name = String(m.description || m.metal_type || '').toLowerCase();
+      if (name.includes('egg')) return 0;
+      if (name.includes('panner') || name.includes('paneer')) return 1;
+      return 2;
+    };
+    source.sort((a,b) => {
+      const pa = priority(a);
+      const pb = priority(b);
+      if (pa !== pb) return pa - pb;
+      return String(a.metal_type||'').localeCompare(String(b.metal_type||''));
+    });
+    return source;
+  }, [materials]);
   const [addForm, setAddForm] = useState({ material_code:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState(null);
@@ -347,7 +363,7 @@ const Purchases = () => {
                     const mat = materials.find(m=> String(m.part_code) === String(code));
                     const type = mat ? mat.metal_type : '';
                     setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
-                  }} options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))} />
+                  }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))} />
                 </div>
                 <div>
                   <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Price / Unit</label>
