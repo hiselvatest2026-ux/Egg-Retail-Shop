@@ -196,16 +196,16 @@ const Purchases = () => {
               <table className="table table-hover table-zebra mt-2">
                 <thead>
                   <tr>
-                    <th>Product (Material)</th>
-                    <th style={{textAlign:'right'}}>Price/Unit</th>
-                    <th>UOM</th>
-                    <th>Date of Manufacturing</th>
-                    <th>Shelf Life</th>
-                    <th style={{textAlign:'right'}}>Quantity</th>
-                    <th style={{textAlign:'right'}}>SGST %</th>
-                    <th style={{textAlign:'right'}}>CGST %</th>
-                    <th style={{textAlign:'right'}}>Total Amount</th>
-                    <th></th>
+                    <th style={{minWidth:280}}>Product (Material)</th>
+                    <th style={{minWidth:120, textAlign:'right'}}>Price/Unit</th>
+                    <th style={{minWidth:140, textAlign:'center'}}>UOM</th>
+                    <th style={{minWidth:180}}>Date of Manufacturing</th>
+                    <th style={{minWidth:160}}>Shelf Life</th>
+                    <th style={{minWidth:120, textAlign:'right'}}>Quantity</th>
+                    <th style={{minWidth:120, textAlign:'right'}}>SGST %</th>
+                    <th style={{minWidth:120, textAlign:'right'}}>CGST %</th>
+                    <th style={{minWidth:140, textAlign:'right'}}>Total Amount</th>
+                    <th style={{width:72}}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,10 +224,10 @@ const Purchases = () => {
                             options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
                           />
                         </td>
-                        <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
+                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
                         }} /></td>
-                        <td style={{overflow:'visible'}}>
+                        <td style={{overflow:'visible', textAlign:'center'}}>
                           <Dropdown
                             value={r.uom || 'Piece'}
                             onChange={(val)=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row))}
@@ -240,13 +240,13 @@ const Purchases = () => {
                         <td><input className="input" placeholder="days/months" value={r.shelf_life||''} onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, shelf_life: val } : row));
                         }} /></td>
-                        <td style={{textAlign:'right'}}><input className="input" value={r.quantity||''} inputMode="numeric" onChange={e=>{
+                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={r.quantity||''} inputMode="numeric" onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, quantity: val } : row));
                         }} /></td>
-                        <td style={{textAlign:'right'}}><input className="input" value={totals.sgst_percent.toFixed(2)} readOnly /></td>
-                        <td style={{textAlign:'right'}}><input className="input" value={totals.cgst_percent.toFixed(2)} readOnly /></td>
-                        <td style={{textAlign:'right'}}><input className="input" value={totals.totalAmount.toFixed(2)} readOnly /></td>
-                        <td><button type="button" className="btn danger btn-sm" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>Delete</button></td>
+                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={totals.sgst_percent.toFixed(2)} readOnly /></td>
+                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={totals.cgst_percent.toFixed(2)} readOnly /></td>
+                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={totals.totalAmount.toFixed(2)} readOnly /></td>
+                        <td style={{textAlign:'center'}}><button type="button" className="btn icon btn-sm" title="Delete" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>🗑️</button></td>
                       </tr>
                     );
                   })}
@@ -295,12 +295,11 @@ const Purchases = () => {
                 );
               })}
             </div>
-            <div style={{display:'flex', justifyContent:'space-between', marginTop:8}}>
-              <button type="button" className="btn" onClick={()=> setRows(prev=> {
+            <div style={{display:'flex', justifyContent:'flex-end', marginTop:8, gap:12}}>
+              <button type="button" className="btn btn-mobile-full" onClick={()=> setRows(prev=> {
                 const first = (materials && materials[0]) ? materials[0] : null;
                 return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
               })}>+ Add Row</button>
-              <div style={{color:'#b6beca'}}>Rows: <strong>{rows.length}</strong></div>
             </div>
           </div>
           {/* New editable purchases table goes below */}
