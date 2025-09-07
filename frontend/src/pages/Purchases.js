@@ -214,19 +214,35 @@ const Purchases = () => {
                     return (
                       <tr key={idx}>
                         <td style={{overflow:'visible'}}>
-                          <div style={{display:'flex', flexDirection:'column', gap:4}}>
-                            <div style={{fontSize:12, color:'#b6beca'}}>Select Product</div>
-                            <Dropdown
-                              value={r.material_code || ''}
-                              onChange={(code)=>{
-                                const mat = materials.find(m=> String(m.part_code) === String(code));
-                                const type = mat ? mat.metal_type : '';
-                                setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
-                              }}
-                              placeholder={'Select Product'}
-                              options={[{ value:'', label:'Select Product' }, ...materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))]}
-                            />
-                          </div>
+                          {(()=>{
+                            const materialTypeSet = new Set((materials||[]).map(m=> String(m.metal_type||'').toLowerCase()));
+                            const options = [
+                              { value:'', label:'Select Product' },
+                              ...(materials||[]).map(m=>({ value: `m:${String(m.part_code)}`, label: `${m.part_code} - ${m.metal_type}` })),
+                              ...(products||[]).filter(p=> !materialTypeSet.has(String(p.name||'').toLowerCase())).map(p=>({ value: `p:${p.name}`, label: p.name }))
+                            ];
+                            const currentValue = r.material_code ? `m:${r.material_code}` : (r.material_type ? `p:${r.material_type}` : '');
+                            return (
+                              <Dropdown
+                                value={currentValue}
+                                onChange={(val)=>{
+                                  if (String(val).startsWith('m:')) {
+                                    const code = String(val).slice(2);
+                                    const mat = materials.find(m=> String(m.part_code) === String(code));
+                                    const type = mat ? mat.metal_type : '';
+                                    setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
+                                  } else if (String(val).startsWith('p:')) {
+                                    const type = String(val).slice(2);
+                                    setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: '', material_type: type } : row));
+                                  } else {
+                                    setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: '', material_type: '' } : row));
+                                  }
+                                }}
+                                placeholder={'Select Product'}
+                                options={options}
+                              />
+                            );
+                          })()}
                         </td>
                         <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
@@ -264,7 +280,7 @@ const Purchases = () => {
                   <div key={idx} className="card">
                     <div className="card-body">
                       <div className="data-pairs">
-                        <div className="pair"><strong>Select Product</strong>
+                        <div className="pair">
                           <Dropdown
                             value={r.material_code || ''}
                             onChange={(code)=>{
