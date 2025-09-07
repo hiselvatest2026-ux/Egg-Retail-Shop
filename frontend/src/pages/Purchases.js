@@ -265,7 +265,7 @@ const Purchases = () => {
                     <th style={{minWidth:280}}>Product (Material)</th>
                     <th style={{minWidth:120, textAlign:'right'}}>Price/Unit</th>
                     <th style={{minWidth:140, textAlign:'center'}}>UOM</th>
-                    <th style={{minWidth:180}}>Date of Manufacturing</th>
+                    <th style={{minWidth:180}}>DateOfManufactoring</th>
                     <th style={{minWidth:160}}>Shelf Life</th>
                     <th style={{minWidth:120, textAlign:'right'}}>Quantity</th>
                     <th style={{minWidth:120, textAlign:'right'}}>SGST %</th>
@@ -314,7 +314,7 @@ const Purchases = () => {
                         <div className="pair"><strong>Product</strong><div>{productLabel}</div></div>
                         <div className="pair"><strong>Price/Unit</strong><div style={{textAlign:'right'}}>{r.price_per_unit || '-'}</div></div>
                         <div className="pair"><strong>UOM</strong><div>{r.uom || 'Piece'}</div></div>
-                        <div className="pair"><strong>Date of Manufacturing</strong><div>{r.mfg_date || '-'}</div></div>
+                        <div className="pair"><strong>DateOfManufactoring</strong><div>{r.mfg_date || '-'}</div></div>
                         <div className="pair"><strong>Shelf Life</strong><div>{r.shelf_life || '-'}</div></div>
                         <div className="pair"><strong>Quantity</strong><div style={{textAlign:'right'}}>{r.quantity || '-'}</div></div>
                         <div className="pair"><strong>SGST %</strong><div style={{textAlign:'right'}}>{totals.sgst_percent.toFixed(2)}</div></div>
@@ -382,7 +382,7 @@ const Purchases = () => {
                   <Dropdown value={editForm.uom||'Piece'} onChange={(v)=>setEditForm({...editForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
                 <div>
-                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Date of Manufacturing</label>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>DateOfManufactoring</label>
                   <input className="input date" type="date" value={editForm.mfg_date||''} onChange={e=>setEditForm({...editForm, mfg_date:e.target.value})} />
                 </div>
                 <div>
