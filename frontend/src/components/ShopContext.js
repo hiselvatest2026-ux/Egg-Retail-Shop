@@ -11,7 +11,8 @@ export const ShopProvider = ({ children }) => {
     (async()=>{
       try {
         const res = await getLocations();
-        const list = res.data || [];
+        const listAll = res.data || [];
+        const list = listAll.filter(s => !/selva/i.test(String(s.name||'')));
         setShops(list);
         let saved = typeof window !== 'undefined' ? window.localStorage.getItem('currentShopId') : null;
         // Allow deep link via ?shop_id= or ?shop=
