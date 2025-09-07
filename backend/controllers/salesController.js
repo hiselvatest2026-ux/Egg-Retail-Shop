@@ -80,18 +80,21 @@ exports.getPricingForSale = async (req, res) => {
       category = 'Retail';
     }
     
-    // Get customer tax applicability
-    const customerResult = await pool.query(
-      'SELECT tax_applicability FROM customers WHERE id = $1',
-      [customer_id]
-    );
-    
-    if (customerResult.rows.length === 0) {
-      return res.status(404).json({ message: 'Customer not found' });
+    // Get customer tax applicability (optional)
+    let isTaxable = true;
+    if (customer_id) {
+      const customerResult = await pool.query(
+        'SELECT tax_applicability FROM customers WHERE id = $1',
+        [customer_id]
+      );
+      if (customerResult.rows.length === 0) {
+        // If missing, default to taxable instead of failing
+        isTaxable = true;
+      } else {
+        const customer = customerResult.rows[0];
+        isTaxable = customer.tax_applicability === 'Taxable';
+      }
     }
-    
-    const customer = customerResult.rows[0];
-    const isTaxable = customer.tax_applicability === 'Taxable';
     
     // Get pricing information
     let pricingQuery = `
