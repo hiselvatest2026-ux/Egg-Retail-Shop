@@ -49,20 +49,20 @@ async function seedDefaults() {
     const sA = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (1,354.00,NULL,'Cash','Completed',0,'Cash') RETURNING id`);
     try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,24,6.00,$2)`, [sA.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,24,6.00)`, [sA.rows[0].id]); }
     try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,2,1,200.00,$2)`, [sA.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,2,1,200.00)`, [sA.rows[0].id]); }
-    try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (1,$1,354.00,'Cash')`, [sA.rows[0].id]); } catch (e) {}
+    // No seed payments; let user test Record Payment flow
 
     // B) Wholesale Credit sale, partial payment, trays + pieces mix
     // Eggs: 60 @ 5.50 = 330.00; Paneer: 5 @ 190 => 950 *1.05 = 997.50; Grand = 1327.50; Paid 500 => Balance 827.50
     const sB = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (3,1327.50,NULL,'Credit','Completed',0,'Credit') RETURNING id`);
     try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,60,5.50,$2)`, [sB.rows[0].id, warehouseId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,60,5.50)`, [sB.rows[0].id]); }
     try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,2,5,190.00,$2)`, [sB.rows[0].id, warehouseId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,2,5,190.00)`, [sB.rows[0].id]); }
-    try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (3,$1,500.00,'Cash')`, [sB.rows[0].id]); } catch (e) {}
+    // No seed payments; partial balance remains for testing
 
     // C) Retail Walk-in (use Retail category), Gpay full payment, single item
     // Eggs: 12 @ 6 = 72.00
     const sC = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (4,72.00,NULL,'Cash','Completed',0,'Cash') RETURNING id`);
     try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,12,6.00,$2)`, [sC.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,12,6.00)`, [sC.rows[0].id]); }
-    try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (4,$1,72.00,'Cash')`, [sC.rows[0].id]); } catch (e) {}
+    // No seed payments; allow testing fresh payments
   } catch (e) {}
   try { await pool.query(`INSERT INTO stock_adjustments (product_id, adjustment_type, quantity, note) VALUES (1,'Breakage',2,'Damaged crate')`); } catch (e) {}
 
