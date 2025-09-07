@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShopProvider } from './components/ShopContext';
 import ShopSwitcher from './components/ShopSwitcher';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
@@ -24,6 +24,12 @@ import Vendors from './pages/Vendors';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Auto-close sidebar on route change (mobile)
+  useEffect(() => {
+    const closeOnNav = () => setSidebarOpen(false);
+    window.addEventListener('popstate', closeOnNav);
+    return () => window.removeEventListener('popstate', closeOnNav);
+  }, []);
   return (
     <Router>
       <ShopProvider>
@@ -49,7 +55,12 @@ function App() {
               <ShopSwitcher />
             </div>
           </div>
-          <nav className="nav">
+          <nav className="nav" onClick={(e)=>{
+            const target = e.target;
+            if (target && target.closest && target.closest('a')) {
+              setSidebarOpen(false);
+            }
+          }}>
             <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
             <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
             
@@ -91,9 +102,9 @@ function App() {
           </Routes>
         </main>
         <nav className="bottom-tabs">
-          <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
-          <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
-          <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
+          <NavLink to="/sales" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
+          <NavLink to="/purchases" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
+          <NavLink to="/inventory" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
           <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
