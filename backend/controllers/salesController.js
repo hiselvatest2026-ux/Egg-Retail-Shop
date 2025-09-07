@@ -73,7 +73,12 @@ exports.deleteSale = async (req, res) => {
 // New function to get pricing information for sales
 exports.getPricingForSale = async (req, res) => {
   try {
-    const { customer_id, material_code, category = 'Retail' } = req.query;
+    const { customer_id, material_code } = req.query;
+    let { category } = req.query;
+    // Normalize Walk-in to Retail pricing unless explicitly defined
+    if (category && /walk-?in/i.test(category)) {
+      category = 'Retail';
+    }
     
     // Get customer tax applicability
     const customerResult = await pool.query(

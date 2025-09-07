@@ -67,6 +67,16 @@ const Sales = () => {
   const [payingSale, setPayingSale] = useState(null);
   const [payForm, setPayForm] = useState({ amount: '', mode: 'Cash' });
 
+  // Ensure base categories always include Walk-in alongside Retail/Wholesale
+  const saleCategories = useMemo(() => {
+    const base = ['Retail','Wholesale','Walk-in'];
+    const fromCustomers = Array.from(new Set((customers||[]).map(c=>c.category).filter(Boolean)));
+    const merged = Array.from(new Set([...base, ...fromCustomers]));
+    const order = new Map(base.map((c,i)=>[c,i]));
+    merged.sort((a,b)=>{ const ia = order.has(a)?order.get(a):base.length; const ib = order.has(b)?order.get(b):base.length; if (ia!==ib) return ia-ib; return String(a).localeCompare(String(b)); });
+    return merged;
+  }, [customers]);
+
   const itemsTotal = useMemo(() => {
     if (!lineItems || lineItems.length === 0) return 0;
     return lineItems.reduce((sum, it) => {
@@ -145,10 +155,9 @@ const Sales = () => {
     }
     // Otherwise, default to first available category if none selected yet
     if (!form.category) {
-      const cats = Array.from(new Set((customers||[]).map(c=>c.category).filter(Boolean)));
-      if (cats.length > 0) setForm(prev => ({ ...prev, category: cats[0] }));
+      if (saleCategories.length > 0) setForm(prev => ({ ...prev, category: saleCategories[0] }));
     }
-  }, [paymentsFilter.customer_id, customers]);
+  }, [paymentsFilter.customer_id, customers, saleCategories]);
 
   const reloadPayments = async () => {
     try {
@@ -354,7 +363,7 @@ const Sales = () => {
                 value={form.category}
                 onChange={(v)=>setForm(prev=>({ ...prev, category: v }))}
                 placeholder={'Select category'}
-                options={[...Array.from(new Set((customers||[]).map(c=>c.category).filter(Boolean))).map(c=>({ value:c, label:c }))]}
+                options={saleCategories.map(c=>({ value:c, label:c }))}
               />
             </div>
             <div className="input-group" style={{overflow:'visible'}}>
