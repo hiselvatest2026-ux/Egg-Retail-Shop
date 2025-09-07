@@ -48,11 +48,8 @@ router.post('/seed/ratinam', async (_req, res) => {
 router.post('/clear-transactions', async (_req, res) => {
   try {
     await pool.query('BEGIN');
-    try { await pool.query('DELETE FROM payments'); } catch(_) {}
-    try { await pool.query('DELETE FROM sale_items'); } catch(_) {}
-    try { await pool.query('DELETE FROM sales'); } catch(_) {}
-    try { await pool.query('DELETE FROM purchase_items'); } catch(_) {}
-    try { await pool.query('DELETE FROM purchases'); } catch(_) {}
+    // Use TRUNCATE with RESTART IDENTITY to reset auto-increment IDs
+    await pool.query('TRUNCATE payments, sale_items, sales, purchase_items, purchases RESTART IDENTITY CASCADE');
     await pool.query('COMMIT');
     res.json({ message: 'Transactions cleared (purchases, purchase_items, sales, sale_items, payments)' });
   } catch (e) {
