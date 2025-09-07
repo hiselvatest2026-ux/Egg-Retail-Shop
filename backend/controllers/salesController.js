@@ -180,9 +180,7 @@ exports.getSaleInvoice = async (req, res) => {
       'SELECT COALESCE(SUM(quantity * price), 0) AS total FROM sale_items WHERE sale_id=$1',
       [id]
     );
-    const computedTotal = totalResult.rows[0]?.total ?? 0;
     const items = itemsResult.rows;
-    const total = (items && items.length > 0) ? computedTotal : (sale.total ?? 0);
 
     // Company settings
     const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
@@ -198,29 +196,50 @@ exports.getSaleInvoice = async (req, res) => {
 
     // Tax breakdown per item (assume intra-state split when taxable)
     const isTaxable = sale.tax_applicability === 'Taxable';
-    let subtotal = 0, cgst_total = 0, sgst_total = 0, igst_total = 0;
-    const enrichedItems = items.map(it => {
-      const lineTotal = Number(it.line_total || 0);
-      const gstPercent = isTaxable ? Number(it.gst_percent || 0) : 0;
-      let taxableValue = lineTotal;
-      let taxAmt = 0, cgst = 0, sgst = 0, igst = 0;
-      if (isTaxable && gstPercent > 0) {
-        taxableValue = Number((lineTotal / (1 + (gstPercent/100))).toFixed(2));
-        taxAmt = Number((lineTotal - taxableValue).toFixed(2));
-        cgst = Number((taxAmt / 2).toFixed(2));
-        sgst = Number((taxAmt / 2).toFixed(2));
+    let workingItems = items;
+    // Fallback: if no sale_items present, synthesize a single item from sale.product_name and sale.total
+    if (!workingItems || workingItems.length === 0) {
+      let hsn = null, gstp = 0, prodName = sale.product_name || 'Product';
+      // Try to guess HSN/GST from metal_master by product keywords
+      const guessRes = await pool.query(`
+        SELECT hsn_sac, gst_percent FROM metal_master
+        WHERE (LOWER(metal_type) LIKE CASE WHEN LOWER($1) LIKE 'egg%' THEN 'egg%' ELSE '%' END)
+           OR (LOWER(metal_type) LIKE CASE WHEN LOWER($1) LIKE 'paneer%' OR LOWER($1) LIKE 'panner%' THEN 'paneer%' ELSE '%' END)
+        ORDER BY CASE WHEN LOWER(metal_type) LIKE 'egg%' THEN 0 WHEN LOWER(metal_type) LIKE 'paneer%' OR LOWER(metal_type) LIKE 'panner%' THEN 1 ELSE 2 END, id ASC
+        LIMIT 1
+      `, [prodName]);
+      if (guessRes.rows.length > 0) {
+        hsn = guessRes.rows[0].hsn_sac || null;
+        gstp = Number(guessRes.rows[0].gst_percent || 0);
       }
-      subtotal += taxableValue;
+      workingItems = [{ id: 0, product_id: null, product_name: prodName, quantity: 1, price: Number(sale.total||0), line_total: Number(sale.total||0), hsn_sac: hsn, gst_percent: gstp }];
+    }
+
+    // Compute taxes assuming stored prices are exclusive of tax
+    let subtotal = 0, cgst_total = 0, sgst_total = 0, igst_total = 0;
+    const enrichedItems = workingItems.map(it => {
+      const qty = Number(it.quantity || 0);
+      const rate = Number(it.price || 0);
+      const lineTotalEx = Number((qty * rate).toFixed(2));
+      const gstPercent = isTaxable ? Number(it.gst_percent || 0) : 0;
+      let cgst = 0, sgst = 0, igst = 0;
+      if (isTaxable && gstPercent > 0) {
+        cgst = Number(((lineTotalEx * (gstPercent/2)) / 100).toFixed(2));
+        sgst = Number(((lineTotalEx * (gstPercent/2)) / 100).toFixed(2));
+      }
+      subtotal += lineTotalEx;
       cgst_total += cgst;
       sgst_total += sgst;
       igst_total += igst;
-      return { ...it, taxable_value: taxableValue, cgst, sgst, igst };
+      const hsn = it.hsn_sac || (String(it.product_name||'').toLowerCase().includes('egg') ? '0407' : (String(it.product_name||'').toLowerCase().includes('paneer') || String(it.product_name||'').toLowerCase().includes('panner') ? '0406' : null));
+      return { ...it, line_total: lineTotalEx + cgst + sgst + igst, taxable_value: lineTotalEx, cgst, sgst, igst, hsn_sac: hsn };
     });
 
-    const grand_total = subtotal + cgst_total + sgst_total + igst_total;
-    const round_off = Number((total - grand_total).toFixed(2));
+    const grand_total = Number((subtotal + cgst_total + sgst_total + igst_total).toFixed(2));
+    const total = grand_total; // use computed grand total for invoice display
+    const round_off = 0;
 
-    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance } });
+    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance: Number((grand_total - paid).toFixed(2)) } });
   } catch (err) {
     res.status(500).send(err.message);
   }
