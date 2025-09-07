@@ -37,6 +37,7 @@ img { max-width: 100%; height: auto; }
 .table { width:100%; border-collapse: collapse; color:#e5e7eb; background:#2A2A3B; }
 .table th, .table td { border:1px solid #3A3A4D; padding:14px 16px; text-align:left; }
 .table thead th { background:#242435; font-weight:700; color:#cbd5e1; }
+.table thead th, .table td, .input, .btn, .ui-dropdown, .ui-dropdown * { font-family: Arial, sans-serif; font-size: 14px; }
 .table-hover tbody tr { transition: background-color .12s ease; }
 .table-hover tbody tr:hover { background:#242435; }
 .table-zebra tbody tr:nth-child(odd) { background:#252537; }
