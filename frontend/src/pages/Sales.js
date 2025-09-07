@@ -307,12 +307,38 @@ const Sales = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <Card title="Sales Entry">
-          {/* Auto fields display */}
-          <div className="data-pairs" style={{marginBottom:8}}>
-            <div className="pair"><strong>Sales Type</strong><div>Cash</div></div>
-            <div className="pair"><strong>Sale Category</strong><div>Retail</div></div>
-            <div className="pair"><strong>Route Name</strong><div>{(trips && trips[0]) ? (trips[0].route_name || trips[0].master_route_name || 'Route') : 'No Route (Today)'}</div></div>
-            <div className="pair" style={{textAlign:'right'}}><strong>Total Amount</strong><div>₹ {itemsTotalWithGst.toFixed(2)}</div></div>
+          {/* Controls */}
+          <div className="form-grid-2" style={{marginBottom:8}}>
+            <div className="input-group" style={{overflow:'visible'}}>
+              <label>Sale Type</label>
+              <Dropdown
+                value={form.sale_type}
+                onChange={(v)=>setForm(prev=>({ ...prev, sale_type: v }))}
+                options={[{value:'Cash',label:'Cash'},{value:'Credit',label:'Credit'},{value:'Gpay',label:'Gpay'}]}
+              />
+            </div>
+            <div className="input-group" style={{overflow:'visible'}}>
+              <label>Sale Category</label>
+              <Dropdown
+                value={form.category}
+                onChange={(v)=>setForm(prev=>({ ...prev, category: v }))}
+                placeholder={'Select category'}
+                options={[...Array.from(new Set((customers||[]).map(c=>c.category).filter(Boolean))).map(c=>({ value:c, label:c }))]}
+              />
+            </div>
+            <div className="input-group" style={{overflow:'visible'}}>
+              <label>Route Name</label>
+              <Dropdown
+                value={selectedRouteId}
+                onChange={(v)=>setSelectedRouteId(v)}
+                placeholder={'Select Route'}
+                options={(routes||[]).map(r=>({ value:String(r.id), label:`${r.route_name} - ${r.vehicle_number||'-'}` }))}
+              />
+            </div>
+            <div className="input-group">
+              <label>Total Amount</label>
+              <input className="input" value={`₹ ${itemsTotalWithGst.toFixed(2)}`} readOnly />
+            </div>
           </div>
           {/* Add Item row */}
           <div className="card">
