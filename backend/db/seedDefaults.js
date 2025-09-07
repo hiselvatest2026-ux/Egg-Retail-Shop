@@ -3,16 +3,17 @@ const pool = require('../models/db');
 async function seedDefaults() {
   try {
     await pool.query('BEGIN');
-    await pool.query('TRUNCATE payments, sale_items, sales, purchase_items, purchases, stock_adjustments, goods_receipts, opening_stocks_material, opening_stocks, stock_counts, pricing_master, metal_master, products, customers, suppliers, vendors, locations RESTART IDENTITY CASCADE');
+    await pool.query('TRUNCATE payments, sale_items, sales, purchase_items, purchases, stock_adjustments, goods_receipts, opening_stocks_material, opening_stocks, stock_counts, pricing_master, metal_master, products, customers, suppliers, vendors, route_trips, routes, settings, locations RESTART IDENTITY CASCADE');
     await pool.query('COMMIT');
   } catch (e) { try { await pool.query('ROLLBACK'); } catch(_){} }
 
-  try { await pool.query(`INSERT INTO locations (name) VALUES ('Selva'), ('Ratinam')`); } catch (e) {}
+  try { await pool.query(`INSERT INTO locations (name) VALUES ('Ratinam')`); } catch (e) {}
   // Fetch locations for multi-shop seeding
   let locs = [];
   try { const r = await pool.query(`SELECT id, name FROM locations ORDER BY id ASC`); locs = r.rows; } catch (e) {}
-  const mainOutletId = locs.find(l=>/selva/i.test(l.name))?.id || locs[0]?.id || 1;
-  const warehouseId = locs.find(l=>/ratinam/i.test(l.name))?.id || locs[1]?.id || mainOutletId;
+  const ratinamId = locs.find(l=>/ratinam/i.test(l.name))?.id || locs[0]?.id || 1;
+  const mainOutletId = ratinamId;
+  const warehouseId = ratinamId;
   try { await pool.query(`INSERT INTO vendors (name, phone, address, pincode, gstin, credit_terms) VALUES ('Agri Supplies Co','9876543210','12 Market St','600001','33AAAAA0000A1Z5','Net 30'), ('Fresh Farm Traders','9876501234','8 Farm Rd','600045','33BBBBB1111B2Z6','Immediate')`); } catch (e) {}
   try { await pool.query(`INSERT INTO suppliers (name, contact_info) VALUES ('Legacy Supplier A','legacyA@example.com'),('Legacy Supplier B','legacyB@example.com')`); } catch (e) {}
   try { await pool.query(`INSERT INTO customers (name, contact_info, phone, category, gstin, tax_applicability) VALUES ('Alice Retail','alice@example.com','9000000001','Retail','33ZZZAA1111Z5','Taxable'),('Bob Cafe','bob@example.com','9000000002','Retail','', 'Non-Taxable'),('City Mart','city@example.com','9000000003','Wholesale','33YYYBB2222Y6','Taxable')`); } catch (e) {}
