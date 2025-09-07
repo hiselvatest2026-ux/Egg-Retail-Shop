@@ -114,6 +114,10 @@ async function ensureSchema() {
       route_number VARCHAR(50) UNIQUE NOT NULL,
       route_name VARCHAR(100) NOT NULL,
       vehicle_number VARCHAR(50),
+      salesman_name VARCHAR(100),
+      mobile VARCHAR(20),
+      area_name VARCHAR(100),
+      pincode VARCHAR(10),
       active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT NOW()
     );`

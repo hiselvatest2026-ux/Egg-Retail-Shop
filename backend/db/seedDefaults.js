@@ -41,7 +41,10 @@ async function seedDefaults() {
 
   // Routes and today's trip
   try {
-    await pool.query(`INSERT INTO routes (route_number, route_name, vehicle_number, active) VALUES ('R001','North Zone','TN-01-AB-1234', true)`);
+    await pool.query(`INSERT INTO routes (route_number, route_name, vehicle_number, active, salesman_name, mobile, area_name, pincode) VALUES 
+      ('R001','North Zone','TN-01-AB-1234', true, 'Kumar','9000000001','Anna Nagar','600040'),
+      ('R002','South Zone','TN-02-CD-5678', true, 'Vijay','9000000002','Velachery','600042'),
+      ('R003','Central','TN-03-EF-9012', false, 'Raj','9000000003','T. Nagar','600017')`);
   } catch (e) {}
   try {
     await pool.query(`INSERT INTO route_trips (route_id, service_date, route_name, vehicle_number, status) VALUES (1, CURRENT_DATE, 'North Zone', 'TN-01-AB-1234', 'Planned')`);
