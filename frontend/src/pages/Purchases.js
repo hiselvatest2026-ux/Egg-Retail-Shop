@@ -37,14 +37,14 @@ const Purchases = () => {
   };
 
   const deriveGstPercents = (row) => {
-    // Try to derive GST% from materials by product code or name; fallback 0
+    // Derive GST% from materials using material_code or material_type; fallback 0
     let gst = 0;
-    if (row.product_code) {
-      const m = materials.find(x => String(x.part_code) === String(row.product_code));
+    if (row.material_code) {
+      const m = materials.find(x => String(x.part_code) === String(row.material_code));
       if (m) gst = Number(m.gst_percent || 0);
     }
-    if (!gst && row.product_name) {
-      const m2 = materials.find(x => String(x.metal_type).toLowerCase() === String(row.product_name).toLowerCase());
+    if (!gst && row.material_type) {
+      const m2 = materials.find(x => String(x.metal_type).toLowerCase() === String(row.material_type).toLowerCase());
       if (m2) gst = Number(m2.gst_percent || 0);
     }
     const sgst = gst / 2;
@@ -87,14 +87,14 @@ const Purchases = () => {
         const price = Number(r.price_per_unit || 0);
         const qty = Number(r.quantity || 0);
         if (!(qty>0)) continue;
-        // Map to a product_id if possible by product name
+        // Map to a product_id if possible by material type
         let productId = null;
-        if (r.product_name) {
-          const prod = products.find(p => String(p.name).toLowerCase() === String(r.product_name).toLowerCase());
+        if (r.material_type) {
+          const prod = products.find(p => String(p.name).toLowerCase() === String(r.material_type).toLowerCase());
           if (prod) productId = prod.id;
         }
-        if (!productId && r.product_code) {
-          const mat = materials.find(m => String(m.part_code) === String(r.product_code));
+        if (!productId && r.material_code) {
+          const mat = materials.find(m => String(m.part_code) === String(r.material_code));
           if (mat) {
             const prod2 = products.find(p => String(p.name).toLowerCase() === String(mat.metal_type||'').toLowerCase());
             if (prod2) productId = prod2.id;
@@ -196,8 +196,7 @@ const Purchases = () => {
               <table className="table table-hover table-zebra mt-2">
                 <thead>
                   <tr>
-                    <th>Product Code</th>
-                    <th>Product Name</th>
+                    <th>Select Product (Material)</th>
                     <th style={{textAlign:'right'}}>Price/Unit</th>
                     <th>UOM</th>
                     <th>DoM</th>
@@ -214,12 +213,19 @@ const Purchases = () => {
                     const totals = computeRowTotals(r);
                     return (
                       <tr key={idx}>
-                        <td><input className="input" value={r.product_code||''} onChange={e=>{
-                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_code: val } : row));
-                        }} /></td>
-                        <td><input className="input" value={r.product_name||''} onChange={e=>{
-                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_name: val } : row));
-                        }} /></td>
+                        <td>
+                          <select className="input" value={r.material_code||''} onChange={e=>{
+                            const code = e.target.value;
+                            const mat = materials.find(m=> String(m.part_code) === String(code));
+                            const type = mat ? mat.metal_type : '';
+                            setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
+                          }}>
+                            <option value="">Select Product</option>
+                            {materials.map(m => (
+                              <option key={m.part_code} value={m.part_code}>{m.part_code} - {m.metal_type}</option>
+                            ))}
+                          </select>
+                        </td>
                         <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
                         }} /></td>
@@ -257,8 +263,19 @@ const Purchases = () => {
                   <div key={idx} className="card">
                     <div className="card-body">
                       <div className="data-pairs">
-                        <div className="pair"><strong>Product Code</strong><input className="input" value={r.product_code||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_code: e.target.value } : row))} /></div>
-                        <div className="pair"><strong>Product Name</strong><input className="input" value={r.product_name||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_name: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>Select Product</strong>
+                          <select className="input" value={r.material_code||''} onChange={e=>{
+                            const code = e.target.value;
+                            const mat = materials.find(m=> String(m.part_code) === String(code));
+                            const type = mat ? mat.metal_type : '';
+                            setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
+                          }}>
+                            <option value="">Select Product</option>
+                            {materials.map(m => (
+                              <option key={m.part_code} value={m.part_code}>{m.part_code} - {m.metal_type}</option>
+                            ))}
+                          </select>
+                        </div>
                         <div className="pair"><strong>Price/Unit</strong><input className="input" value={r.price_per_unit||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: e.target.value } : row))} /></div>
                         <div className="pair"><strong>UOM</strong>
                           <select className="input" value={r.uom||'Piece'} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: e.target.value } : row))}>
@@ -282,7 +299,7 @@ const Purchases = () => {
               })}
             </div>
             <div style={{display:'flex', justifyContent:'space-between', marginTop:8}}>
-              <button type="button" className="btn" onClick={()=> setRows(prev=> [...prev, { product_code:'', product_name:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }])}>+ Add Row</button>
+              <button type="button" className="btn" onClick={()=> setRows(prev=> [...prev, { material_code:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }])}>+ Add Row</button>
               <div style={{color:'#b6beca'}}>Rows: <strong>{rows.length}</strong></div>
             </div>
           </div>
