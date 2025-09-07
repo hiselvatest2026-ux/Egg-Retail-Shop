@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
@@ -18,6 +18,9 @@ const Sales = () => {
   const [available, setAvailable] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [lineItems, setLineItems] = useState([]);
+  const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
   const [pricingInfo, setPricingInfo] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,6 +65,8 @@ const Sales = () => {
         setCustomers(r.data);
         const m = await getMetals();
         setMaterials(m.data);
+        const pr = await getProducts();
+        setProducts(pr.data || []);
         const pays = await getPayments();
         const map = {};
         (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
@@ -90,9 +95,12 @@ const Sales = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!form.customer_id) { setError('Please select a customer.'); return; }
-    if (!form.product_name || !form.material_code) { setError('Please select a product.'); return; }
-    if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }
-    if (!form.total || Number.isNaN(Number(form.total))) { setError('Total could not be calculated.'); return; }
+    const hasItems = lineItems.length > 0;
+    if (!hasItems) {
+      if (!form.product_name || !form.material_code) { setError('Please select a product.'); return; }
+      if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }
+      if (!form.total || Number.isNaN(Number(form.total))) { setError('Total could not be calculated.'); return; }
+    }
     // Client-side stock validation
     try {
       const pid = materials.find(m=>String(m.metal_type)===String(form.product_name))?.id;
@@ -106,22 +114,43 @@ const Sales = () => {
       }
     } catch(_){}
     try {
-      const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null };
-      if (editing) { 
-        await updateSale(editing, payload); 
-      } else { 
-        const res = await createSale(payload);
+      if (hasItems) {
+        const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null });
         const newSale = res.data;
+        for (const it of lineItems) {
+          const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : Number(it.qty_pieces||0);
+          const price = Number(it.price_per_piece || 0);
+          if (!it.product_id || !(effQty>0)) continue;
+          await createSaleItem(newSale.id, { product_id: Number(it.product_id), quantity: effQty, price });
+        }
         if (recordPaymentNow) {
-          const amt = Number(paymentAtCreate.amount || form.total || 0);
+          const sum = lineItems.reduce((s,li)=> s + (Number(li.price_per_piece||0) * (li.qty_unit==='Tray' ? Number(li.trays||0)*30 : Number(li.qty_pieces||0))), 0);
+          const amt = Number(paymentAtCreate.amount || sum || 0);
           const mode = paymentAtCreate.mode || 'Cash';
           if (amt > 0) {
             await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
           }
         }
         navigate(`/invoice/${newSale.id}`);
+      } else {
+        const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null };
+        if (editing) { 
+          await updateSale(editing, payload); 
+        } else { 
+          const res = await createSale(payload);
+          const newSale = res.data;
+          if (recordPaymentNow) {
+            const amt = Number(paymentAtCreate.amount || form.total || 0);
+            const mode = paymentAtCreate.mode || 'Cash';
+            if (amt > 0) {
+              await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
+            }
+          }
+          navigate(`/invoice/${newSale.id}`);
+        }
       }
-      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', sale_type:'Cash', payment_mode:'Cash' });
+      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit:'Piece', trays:'', sale_type:'Cash', payment_mode:'Cash' });
+      setLineItems([]);
       setRecordPaymentNow(false);
       setPaymentAtCreate({ amount: '', mode: 'Cash' });
       setPricingInfo(null);
@@ -296,6 +325,68 @@ const Sales = () => {
             <label>Total Amount</label>
             <input className="input" value={form.total} readOnly />
           </div>
+
+          {/* Line items editor (optional) */}
+          <div className="input-group" style={{gridColumn:'1/-1'}}>
+            <label>Add Item</label>
+            <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
+              <select className="input" value={itemForm.product_id} onChange={e=>setItemForm({...itemForm, product_id: e.target.value})}>
+                <option value="">{products.length ? 'Select product' : 'No products found'}</option>
+                {products.map(p => (<option key={p.id} value={p.id}>{p.name} (#{p.id})</option>))}
+              </select>
+              <select className="input" value={itemForm.qty_unit} onChange={e=>setItemForm({...itemForm, qty_unit: e.target.value})}>
+                <option value="Piece">Piece</option>
+                <option value="Tray">Tray (30 pcs)</option>
+              </select>
+              <input className="input" placeholder="Qty (pieces)" value={itemForm.qty_pieces} onChange={e=>setItemForm({...itemForm, qty_pieces: e.target.value})} inputMode="numeric" />
+              <input className="input" placeholder="Trays" value={itemForm.trays} onChange={e=>setItemForm({...itemForm, trays: e.target.value})} inputMode="numeric" />
+              <input className="input" placeholder="Price / piece" value={itemForm.price_per_piece} onChange={e=>setItemForm({...itemForm, price_per_piece: e.target.value})} inputMode="decimal" />
+              <button type="button" className="btn" onClick={async()=>{
+                if (!itemForm.product_id) return;
+                let price = Number(itemForm.price_per_piece||0);
+                try {
+                  if (form.customer_id && form.category) {
+                    const prod = products.find(p=>String(p.id)===String(itemForm.product_id));
+                    if (prod) {
+                      const mat = materials.find(m=> (prod.name||'').toLowerCase().includes((m.metal_type||'').toLowerCase()));
+                      if (mat) {
+                        const pr = await getPricingForSale({ customer_id: form.customer_id, material_code: mat.part_code, category: form.category });
+                        const final = Number(pr.data?.final_price || pr.data?.base_price || 0);
+                        if (final>0) price = final;
+                      }
+                    }
+                  }
+                } catch(_) {}
+                const effQty = itemForm.qty_unit==='Tray' ? (Number(itemForm.trays||0)*30) : Number(itemForm.qty_pieces||0);
+                const lineTotal = effQty * price;
+                setLineItems(prev=>[...prev, { ...itemForm, price_per_piece: price, effectiveQty: effQty, lineTotal }]);
+                setItemForm({ product_id:'', qty_unit:'Piece', qty_pieces:'', trays:'', price_per_piece:'' });
+              }}>Add</button>
+            </div>
+          </div>
+          {lineItems.length > 0 && (
+            <div className="input-group" style={{gridColumn:'1/-1'}}>
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="table table-hover table-zebra mt-2">
+                  <thead><tr><th>Product</th><th style={{textAlign:'right'}}>Qty (pcs)</th><th style={{textAlign:'right'}}>Price/pc</th><th style={{textAlign:'right'}}>Line Total</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {lineItems.map((it,idx)=>{
+                      const prod = products.find(p=>String(p.id)===String(it.product_id));
+                      return (
+                        <tr key={idx}>
+                          <td>{prod ? prod.name : it.product_id}</td>
+                          <td style={{textAlign:'right'}}>{it.effectiveQty}</td>
+                          <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
+                          <td style={{textAlign:'right'}}>{(Number(it.lineTotal||0)).toFixed(2)}</td>
+                          <td><button type="button" className="btn danger btn-sm" onClick={()=>setLineItems(prev=>prev.filter((_,i)=>i!==idx))}>Remove</button></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Route controls (full-width, placed after core fields to maintain alignment) */}
           <div className="input-group" style={{gridColumn:'1/-1', overflow:'visible'}}>
