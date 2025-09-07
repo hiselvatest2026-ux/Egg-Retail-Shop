@@ -43,25 +43,8 @@ const InventoryManagement = () => {
   const loadClosing = async () => {
     try { 
       const params = locationId ? { params: { location_id: locationId } } : undefined;
-      const [p, m] = await Promise.all([
-        axios.get(`${baseUrl}/inventory/closing-stocks`, params),
-        axios.get(`${baseUrl}/inventory/closing-stocks/materials`, params)
-      ]);
-      const list = m.data||[];
-      setClosing(p.data||[]);
-      if (!list.length) {
-        // Prefill using formula: Closing = Opening + Purchases - Sales - Adjustments
-        // We approximate via current stock rows for the selected location
-        const nameToStock = new Map((rows||[]).map(r => [String(r.name||'').toLowerCase(), Number(r.stock||0)]));
-        if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
-        const prefill = (openingMaterials||[]).map(o=>{
-          const stock = nameToStock.get(String(o.material_type||'').toLowerCase()) || 0;
-          return { material_code:o.material_code, material_type:o.material_type, quantity: String(stock) };
-        });
-        setClosingMaterials(prefill);
-      } else {
-        setClosingMaterials(list);
-      }
+      const m = await axios.get(`${baseUrl}/inventory/closing-stocks/materials`, params);
+      setClosingMaterials(m.data||[]);
     } catch(e){ console.error('load closing failed', e);} }
   useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
 
