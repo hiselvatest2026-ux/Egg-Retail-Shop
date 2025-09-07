@@ -483,7 +483,7 @@ const Sales = () => {
                     options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.description || m.metal_type}` }))}
                   />
                 </div>
-                <input className="input" placeholder="Product Name" value={addForm.material_type||''} readOnly />
+                
                 <input className="input" placeholder="Price / unit *" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" readOnly />
                 <div style={{overflow:'visible'}}>
                   <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />

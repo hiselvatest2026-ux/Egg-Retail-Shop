@@ -234,7 +234,6 @@ const Purchases = () => {
                     />
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
-                  <input className="input" placeholder="Material Type" value={addForm.material_type||''} readOnly />
                   <div>
                     <input className="input" placeholder="Price / Unit *" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
                     {addFormErrors.price_per_unit && <div className="form-help">{addFormErrors.price_per_unit}</div>}
@@ -439,10 +438,7 @@ const Purchases = () => {
                     setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
                   }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))} />
                 </div>
-                <div>
-                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Material Type</label>
-                  <input className="input" value={editForm.material_type||''} readOnly />
-                </div>
+                
                 <div>
                   <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Price / Unit</label>
                   <input className="input" value={editForm.price_per_unit||''} onChange={e=>setEditForm({...editForm, price_per_unit:e.target.value})} />
