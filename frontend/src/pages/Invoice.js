@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { getSaleInvoice } from '../api/api';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getSaleInvoice, getSales } from '../api/api';
 import Card from '../components/Card';
 
 const Invoice = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,7 +24,28 @@ const Invoice = () => {
   }, [id]);
 
   if (loading) return <div className="p-4">Loading invoice...</div>;
-  if (error) return <div className="p-4">{error}</div>;
+  if (error) return (
+    <div className="p-4">
+      <div style={{marginBottom:8}}>{error || `Invoice #${id} not found.`}</div>
+      <div className="actions-row">
+        <button className="btn" onClick={()=>navigate('/sales')}>Go to Sales</button>
+        <button className="btn secondary" onClick={async()=>{
+          try {
+            const res = await getSales();
+            const list = res.data || [];
+            if (list.length) {
+              const latest = list.reduce((m,s)=> Number(s.id)>Number(m.id)?s:m, list[0]);
+              navigate(`/invoice/${latest.id}`);
+            } else {
+              navigate('/sales');
+            }
+          } catch(_) {
+            navigate('/sales');
+          }
+        }}>Open Latest Invoice</button>
+      </div>
+    </div>
+  );
   if (!invoice) return <div className="p-4">Invoice not found.</div>;
 
   const { company, sale, items, total, totals } = invoice;
