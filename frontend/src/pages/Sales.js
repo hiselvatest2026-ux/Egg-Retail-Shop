@@ -380,8 +380,8 @@ const Sales = () => {
           <div className="card-header" style={{borderRadius:12, marginBottom:12}}>
             <div className="card-title" style={{fontSize:18}}>Sale Details</div>
           </div>
-          {/* Controls: 2-column on web, stacked on mobile */}
-          <div className="form-grid-2" style={{marginBottom:12}}>
+          {/* Controls: responsive grid */}
+          <div className="form-row" style={{marginBottom:12}}>
             <div className="input-group" style={{overflow:'visible'}}>
               <label>Customer</label>
               <Dropdown
@@ -433,7 +433,7 @@ const Sales = () => {
           {/* Add Item row */}
           <div className="card">
             <div className="card-body">
-              <div className="grid grid-cols-1 sm:grid-cols-9 gap-2">
+              <div className="form-row">
                 <div style={{overflow:'visible'}}>
                   <Dropdown
                     value={addForm.material_code}

@@ -188,7 +188,7 @@ const Purchases = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
-        <form onSubmit={handleSubmit} className="form-grid-2">
+        <form onSubmit={handleSubmit} className="form-row">
           <div className="input-group" style={{overflow:'visible'}}>
             <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
             <Dropdown
@@ -221,7 +221,7 @@ const Purchases = () => {
             {/* Add Item compact form */}
             <div className="card" style={{marginTop:8}}>
               <div className="card-body">
-                <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
+                <div className="form-row">
                   <div style={{overflow:'visible'}}>
                     <Dropdown
                       value={addForm.material_code}

@@ -34,6 +34,10 @@ img { max-width: 100%; height: auto; }
 .btn.icon { background:transparent; color:#cbd5e1; border:1px solid #3A3A4D; }
 .btn.icon:hover { background:rgba(59,130,246,.08); color:#fff; border-color:#3B82F6; }
 
+/* Responsive form row (mobile-first) */
+.form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end; }
+@media (min-width: 768px) { .form-row { grid-template-columns: repeat(2, 1fr); } }
+
 .table { width:100%; border-collapse: collapse; color:#e5e7eb; background:#2A2A3B; }
 .table th, .table td { border:1px solid #3A3A4D; padding:14px 16px; text-align:left; }
 .table thead th { background:#242435; font-weight:700; color:#cbd5e1; }
