@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendors, getMetals, getProducts, createPurchaseItem } from '../api/api';
 import Card from '../components/Card';
-import { Link } from 'react-router-dom';
 import Dropdown from '../components/Dropdown';
 import ShopChip from '../components/ShopChip';
 
@@ -11,14 +10,12 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', product_name: '', price_per_unit: '', price_basis: 'PerPiece', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
+  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [products, setProducts] = useState([]);
-  const [lineItems, setLineItems] = useState([]);
-  const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
-  const [gstPercent, setGstPercent] = useState(0);
+  const [rows, setRows] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fetchPurchases = async () => {
@@ -39,23 +36,31 @@ const Purchases = () => {
     }
   };
 
-  const calcTotal = (pricePerUnit, quantity, gst) => {
-    const unit = Number(pricePerUnit || 0);
-    const qty = Number(quantity || 0);
-    const g = Number(gst || 0);
-    const total = unit * qty * (1 + (g/100));
-    if (!isFinite(total)) return '';
-    return total.toFixed(2);
+  const deriveGstPercents = (row) => {
+    // Try to derive GST% from materials by product code or name; fallback 0
+    let gst = 0;
+    if (row.product_code) {
+      const m = materials.find(x => String(x.part_code) === String(row.product_code));
+      if (m) gst = Number(m.gst_percent || 0);
+    }
+    if (!gst && row.product_name) {
+      const m2 = materials.find(x => String(x.metal_type).toLowerCase() === String(row.product_name).toLowerCase());
+      if (m2) gst = Number(m2.gst_percent || 0);
+    }
+    const sgst = gst / 2;
+    const cgst = gst / 2;
+    return { sgst_percent: sgst, cgst_percent: cgst };
   };
-  const getPerPiecePrice = () => {
-    const input = Number(form.price_per_unit || 0);
-    return String(form.price_basis) === 'PerTray' ? input / 30 : input;
-  };
-  const getEffectiveQty = () => {
-    const isTray = String(form.quantity_unit) === 'Tray';
-    const trays = Number(form.trays || 0);
-    const pieces = Number(form.quantity || 0);
-    return isTray ? trays * 30 : pieces;
+  const computeRowTotals = (row) => {
+    const price = Number(row.price_per_unit || 0);
+    const qtyInput = Number(row.quantity || 0);
+    const effectiveQty = String(row.uom||'Piece') === 'Tray' ? (qtyInput * 30) : qtyInput;
+    const lineTotal = price * effectiveQty;
+    const { sgst_percent, cgst_percent } = deriveGstPercents(row);
+    const sgstAmt = lineTotal * (sgst_percent/100);
+    const cgstAmt = lineTotal * (cgst_percent/100);
+    const totalAmount = lineTotal + sgstAmt + cgstAmt;
+    return { lineTotal, sgst_percent, cgst_percent, totalAmount };
   };
   useEffect(() => { 
     fetchPurchases(); 
@@ -69,41 +74,38 @@ const Purchases = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!form.vendor_id) { setError('Please select a vendor.'); return; }
-    const hasItems = lineItems.length > 0;
-    if (!hasItems) {
-      if (!form.product_name) { setError('Please select a product.'); return; }
-      if (!form.price_per_unit || Number.isNaN(Number(form.price_per_unit))) { setError('Please enter a valid price.'); return; }
-      if (!getEffectiveQty() || Number.isNaN(Number(getEffectiveQty()))) { setError('Please enter a valid quantity.'); return; }
-    }
+    if (!rows.length) { setError('Please add at least one row.'); return; }
     try {
-      if (hasItems) {
-        // Create minimal header, then items
-        let purchaseId = editing;
-        if (!editing) {
-          const header = { vendor_id: Number(form.vendor_id), product_name: null, price_per_unit: 0, quantity: 0, gst_percent: 0 };
-          const res = await createPurchase(header);
-          purchaseId = res.data?.id || res.id;
-        }
-        for (const it of lineItems) {
-          const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : Number(it.qty_pieces||0);
-          const price = Number(it.price_per_piece || 0);
-          if (!it.product_id || !(effQty>0)) continue;
-          await createPurchaseItem(purchaseId, { product_id: Number(it.product_id), quantity: effQty, price });
-        }
-        setSuccess('Purchase saved with items.');
-      } else {
-        const payload = { 
-          vendor_id: Number(form.vendor_id), 
-          product_name: form.product_name,
-          price_per_unit: Number(getPerPiecePrice()),
-          quantity: Number(getEffectiveQty()),
-          gst_percent: Number(gstPercent)
-        };
-        if (editing) { await updatePurchase(editing, payload); } else { await createPurchase(payload); }
-        setSuccess('Purchase saved successfully.');
+      // Create minimal header, then items based on rows
+      let purchaseId = editing;
+      if (!editing) {
+        const header = { vendor_id: Number(form.vendor_id) };
+        const res = await createPurchase(header);
+        purchaseId = res.data?.id || res.id;
       }
-      setForm({ vendor_id: '', product_name: '', price_per_unit: '', price_basis: 'PerPiece', quantity: '', quantity_unit: 'Piece', trays: '', total: '' });
-      setLineItems([]);
+      for (const r of rows) {
+        const price = Number(r.price_per_unit || 0);
+        const qty = Number(r.quantity || 0);
+        if (!(qty>0)) continue;
+        // Map to a product_id if possible by product name
+        let productId = null;
+        if (r.product_name) {
+          const prod = products.find(p => String(p.name).toLowerCase() === String(r.product_name).toLowerCase());
+          if (prod) productId = prod.id;
+        }
+        if (!productId && r.product_code) {
+          const mat = materials.find(m => String(m.part_code) === String(r.product_code));
+          if (mat) {
+            const prod2 = products.find(p => String(p.name).toLowerCase() === String(mat.metal_type||'').toLowerCase());
+            if (prod2) productId = prod2.id;
+          }
+        }
+        if (!productId) continue;
+        await createPurchaseItem(purchaseId, { product_id: Number(productId), quantity: qty, price });
+      }
+      setSuccess('Purchase saved.');
+      setForm({ vendor_id: '', total_purchase_value: '' });
+      setRows([]);
       setEditing(null);
       await fetchPurchases();
     } catch (err) {
@@ -191,140 +193,8 @@ const Purchases = () => {
               </>
             );
           })()}
-          <div className="input-group" style={{overflow:'visible'}}>
-            <label>Product Name</label>
-            <Dropdown
-              value={form.product_name}
-              onChange={(name)=>{
-                setForm({...form, product_name: name});
-                const m = materials.find(x=>x.metal_type===name);
-                const nextGst = m ? Number(m.gst_percent) : 0;
-                setGstPercent(nextGst);
-                const total = calcTotal(getPerPiecePrice(), getEffectiveQty(), nextGst);
-                setForm(prev=>({...prev, total}));
-              }}
-              placeholder={'Select product'}
-              options={materials.map(m=>({ value: m.metal_type, label: m.metal_type }))}
-            />
-          </div>
-          <div className="input-group">
-            <label>{form.price_basis==='PerTray' ? 'Price per tray' : 'Price per piece'}</label>
-            <input className="input" type="number" step="0.01" value={form.price_per_unit} inputMode="decimal" onChange={e=>{
-              const v = e.target.value; setForm({...form, price_per_unit: v});
-              const perPiece = String(form.price_basis)==='PerTray' ? (Number(v||0)/30) : Number(v||0);
-              const total = calcTotal(perPiece, getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
-            }} />
-          </div>
-          <div className="input-group" style={{overflow:'visible'}}>
-            <label>Price basis</label>
-            <Dropdown
-              value={form.price_basis}
-              onChange={(v)=>{
-                setForm(prev=>({ ...prev, price_basis: v }));
-                const perPiece = v==='PerTray' ? (Number(form.price_per_unit||0)/30) : Number(form.price_per_unit||0);
-                const total = calcTotal(perPiece, getEffectiveQty(), gstPercent);
-                setForm(prev=>({...prev, total}));
-              }}
-              options={[{value:'PerPiece',label:'Per piece'},{value:'PerTray',label:'Per tray (30 pcs)'}]}
-            />
-          </div>
-          <div className="input-group">
-            <label>Quantity (pieces)</label>
-            <input className="input" type="number" value={form.quantity} inputMode="numeric" onChange={e=>{
-              const v = e.target.value; setForm({...form, quantity: v});
-              const total = calcTotal(getPerPiecePrice(), getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
-            }} />
-          </div>
-          <div className="input-group" style={{overflow:'visible'}}>
-            <label>Quantity Unit</label>
-            <Dropdown
-              value={form.quantity_unit}
-              onChange={(v)=>{
-                // convert values when switching units
-                if (v==='Tray') {
-                  const pieces = Number(form.quantity||0);
-                  const trays = Math.ceil(pieces/30);
-                  setForm(prev=>({ ...prev, quantity_unit: v, trays: String(trays) }));
-                  const total = calcTotal(getPerPiecePrice(), trays*30, gstPercent);
-                  setForm(prev=>({...prev, total}));
-                } else {
-                  const trays = Number(form.trays||0);
-                  const pieces = trays*30;
-                  setForm(prev=>({ ...prev, quantity_unit: v, quantity: String(pieces) }));
-                  const total = calcTotal(getPerPiecePrice(), pieces, gstPercent);
-                  setForm(prev=>({...prev, total}));
-                }
-              }}
-              options={[{value:'Piece',label:'Single Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
-            />
-          </div>
-          <div className="input-group">
-            <label>Number of Trays</label>
-            <input className="input" type="number" value={form.trays} inputMode="numeric" onChange={e=>{
-              const v = e.target.value; setForm({...form, trays: v});
-              const total = calcTotal(getPerPiecePrice(), getEffectiveQty(), gstPercent); setForm(prev=>({...prev, total}));
-            }} />
-          </div>
-          <div className="input-group">
-            <label>Effective Qty (pcs)</label>
-            <input className="input" value={getEffectiveQty()} readOnly />
-          </div>
-          <div className="input-group">
-            <label>GST %</label>
-            <input className="input" value={gstPercent} readOnly disabled />
-          </div>
-          <div className="input-group">
-            <label>Total Amount</label>
-            <input className="input" value={form.total} readOnly />
-          </div>
-          {/* Line items editor (optional) */}
-          <div className="input-group" style={{gridColumn:'1/-1'}}>
-            <label>Add Item</label>
-            <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
-              <select className="input" value={itemForm.product_id} onChange={e=>setItemForm({...itemForm, product_id: e.target.value})}>
-                <option value="">{products.length ? 'Select product' : 'No products found'}</option>
-                {products.map(p => (<option key={p.id} value={p.id}>{p.name} (#{p.id})</option>))}
-              </select>
-              <select className="input" value={itemForm.qty_unit} onChange={e=>setItemForm({...itemForm, qty_unit: e.target.value})}>
-                <option value="Piece">Piece</option>
-                <option value="Tray">Tray (30 pcs)</option>
-              </select>
-              <input className="input" placeholder="Qty (pieces)" value={itemForm.qty_pieces} onChange={e=>setItemForm({...itemForm, qty_pieces: e.target.value})} inputMode="numeric" />
-              <input className="input" placeholder="Trays" value={itemForm.trays} onChange={e=>setItemForm({...itemForm, trays: e.target.value})} inputMode="numeric" />
-              <input className="input" placeholder="Price / piece" value={itemForm.price_per_piece} onChange={e=>setItemForm({...itemForm, price_per_piece: e.target.value})} inputMode="decimal" />
-              <button type="button" className="btn" onClick={()=>{
-                if (!itemForm.product_id) return;
-                const effQty = itemForm.qty_unit==='Tray' ? (Number(itemForm.trays||0)*30) : Number(itemForm.qty_pieces||0);
-                const price = Number(itemForm.price_per_piece||0);
-                const lineTotal = effQty * price;
-                setLineItems(prev=>[...prev, { ...itemForm, effectiveQty: effQty, lineTotal }]);
-                setItemForm({ product_id:'', qty_unit:'Piece', qty_pieces:'', trays:'', price_per_piece:'' });
-              }}>Add</button>
-            </div>
-          </div>
-          {lineItems.length > 0 && (
-            <div className="input-group" style={{gridColumn:'1/-1'}}>
-              <div className="hidden sm:block overflow-x-auto">
-                <table className="table table-hover table-zebra mt-2">
-                  <thead><tr><th>Product</th><th style={{textAlign:'right'}}>Qty (pcs)</th><th style={{textAlign:'right'}}>Price/pc</th><th style={{textAlign:'right'}}>Line Total</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    {lineItems.map((it,idx)=>{
-                      const prod = products.find(p=>String(p.id)===String(it.product_id));
-                      return (
-                        <tr key={idx}>
-                          <td>{prod ? prod.name : it.product_id}</td>
-                          <td style={{textAlign:'right'}}>{it.effectiveQty}</td>
-                          <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
-                          <td style={{textAlign:'right'}}>{(Number(it.lineTotal||0)).toFixed(2)}</td>
-                          <td><button type="button" className="btn danger btn-sm" onClick={()=>setLineItems(prev=>prev.filter((_,i)=>i!==idx))}>Remove</button></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+          {/* New spec: remove single-product fields; use editable table below */}
+          {/* New editable purchases table goes below */}
           <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
             <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
