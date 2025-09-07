@@ -140,6 +140,9 @@ export const getPricingForSale = (params) => {
   return axios.get(`${API_URL}/sales/pricing`, { params });
 };
 
+// Latest purchase unit price for a material
+export const getLastPurchasePrice = (params) => axios.get(`${API_URL}/sales/last-purchase-price`, { params });
+
 // Dashboard
 export const getDashboard = () => axios.get(`${API_URL}/dashboard`);
 // Collection APIs

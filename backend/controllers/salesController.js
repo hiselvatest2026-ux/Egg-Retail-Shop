@@ -250,3 +250,29 @@ exports.getSaleInvoice = async (req, res) => {
   }
 };
 
+// Get latest purchase unit price for a given material_code
+exports.getLastPurchasePrice = async (req, res) => {
+  try {
+    const { material_code } = req.query;
+    if (!material_code) return res.status(400).json({ message: 'material_code is required' });
+    const mmRes = await pool.query('SELECT metal_type FROM metal_master WHERE part_code=$1', [material_code]);
+    if (mmRes.rows.length === 0) return res.status(404).json({ message: 'Material not found' });
+    const metalType = mmRes.rows[0].metal_type;
+    const prodRes = await pool.query('SELECT id FROM products WHERE LOWER(name) LIKE LOWER($1) || '%' ORDER BY id ASC LIMIT 1', [metalType]);
+    if (prodRes.rows.length === 0) return res.status(404).json({ message: 'Product not found for material' });
+    const productId = prodRes.rows[0].id;
+    const priceRes = await pool.query(`
+      SELECT pi.price
+      FROM purchase_items pi
+      JOIN purchases p ON p.id = pi.purchase_id
+      WHERE pi.product_id=$1
+      ORDER BY p.id DESC, pi.id DESC
+      LIMIT 1
+    `, [productId]);
+    if (priceRes.rows.length === 0) return res.status(404).json({ message: 'No purchase price found' });
+    return res.json({ price: Number(priceRes.rows[0].price) });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+

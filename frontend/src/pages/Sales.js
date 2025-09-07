@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem, getRoutes } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem, getRoutes, getLastPurchasePrice } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
@@ -392,13 +392,22 @@ const Sales = () => {
           {/* Add Item row */}
           <div className="card">
             <div className="card-body">
-              <div className="grid grid-cols-1 sm:grid-cols-10 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-9 gap-2">
                 <div style={{overflow:'visible'}}>
                   <Dropdown
                     value={addForm.material_code}
                     onChange={(code)=>{
                       const mat = sortedMaterials.find(m=> String(m.part_code)===String(code));
                       setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                      // Auto-fill price from latest Purchase for this material
+                      if (code) {
+                        getLastPurchasePrice({ material_code: code })
+                          .then(r=>{
+                            const price = Number(r?.data?.price || 0);
+                            if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                          })
+                          .catch(()=>{});
+                      }
                     }}
                     placeholder={'Product Code *'}
                     options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.description || m.metal_type}` }))}
@@ -410,7 +419,6 @@ const Sales = () => {
                   <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
                 <input className="input date" type="date" placeholder="DOM" value={addForm.dom||''} onChange={e=>setAddForm({...addForm, dom:e.target.value})} />
-                <input className="input" placeholder="Shelf Life" value={addForm.shelf_life||''} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
                 <input className="input" placeholder="Quantity *" value={addForm.qty||''} onChange={e=>setAddForm({...addForm, qty:e.target.value})} inputMode="numeric" />
                 <input className="input" placeholder="SGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.sgstAmt? t.sgstAmt.toFixed(2):''; })()} readOnly />
                 <input className="input" placeholder="CGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.cgstAmt? t.cgstAmt.toFixed(2):''; })()} readOnly />
@@ -440,7 +448,6 @@ const Sales = () => {
                     <th style={{textAlign:'right'}}>Price / unit</th>
                     <th>UOM</th>
                     <th>DOM</th>
-                    <th>Shelf Life</th>
                     <th style={{textAlign:'right'}}>Quantity</th>
                     <th style={{textAlign:'right'}}>SGST</th>
                     <th style={{textAlign:'right'}}>CGST</th>
@@ -458,7 +465,6 @@ const Sales = () => {
                         <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
                         <td>{it.qty_unit||'Piece'}</td>
                         <td>-</td>
-                        <td>-</td>
                         <td style={{textAlign:'right'}}>{it.effectiveQty||0}</td>
                         <td style={{textAlign:'right'}}>{gst.sgstAmt.toFixed(2)}</td>
                         <td style={{textAlign:'right'}}>{gst.cgstAmt.toFixed(2)}</td>
@@ -467,7 +473,7 @@ const Sales = () => {
                     );
                   })}
                   <tr>
-                    <td colSpan={9}></td>
+                    <td colSpan={8}></td>
                     <td style={{textAlign:'right', fontWeight:800}}>₹ {itemsTotalWithGst.toFixed(2)}</td>
                   </tr>
                 </tbody>
