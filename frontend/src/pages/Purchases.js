@@ -232,10 +232,15 @@ const Purchases = () => {
                   <div style={{overflow:'visible'}}>
                     <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                   </div>
-                  <div>
-                    <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>DoM</label>
-                    <input className="input date" type="date" value={addForm.mfg_date} onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})} />
-                  </div>
+                  <input
+                    className="input date"
+                    type="date"
+                    aria-label="DoM"
+                    title="DoM (dd-mm-yyyy)"
+                    placeholder="dd-mm-yyyy"
+                    value={addForm.mfg_date}
+                    onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
+                  />
                   <input className="input" placeholder="Shelf life (e.g., 12 days)" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
                   <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
                 </div>
