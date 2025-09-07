@@ -235,9 +235,9 @@ const Purchases = () => {
                   <input
                     className="input date"
                     type="date"
-                    aria-label="DoM"
-                    title="DoM (dd-mm-yyyy)"
-                    placeholder="dd-mm-yyyy"
+                    aria-label="DOM"
+                    title="DOM"
+                    placeholder="DOM"
                     value={addForm.mfg_date}
                     onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
                   />
