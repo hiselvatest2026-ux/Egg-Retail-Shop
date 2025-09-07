@@ -44,6 +44,7 @@ img { max-width: 100%; height: auto; }
 /* Mobile-friendly tables */
 .table { display: block; overflow-x: auto; white-space: nowrap; }
 .table thead th { position: sticky; top: 0; z-index: 1; }
+.table td, .table th { height: 56px; vertical-align: middle; }
 
 .sidebar { width:256px; background:#0f172a; color:#e2e8f0; }
 .sidebar .brand { padding:16px; font-weight:700; font-size:18px; border-bottom:1px solid #1f2937; }

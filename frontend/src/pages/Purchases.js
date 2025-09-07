@@ -193,7 +193,19 @@ const Purchases = () => {
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Purchases</label>
             <div className="hidden sm:block overflow-x-auto">
-              <table className="table table-hover table-zebra mt-2">
+              <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
+                <colgroup>
+                  <col style={{width:'28%'}} />
+                  <col style={{width:'12%'}} />
+                  <col style={{width:'14%'}} />
+                  <col style={{width:'18%'}} />
+                  <col style={{width:'16%'}} />
+                  <col style={{width:'12%'}} />
+                  <col style={{width:'12%'}} />
+                  <col style={{width:'12%'}} />
+                  <col style={{width:'14%'}} />
+                  <col style={{width:'6%'}} />
+                </colgroup>
                 <thead>
                   <tr>
                     <th style={{minWidth:280}}>Product (Material)</th>

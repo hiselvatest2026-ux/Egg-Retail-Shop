@@ -9,8 +9,8 @@ const Dropdown = ({ value, onChange, options, placeholder = 'Select', renderLabe
   return (
     <Listbox value={value} onChange={onChange} disabled={disabled}>
       {({ open }) => (
-        <div className="relative">
-          <Listbox.Button className="input w-full flex items-center justify-between" style={{textAlign:'left'}}>
+        <div className="relative" style={{minWidth:0}}>
+          <Listbox.Button className="input w-full flex items-center justify-between" style={{textAlign:'left', height:42}}>
             <span className={classNames(!selected && 'text-[#9fb0c2]')}>{label}</span>
             <span aria-hidden className="ml-2">▾</span>
           </Listbox.Button>
