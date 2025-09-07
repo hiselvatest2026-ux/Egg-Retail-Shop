@@ -73,6 +73,27 @@ const Sales = () => {
       return sum + (effQty * price);
     }, 0);
   }, [lineItems]);
+  const computeItemGst = (item) => {
+    let gstPercent = 0;
+    if (item.material_code) {
+      const mat = materials.find(m=> String(m.part_code)===String(item.material_code));
+      if (mat) gstPercent = Number(mat.gst_percent||0);
+    } else if (item.material_type) {
+      const mat2 = materials.find(m=> String(m.metal_type||'').toLowerCase()===String(item.material_type||'').toLowerCase());
+      if (mat2) gstPercent = Number(mat2.gst_percent||0);
+    }
+    const sgstPercent = gstPercent/2;
+    const cgstPercent = gstPercent/2;
+    const effQty = item.qty_unit==='Tray' ? (Number(item.trays||0)*30) : Number(item.qty_pieces||0);
+    const base = Number(item.price_per_piece||0) * effQty;
+    const sgstAmt = base * (sgstPercent/100);
+    const cgstAmt = base * (cgstPercent/100);
+    const total = base + sgstAmt + cgstAmt;
+    return { base, sgstPercent, cgstPercent, sgstAmt, cgstAmt, total };
+  };
+  const itemsTotalWithGst = useMemo(()=>{
+    return (lineItems||[]).reduce((sum, it)=> sum + computeItemGst(it).total, 0);
+  }, [lineItems, materials]);
 
   const fetchSales = async () => {
     try {
@@ -281,6 +302,101 @@ const Sales = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <Card title="Sales Entry">
+          {/* Auto fields display */}
+          <div className="data-pairs" style={{marginBottom:8}}>
+            <div className="pair"><strong>Sales Type</strong><div>Cash</div></div>
+            <div className="pair"><strong>Sale Category</strong><div>Retail</div></div>
+            <div className="pair"><strong>Route Name</strong><div>{(trips && trips[0]) ? (trips[0].route_name || trips[0].master_route_name || 'Route') : 'No Route (Today)'}</div></div>
+            <div className="pair" style={{textAlign:'right'}}><strong>Total Amount</strong><div>₹ {itemsTotalWithGst.toFixed(2)}</div></div>
+          </div>
+          {/* Add Item row */}
+          <div className="card">
+            <div className="card-body">
+              <div className="grid grid-cols-1 sm:grid-cols-10 gap-2">
+                <div style={{overflow:'visible'}}>
+                  <Dropdown
+                    value={addForm.material_code}
+                    onChange={(code)=>{
+                      const mat = sortedMaterials.find(m=> String(m.part_code)===String(code));
+                      setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                    }}
+                    placeholder={'Product Code *'}
+                    options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.description || m.metal_type}` }))}
+                  />
+                </div>
+                <input className="input" placeholder="Product Name" value={addForm.material_type||''} readOnly />
+                <input className="input" placeholder="Price / unit *" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" />
+                <div style={{overflow:'visible'}}>
+                  <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                </div>
+                <input className="input date" type="date" placeholder="DOM" value={addForm.dom||''} onChange={e=>setAddForm({...addForm, dom:e.target.value})} />
+                <input className="input" placeholder="Shelf Life" value={addForm.shelf_life||''} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
+                <input className="input" placeholder="Quantity *" value={addForm.qty||''} onChange={e=>setAddForm({...addForm, qty:e.target.value})} inputMode="numeric" />
+                <input className="input" placeholder="SGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.sgstAmt? t.sgstAmt.toFixed(2):''; })()} readOnly />
+                <input className="input" placeholder="CGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.cgstAmt? t.cgstAmt.toFixed(2):''; })()} readOnly />
+                <input className="input" placeholder="Total (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.total? t.total.toFixed(2):''; })()} readOnly />
+              </div>
+              <div className="actions-row" style={{justifyContent:'flex-end', marginTop:8}}>
+                <button type="button" className="btn primary" onClick={()=>{
+                  const qtyNum = Number(addForm.qty||0); const price = Number(addForm.price_per_piece||0);
+                  if (!addForm.material_code || !(qtyNum>0) || !(price>0)) return;
+                  const effQty = (addForm.uom||'Piece')==='Tray' ? qtyNum*30 : qtyNum;
+                  const newItem = { material_code:addForm.material_code, material_type:addForm.material_type, qty_unit:addForm.uom||'Piece', qty_pieces:(addForm.uom||'Piece')==='Piece'? String(qtyNum):'', trays:(addForm.uom||'Piece')==='Tray'? String(qtyNum):'', price_per_piece: price, effectiveQty: effQty };
+                  const g = computeItemGst(newItem);
+                  setLineItems(prev=>[...prev, { ...newItem, sgst_amount:g.sgstAmt, cgst_amount:g.cgstAmt, lineTotal:g.base, totalWithGst:g.total }]);
+                  setAddForm({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
+                }}>Add Item</button>
+              </div>
+            </div>
+          </div>
+          {/* Items table */}
+          {lineItems.length>0 && (
+            <div className="hidden sm:block overflow-x-auto" style={{marginTop:8}}>
+              <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
+                <thead>
+                  <tr>
+                    <th>Product Code</th>
+                    <th>Product Name</th>
+                    <th style={{textAlign:'right'}}>Price / unit</th>
+                    <th>UOM</th>
+                    <th>DOM</th>
+                    <th>Shelf Life</th>
+                    <th style={{textAlign:'right'}}>Quantity</th>
+                    <th style={{textAlign:'right'}}>SGST</th>
+                    <th style={{textAlign:'right'}}>CGST</th>
+                    <th style={{textAlign:'right'}}>Total Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lineItems.map((it,idx)=>{
+                    const label = it.material_code ? `${it.material_code} - ${it.material_type||''}` : (it.material_type||'-');
+                    const gst = computeItemGst(it);
+                    return (
+                      <tr key={idx}>
+                        <td>{it.material_code}</td>
+                        <td>{label}</td>
+                        <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
+                        <td>{it.qty_unit||'Piece'}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td style={{textAlign:'right'}}>{it.effectiveQty||0}</td>
+                        <td style={{textAlign:'right'}}>{gst.sgstAmt.toFixed(2)}</td>
+                        <td style={{textAlign:'right'}}>{gst.cgstAmt.toFixed(2)}</td>
+                        <td style={{textAlign:'right'}}>{gst.total.toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr>
+                    <td colSpan={9}></td>
+                    <td style={{textAlign:'right', fontWeight:800}}>₹ {itemsTotalWithGst.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+        
         <Card title="Record Payments">
           <div className="hidden sm:block overflow-x-auto">
             <table className="table table-hover table-zebra mt-2">
