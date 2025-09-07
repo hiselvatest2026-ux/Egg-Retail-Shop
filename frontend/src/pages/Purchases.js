@@ -171,6 +171,26 @@ const Purchases = () => {
               options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
             />
           </div>
+          {form.vendor_id && (()=>{
+            const v = vendors.find(x=> String(x.id) === String(form.vendor_id));
+            if (!v) return null;
+            return (
+              <>
+                <div className="input-group">
+                  <label>Vendor Code</label>
+                  <input className="input" value={v.vendor_code || ''} readOnly />
+                </div>
+                <div className="input-group">
+                  <label>Vendor Name</label>
+                  <input className="input" value={v.name || ''} readOnly />
+                </div>
+                <div className="input-group" style={{gridColumn:'1/-1'}}>
+                  <label>Address</label>
+                  <input className="input" value={v.address || ''} readOnly />
+                </div>
+              </>
+            );
+          })()}
           <div className="input-group" style={{overflow:'visible'}}>
             <label>Product Name</label>
             <Dropdown
