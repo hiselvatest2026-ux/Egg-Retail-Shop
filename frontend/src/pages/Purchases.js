@@ -234,7 +234,7 @@ const Purchases = () => {
                             options={[{value:'Piece', label:'Piece'},{value:'Tray', label:'Tray (30 pcs)'}]}
                           />
                         </td>
-                        <td><input className="input" type="date" value={r.mfg_date||''} onChange={e=>{
+                        <td><input className="input date" type="date" value={r.mfg_date||''} onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: val } : row));
                         }} /></td>
                         <td><input className="input" placeholder="days/months" value={r.shelf_life||''} onChange={e=>{
