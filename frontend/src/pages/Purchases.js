@@ -199,7 +199,7 @@ const Purchases = () => {
                     <th>Select Product (Material)</th>
                     <th style={{textAlign:'right'}}>Price/Unit</th>
                     <th>UOM</th>
-                    <th>DoM</th>
+                    <th>Date of Manufacturing</th>
                     <th>Shelf Life</th>
                     <th style={{textAlign:'right'}}>Quantity</th>
                     <th style={{textAlign:'right'}}>SGST %</th>
@@ -213,29 +213,27 @@ const Purchases = () => {
                     const totals = computeRowTotals(r);
                     return (
                       <tr key={idx}>
-                        <td>
-                          <select className="input" value={r.material_code||''} onChange={e=>{
-                            const code = e.target.value;
-                            const mat = materials.find(m=> String(m.part_code) === String(code));
-                            const type = mat ? mat.metal_type : '';
-                            setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
-                          }}>
-                            <option value="">Select Product</option>
-                            {materials.map(m => (
-                              <option key={m.part_code} value={m.part_code}>{m.part_code} - {m.metal_type}</option>
-                            ))}
-                          </select>
+                        <td style={{overflow:'visible'}}>
+                          <Dropdown
+                            value={r.material_code || ''}
+                            onChange={(code)=>{
+                              const mat = materials.find(m=> String(m.part_code) === String(code));
+                              const type = mat ? mat.metal_type : '';
+                              setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
+                            }}
+                            placeholder={'Select Product'}
+                            options={[{ value:'', label:'Select Product' }, ...materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))]}
+                          />
                         </td>
                         <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
                         }} /></td>
-                        <td>
-                          <select className="input" value={r.uom||'Piece'} onChange={e=>{
-                            const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row));
-                          }}>
-                            <option value="Piece">Piece</option>
-                            <option value="Tray">Tray</option>
-                          </select>
+                        <td style={{overflow:'visible'}}>
+                          <Dropdown
+                            value={r.uom || 'Piece'}
+                            onChange={(val)=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row))}
+                            options={[{value:'Piece', label:'Piece'},{value:'Tray', label:'Tray (30 pcs)'}]}
+                          />
                         </td>
                         <td><input className="input" type="date" value={r.mfg_date||''} onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: val } : row));
@@ -264,24 +262,24 @@ const Purchases = () => {
                     <div className="card-body">
                       <div className="data-pairs">
                         <div className="pair"><strong>Select Product</strong>
-                          <select className="input" value={r.material_code||''} onChange={e=>{
-                            const code = e.target.value;
-                            const mat = materials.find(m=> String(m.part_code) === String(code));
-                            const type = mat ? mat.metal_type : '';
-                            setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
-                          }}>
-                            <option value="">Select Product</option>
-                            {materials.map(m => (
-                              <option key={m.part_code} value={m.part_code}>{m.part_code} - {m.metal_type}</option>
-                            ))}
-                          </select>
+                          <Dropdown
+                            value={r.material_code || ''}
+                            onChange={(code)=>{
+                              const mat = materials.find(m=> String(m.part_code) === String(code));
+                              const type = mat ? mat.metal_type : '';
+                              setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
+                            }}
+                            placeholder={'Select Product'}
+                            options={[{ value:'', label:'Select Product' }, ...materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))]}
+                          />
                         </div>
                         <div className="pair"><strong>Price/Unit</strong><input className="input" value={r.price_per_unit||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: e.target.value } : row))} /></div>
                         <div className="pair"><strong>UOM</strong>
-                          <select className="input" value={r.uom||'Piece'} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: e.target.value } : row))}>
-                            <option value="Piece">Piece</option>
-                            <option value="Tray">Tray</option>
-                          </select>
+                          <Dropdown
+                            value={r.uom || 'Piece'}
+                            onChange={(val)=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row))}
+                            options={[{value:'Piece', label:'Piece'},{value:'Tray', label:'Tray (30 pcs)'}]}
+                          />
                         </div>
                         <div className="pair"><strong>DoM</strong><input className="input" type="date" value={r.mfg_date||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: e.target.value } : row))} /></div>
                         <div className="pair"><strong>Shelf Life</strong><input className="input" value={r.shelf_life||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, shelf_life: e.target.value } : row))} /></div>
