@@ -135,7 +135,13 @@ const Sales = () => {
         const tr = await getRouteTrips({ date: today });
         setTrips(tr.data||[]);
         const rr = await getRoutes();
-        setRoutes(rr.data||[]);
+        const routeList = rr.data||[];
+        setRoutes(routeList);
+        // Default select first active route if none chosen
+        if (!selectedRouteId && routeList.length) {
+          const firstActive = routeList.find(x=>x.active) || routeList[0];
+          setSelectedRouteId(String(firstActive.id));
+        }
       } catch(e){ 
         console.error('data load failed', e);
       } 
@@ -412,7 +418,7 @@ const Sales = () => {
               <label>Route Name</label>
               <Dropdown
                 value={selectedRouteId}
-                onChange={(v)=>{ setSelectedRouteId(v); setForm(prev=>({ ...prev, route_trip_id: v })); }}
+                onChange={(v)=>{ setSelectedRouteId(v); }}
                 placeholder={'Select Route'}
                 options={(routes||[]).map(r=>({ value:String(r.id), label:`${r.route_name} - ${r.vehicle_number||'-'}` }))}
               />
