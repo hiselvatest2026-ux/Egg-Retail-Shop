@@ -177,20 +177,10 @@ const Purchases = () => {
             const v = vendors.find(x=> String(x.id) === String(form.vendor_id));
             if (!v) return null;
             return (
-              <>
-                <div className="input-group">
-                  <label>Vendor Code</label>
-                  <input className="input" value={v.vendor_code || ''} readOnly />
-                </div>
-                <div className="input-group">
-                  <label>Vendor Name</label>
-                  <input className="input" value={v.name || ''} readOnly />
-                </div>
-                <div className="input-group" style={{gridColumn:'1/-1'}}>
-                  <label>Address</label>
-                  <input className="input" value={v.address || ''} readOnly />
-                </div>
-              </>
+              <div className="input-group" style={{gridColumn:'1/-1'}}>
+                <label>Address</label>
+                <input className="input" value={v.address || ''} readOnly />
+              </div>
             );
           })()}
           {/* New spec: manual total (optional) */}
@@ -314,111 +304,7 @@ const Purchases = () => {
         </form>
       </Card>
 
-      <Card title="Purchases List">
-        <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
-          <div className="w-full sm:w-52" style={{overflow:'visible'}}>
-            <Dropdown
-              value={vendorFilter}
-              onChange={v=>{ setVendorFilter(v); setPage(1); }}
-              placeholder={'All Vendors'}
-              options={[{value:'', label:'All Vendors'}, ...vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))]}
-            />
-          </div>
-          <input className="input w-full sm:w-72" placeholder="Search by #, vendor, product" value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-          <div className="ml-auto flex items-center gap-3" style={{overflow:'visible'}}>
-            <div className="w-36" style={{minWidth:'9rem'}}>
-              <Dropdown
-                value={String(pageSize)}
-                onChange={(v)=>{ setPageSize(Number(v)); setPage(1); }}
-                options={[
-                  { value: '5', label: '5 / page' },
-                  { value: '10', label: '10 / page' },
-                  { value: '20', label: '20 / page' }
-                ]}
-              />
-            </div>
-          </div>
-        </div>
-        {/* Desktop table */}
-        <div className="hidden sm:block overflow-x-auto">
-          <table className="table table-hover table-zebra mt-2">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Vendor</th>
-                <th>Product</th>
-                <th style={{textAlign:'right'}}>Price/Unit</th>
-                <th style={{textAlign:'right'}}>Qty</th>
-                <th style={{textAlign:'right'}}>GST%</th>
-                <th style={{textAlign:'right'}}>Total</th>
-                <th style={{ width: 160, textAlign:'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedPurchases.map(p => (
-                <tr key={p.id}>
-                  <td>#{p.id}</td>
-                  <td><span className="badge">{getVendorLabel(p.vendor_id)}</span></td>
-                  <td>{p.product_name || '-'}</td>
-                  <td style={{textAlign:'right'}}>{p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</td>
-                  <td style={{textAlign:'right'}}>{p.quantity != null ? p.quantity : '-'}</td>
-                  <td style={{textAlign:'right'}}>{p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</td>
-                  <td style={{textAlign:'right'}}>₹ {p.total != null ? Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
-                  <td style={{textAlign:'right'}}>
-                    <div className="btn-group" style={{justifyContent:'flex-end'}}>
-                      <button className="btn icon btn-sm" title="Edit" onClick={() => { 
-                        setEditing(p.id); 
-                        setGstPercent(p.gst_percent || 0);
-                        setForm({ vendor_id: p.vendor_id || '', product_name: p.product_name || '', price_per_unit: p.price_per_unit || '', quantity: p.quantity || '', total: p.total || '' });
-                      }}>✏️</button>
-                      <button className="btn danger btn-sm" title="Delete" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>🗑️</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile cards */}
-        {visiblePurchases.length === 0 && (
-          <div className="card sm:hidden" style={{padding:16, textAlign:'center'}}>No purchases yet. Use the form to add.</div>
-        )}
-        <div className="block sm:hidden">
-          {visiblePurchases.map(p => (
-            <div key={p.id} className="card" style={{marginBottom:12}}>
-              <div className="card-body">
-                <div className="card-title" style={{display:'flex', justifyContent:'space-between'}}>
-                  <span>Purchase #{p.id}</span>
-                </div>
-                <div className="data-pairs">
-                  <div className="pair"><strong>Vendor</strong><div>{getVendorLabel(p.vendor_id)}</div></div>
-                  <div className="pair"><strong>Product</strong><div>{p.product_name || '-'}</div></div>
-                  <div className="pair" style={{textAlign:'right'}}><strong>Price/Unit</strong><div>₹ {p.price_per_unit != null ? Number(p.price_per_unit).toFixed(2) : '-'}</div></div>
-                  <div className="pair" style={{textAlign:'right'}}><strong>Qty</strong><div>{p.quantity != null ? p.quantity : '-'}</div></div>
-                  <div className="pair" style={{textAlign:'right'}}><strong>GST%</strong><div>{p.gst_percent != null ? Number(p.gst_percent).toFixed(2) : '-'}</div></div>
-                  <div className="pair" style={{textAlign:'right'}}><strong>Total</strong><div>₹ {p.total != null ? Number(p.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</div></div>
-                </div>
-                <div className="btn-group" style={{marginTop:10}}>
-                  <button className="btn icon btn-sm" title="Edit" onClick={() => { 
-                    setEditing(p.id); 
-                    setGstPercent(p.gst_percent || 0);
-                    setForm({ vendor_id: p.vendor_id || '', product_name: p.product_name || '', price_per_unit: p.price_per_unit || '', quantity: p.quantity || '', total: p.total || '' });
-                  }}>✏️</button>
-                  <button className="btn danger btn-sm" title="Delete" onClick={async () => { try { await deletePurchase(p.id); await fetchPurchases(); } catch (e) { console.error('Delete failed', e); } }}>Delete</button>
-                </div>
-              </div>
-            </div>
-          ))}
-          {visiblePurchases.length < filteredPurchases.length && (
-            <div style={{display:'flex', justifyContent:'center', marginTop:12}}>
-              <button type="button" className="btn primary w-full" onClick={()=> setPage(p => p + 1)}>
-                Load More
-              </button>
-            </div>
-          )}
-        </div>
-      </Card>
+      {/* Purchases list removed as requested; available in MIS */}
     </div>
     </div>
   );
