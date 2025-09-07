@@ -214,16 +214,19 @@ const Purchases = () => {
                     return (
                       <tr key={idx}>
                         <td style={{overflow:'visible'}}>
-                          <Dropdown
-                            value={r.material_code || ''}
-                            onChange={(code)=>{
-                              const mat = materials.find(m=> String(m.part_code) === String(code));
-                              const type = mat ? mat.metal_type : '';
-                              setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
-                            }}
-                            placeholder={'Select Product'}
-                            options={[{ value:'', label:'Select Product' }, ...materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))]}
-                          />
+                          <div style={{display:'flex', flexDirection:'column', gap:4}}>
+                            <div style={{fontSize:12, color:'#b6beca'}}>Select Product</div>
+                            <Dropdown
+                              value={r.material_code || ''}
+                              onChange={(code)=>{
+                                const mat = materials.find(m=> String(m.part_code) === String(code));
+                                const type = mat ? mat.metal_type : '';
+                                setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
+                              }}
+                              placeholder={'Select Product'}
+                              options={[{ value:'', label:'Select Product' }, ...materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))]}
+                            />
+                          </div>
                         </td>
                         <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
                           const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
