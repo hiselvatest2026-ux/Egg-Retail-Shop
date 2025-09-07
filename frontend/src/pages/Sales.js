@@ -325,8 +325,12 @@ const Sales = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <Card title="Sales Entry">
-          {/* Controls */}
-          <div className="form-grid-2" style={{marginBottom:8}}>
+          {/* Section header emphasis */}
+          <div className="card-header" style={{borderRadius:12, marginBottom:12}}>
+            <div className="card-title" style={{fontSize:18}}>Sale Details</div>
+          </div>
+          {/* Controls: 2-column on web, stacked on mobile */}
+          <div className="form-grid-2" style={{marginBottom:12}}>
             <div className="input-group" style={{overflow:'visible'}}>
               <label>Sale Type</label>
               <Dropdown
@@ -355,8 +359,16 @@ const Sales = () => {
             </div>
             <div className="input-group">
               <label>Total Amount</label>
-              <input className="input" value={`₹ ${itemsTotalWithGst.toFixed(2)}`} readOnly />
+              {/* Highlighted total badge */}
+              <div style={{display:'flex', alignItems:'center'}}>
+                <div className="badge" style={{fontSize:16, padding:'8px 12px', background:'#0d1520', color:'#60a5fa', borderColor:'#1e3a5f', fontWeight:900}}>₹ {itemsTotalWithGst.toFixed(2)}</div>
+              </div>
             </div>
+          </div>
+          {/* Divider */}
+          <div style={{height:1, background:'#3A3A4D', margin:'6px 0 12px 0'}} />
+          <div className="card-header" style={{borderRadius:12, marginBottom:12}}>
+            <div className="card-title" style={{fontSize:18}}>Add Item</div>
           </div>
           {/* Add Item row */}
           <div className="card">
@@ -398,7 +410,7 @@ const Sales = () => {
               </div>
             </div>
           </div>
-          {/* Items table */}
+          {/* Items: table on desktop, cards on mobile */}
           {lineItems.length>0 && (
             <div className="hidden sm:block overflow-x-auto" style={{marginTop:8}}>
               <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
@@ -443,9 +455,34 @@ const Sales = () => {
               </table>
             </div>
           )}
+          {/* Mobile cards for line items */}
+          {lineItems.length>0 && (
+            <div className="sm:hidden cards-mobile" style={{marginTop:12}}>
+              {lineItems.map((it, idx)=>{
+                const gst = computeItemGst(it);
+                return (
+                  <div className="card" key={idx} style={{marginBottom:10}}>
+                    <div className="card-body">
+                      <div style={{fontWeight:800, marginBottom:6}}>Product: {it.material_type || it.material_code || '-'}</div>
+                      <div className="data-pairs">
+                        <div className="pair"><strong>Price</strong><div>₹ {Number(it.price_per_piece||0).toFixed(2)}</div></div>
+                        <div className="pair"><strong>UOM</strong><div>{it.qty_unit||'Piece'}</div></div>
+                        <div className="pair"><strong>Quantity</strong><div>{it.effectiveQty|| (it.qty_unit==='Tray' ? (Number(it.trays||0)*30) : Number(it.qty_pieces||0))}</div></div>
+                        <div className="pair"><strong>SGST</strong><div>{gst.sgstPercent}% (₹ {gst.sgstAmt.toFixed(2)})</div></div>
+                        <div className="pair"><strong>CGST</strong><div>{gst.cgstPercent}% (₹ {gst.cgstAmt.toFixed(2)})</div></div>
+                        <div className="pair" style={{textAlign:'right'}}><strong>Total</strong><div>₹ {gst.total.toFixed(2)}</div></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div style={{display:'flex', justifyContent:'flex-end', fontWeight:900}}>₹ {itemsTotalWithGst.toFixed(2)}</div>
+            </div>
+          )}
         </Card>
         
         <Card title="Record Payments">
+          {/* Desktop payments table */}
           <div className="hidden sm:block overflow-x-auto">
             <table className="table table-hover table-zebra mt-2">
               <thead>
@@ -459,9 +496,11 @@ const Sales = () => {
                     <tr key={s.id}>
                       <td>#{s.id}</td>
                       <td>{customers.find(c=>String(c.id)===String(s.customer_id))?.name || `#${s.customer_id}`}</td>
-                      <td style={{textAlign:'right'}}>₹ {Number(s.total||0).toFixed(2)}</td>
-                      <td style={{textAlign:'right'}}>₹ {paid.toFixed(2)}</td>
-                      <td style={{textAlign:'right'}}>₹ {balance.toFixed(2)}</td>
+                      <td style={{textAlign:'right'}}>₹ {Number(s.total||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                      <td style={{textAlign:'right'}}>₹ {paid.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                      <td style={{textAlign:'right', color: balance>0 ? '#f59e0b' : '#22c55e'}}>
+                        {balance>0 ? `₹ ${balance.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}` : 'Paid ✅'}
+                      </td>
                       <td style={{textAlign:'right'}}>
                         <button className="btn primary btn-sm" onClick={()=>setPayingSale(s)}>Record Payment</button>
                       </td>
@@ -470,6 +509,32 @@ const Sales = () => {
                 })}
               </tbody>
             </table>
+          </div>
+          {/* Mobile payments cards */}
+          <div className="sm:hidden cards-mobile" style={{marginTop:12}}>
+            {sales.map(s=>{
+              const paid = Number(paymentsByInvoice[String(s.id)]||0);
+              const balance = Math.max(0, Number(s.total) - paid);
+              const customerName = customers.find(c=>String(c.id)===String(s.customer_id))?.name || `#${s.customer_id}`;
+              return (
+                <div className="card" key={s.id} style={{marginBottom:10}}>
+                  <div className="card-body">
+                    <div style={{fontWeight:800, marginBottom:6}}>Customer: {customerName}</div>
+                    <div className="data-pairs">
+                      <div className="pair"><strong>Total</strong><div>₹ {Number(s.total||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
+                      <div className="pair"><strong>Paid</strong><div>₹ {paid.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
+                      <div className="pair" style={{color: balance>0 ? '#f59e0b' : '#22c55e'}}>
+                        <strong>Balance</strong>
+                        <div>{balance>0 ? `₹ ${balance.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}` : 'Paid ✅'}</div>
+                      </div>
+                    </div>
+                    <div className="actions-row" style={{marginTop:10}}>
+                      <button className="btn primary btn-mobile-full" onClick={()=>setPayingSale(s)}>Record Payment</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       </div>
