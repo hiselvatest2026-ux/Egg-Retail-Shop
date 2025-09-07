@@ -219,11 +219,15 @@ const Purchases = () => {
                   <div style={{overflow:'visible'}}>
                     <Dropdown
                       value={addForm.material_code}
-                      onChange={(code)=> setAddForm(prev=>({ ...prev, material_code: code }))}
+                      onChange={(code)=>{
+                        const mat = materials.find(m=> String(m.part_code) === String(code));
+                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                      }}
                       placeholder={'Product (Material)'}
                       options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
                     />
                   </div>
+                  <input className="input" placeholder="Material Type" value={addForm.material_type||''} readOnly />
                   <input className="input" placeholder="Price / Unit" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
                   <div style={{overflow:'visible'}}>
                     <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
@@ -236,8 +240,8 @@ const Purchases = () => {
                   <button type="button" className="btn" onClick={()=>{
                     if (!addForm.material_code) return;
                     const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
-                    setRows(prev=>[...prev, { ...addForm, material_type: mat ? mat.metal_type : '' }]);
-                    setAddForm({ material_code:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
+                    setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
+                    setAddForm({ material_code:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
                   }}>Add Item</button>
                 </div>
               </div>
@@ -364,6 +368,10 @@ const Purchases = () => {
                     const type = mat ? mat.metal_type : '';
                     setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
                   }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Material Type</label>
+                  <input className="input" value={editForm.material_type||''} readOnly />
                 </div>
                 <div>
                   <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Price / Unit</label>
