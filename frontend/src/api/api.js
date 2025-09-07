@@ -150,6 +150,11 @@ export const getTotalCollection = (params) => axios.get(`${API_URL}/collection-a
 // Routes and Route Trips
 export const getRouteTrips = (params) => axios.get(`${API_URL}/route-trips`, { params });
 export const createRouteTrip = (data) => axios.post(`${API_URL}/route-trips`, data);
+// Route Master
+export const getRoutes = () => axios.get(`${API_URL}/routes`);
+export const createRoute = (data) => axios.post(`${API_URL}/routes`, data);
+export const updateRoute = (id, data) => axios.put(`${API_URL}/routes/${id}`, data);
+export const deleteRouteApi = (id) => axios.delete(`${API_URL}/routes/${id}`);
 
 // Sale Items
 export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);

@@ -20,6 +20,7 @@ import InvoicePrinting from './pages/InvoicePrinting';
 import MISReports from './pages/MISReports';
 import MetalMaster from './pages/MetalMaster';
 import PricingMaster from './pages/PricingMaster';
+import RoutesMaster from './pages/RoutesMaster';
 import Vendors from './pages/Vendors';
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
             <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
             <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
             <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
+            <NavLink to="/routes-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Route Master</NavLink>
           </nav>
         </aside>
         <main className="content">
@@ -98,6 +100,7 @@ function App() {
             <Route path="/mis" element={<MISReports />} />
             <Route path="/Material-master" element={<MetalMaster />} />
             <Route path="/pricing-master" element={<PricingMaster />} />
+            <Route path="/routes-master" element={<RoutesMaster />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
