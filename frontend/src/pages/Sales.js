@@ -21,6 +21,23 @@ const Sales = () => {
   const [products, setProducts] = useState([]);
   const [lineItems, setLineItems] = useState([]);
   const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
+  const [addForm, setAddForm] = useState({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
+  const [addErrors, setAddErrors] = useState({});
+  const [addSuccess, setAddSuccess] = useState('');
+  const [editIdx, setEditIdx] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const sortedMaterials = useMemo(()=>{
+    const src = Array.isArray(materials) ? [...materials] : [];
+    const pr = (m)=>{
+      const n = String(m.description || m.metal_type || '').toLowerCase();
+      if (n.includes('egg')) return 0;
+      if (n.includes('panner') || n.includes('paneer')) return 1;
+      return 2;
+    };
+    src.sort((a,b)=>{ const da=pr(a), db=pr(b); if (da!==db) return da-db; return String(a.metal_type||'').localeCompare(String(b.metal_type||'')); });
+    return src;
+  }, [materials]);
   const [pricingInfo, setPricingInfo] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -127,10 +144,23 @@ const Sales = () => {
         const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null });
         const newSale = res.data;
         for (const it of lineItems) {
-          const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : Number(it.qty_pieces||0);
+          const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : (it.effectiveQty != null ? Number(it.effectiveQty||0) : Number(it.qty_pieces||0));
           const price = Number(it.price_per_piece || 0);
-          if (!it.product_id || !(effQty>0)) continue;
-          await createSaleItem(newSale.id, { product_id: Number(it.product_id), quantity: effQty, price });
+          if (!(effQty>0)) continue;
+          let pid = it.product_id ? Number(it.product_id) : null;
+          if (!pid && it.material_code) {
+            const mat = materials.find(m=> String(m.part_code)===String(it.material_code));
+            if (mat) {
+              const prod = products.find(p=> String(p.name||'').toLowerCase() === String(mat.metal_type||'').toLowerCase());
+              if (prod) pid = Number(prod.id);
+            }
+          }
+          if (!pid && it.material_type) {
+            const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(it.material_type||'').toLowerCase());
+            if (prod2) pid = Number(prod2.id);
+          }
+          if (!pid) continue;
+          await createSaleItem(newSale.id, { product_id: pid, quantity: effQty, price });
         }
         if (recordPaymentNow) {
           const sum = lineItems.reduce((s,li)=> s + (Number(li.price_per_piece||0) * (li.qty_unit==='Tray' ? Number(li.trays||0)*30 : Number(li.qty_pieces||0))), 0);
@@ -560,6 +590,51 @@ const Sales = () => {
           {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
         </form>
       </Card>
+      {showEdit && editForm && (
+        <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setShowEdit(false)}>
+          <div className="card" style={{width:'min(640px, 92vw)'}} onClick={e=>e.stopPropagation()}>
+            <div className="card-header"><div className="card-title">Edit Item</div></div>
+            <div className="card-body">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div style={{overflow:'visible'}}>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Product (Material)</label>
+                  <Dropdown value={editForm.material_code||''} onChange={(code)=>{
+                    const mat = materials.find(m=> String(m.part_code)===String(code));
+                    setEditForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                  }} options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.description || m.metal_type}` }))} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Material Type</label>
+                  <input className="input" value={editForm.material_type||''} readOnly />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Price / piece</label>
+                  <input className="input" value={editForm.price_per_piece||''} onChange={e=>setEditForm({...editForm, price_per_piece:e.target.value})} />
+                </div>
+                <div style={{overflow:'visible'}}>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>UOM</label>
+                  <Dropdown value={editForm.qty_unit||'Piece'} onChange={(v)=>setEditForm({...editForm, qty_unit:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Quantity</label>
+                  <input className="input" value={editForm.qty_unit==='Tray' ? (Number(editForm.trays||0)) : (Number(editForm.qty_pieces||0))} onChange={e=>{
+                    const val = e.target.value;
+                    if ((editForm.qty_unit||'Piece')==='Tray') setEditForm(prev=>({...prev, trays: val, effectiveQty: Number(val||0)*30 }));
+                    else setEditForm(prev=>({...prev, qty_pieces: val, effectiveQty: Number(val||0) }));
+                  }} />
+                </div>
+              </div>
+              <div className="actions-row" style={{justifyContent:'flex-end', marginTop:12}}>
+                <button className="btn" onClick={()=>{
+                  setLineItems(prev=> prev.map((row,i)=> i===editIdx ? { ...row, ...editForm, lineTotal: Number(editForm.price_per_piece||0) * Number(editForm.effectiveQty||0) } : row));
+                  setShowEdit(false);
+                }}>Save</button>
+                <button className="btn secondary" onClick={()=>setShowEdit(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Card title="Sales List">
         {/* Toolbar */}
