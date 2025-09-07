@@ -13,6 +13,8 @@ body {
   overflow-x: hidden;
   color-scheme: dark;
 }
+/* Ensure consistent sizing under browser zoom */
+*, *::before, *::after { box-sizing: border-box; }
 img { max-width: 100%; height: auto; }
 
 :root { --bottom-tabs-height: 60px; --mobile-header-height: 52px; }
@@ -35,8 +37,12 @@ img { max-width: 100%; height: auto; }
 .btn.icon:hover { background:rgba(59,130,246,.08); color:#fff; border-color:#3B82F6; }
 
 /* Responsive form row (mobile-first) */
-.form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end; }
+.form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end; }
 @media (min-width: 768px) { .form-row { grid-template-columns: repeat(2, 1fr); } }
+.form-row > * { min-width: 0; }
+
+/* Inputs and dropdowns should shrink properly inside grids */
+.input, .ui-dropdown { width: 100%; max-width: 100%; min-width: 0; }
 
 .table { width:100%; border-collapse: collapse; color:#e5e7eb; background:#2A2A3B; }
 .table th, .table td { border:1px solid #3A3A4D; padding:14px 16px; text-align:left; }
