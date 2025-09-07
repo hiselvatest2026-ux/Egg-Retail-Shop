@@ -193,7 +193,109 @@ const Purchases = () => {
               </>
             );
           })()}
-          {/* New spec: remove single-product fields; use editable table below */}
+          {/* New spec: manual total (optional) */}
+          <div className="input-group" style={{gridColumn:'1/-1'}}>
+            <label>Total Purchase Value (manual)</label>
+            <input className="input" type="number" step="0.01" value={form.total_purchase_value} inputMode="decimal" onChange={e=>setForm({...form, total_purchase_value: e.target.value})} />
+          </div>
+
+          {/* Editable Purchases Table */}
+          <div className="input-group" style={{gridColumn:'1/-1'}}>
+            <label>Purchases</label>
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="table table-hover table-zebra mt-2">
+                <thead>
+                  <tr>
+                    <th>Product Code</th>
+                    <th>Product Name</th>
+                    <th style={{textAlign:'right'}}>Price/Unit</th>
+                    <th>UOM</th>
+                    <th>DoM</th>
+                    <th>Shelf Life</th>
+                    <th style={{textAlign:'right'}}>Quantity</th>
+                    <th style={{textAlign:'right'}}>SGST %</th>
+                    <th style={{textAlign:'right'}}>CGST %</th>
+                    <th style={{textAlign:'right'}}>Total Amount</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, idx) => {
+                    const totals = computeRowTotals(r);
+                    return (
+                      <tr key={idx}>
+                        <td><input className="input" value={r.product_code||''} onChange={e=>{
+                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_code: val } : row));
+                        }} /></td>
+                        <td><input className="input" value={r.product_name||''} onChange={e=>{
+                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_name: val } : row));
+                        }} /></td>
+                        <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
+                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
+                        }} /></td>
+                        <td>
+                          <select className="input" value={r.uom||'Piece'} onChange={e=>{
+                            const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row));
+                          }}>
+                            <option value="Piece">Piece</option>
+                            <option value="Tray">Tray</option>
+                          </select>
+                        </td>
+                        <td><input className="input" type="date" value={r.mfg_date||''} onChange={e=>{
+                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: val } : row));
+                        }} /></td>
+                        <td><input className="input" placeholder="days/months" value={r.shelf_life||''} onChange={e=>{
+                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, shelf_life: val } : row));
+                        }} /></td>
+                        <td style={{textAlign:'right'}}><input className="input" value={r.quantity||''} inputMode="numeric" onChange={e=>{
+                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, quantity: val } : row));
+                        }} /></td>
+                        <td style={{textAlign:'right'}}><input className="input" value={totals.sgst_percent.toFixed(2)} readOnly /></td>
+                        <td style={{textAlign:'right'}}><input className="input" value={totals.cgst_percent.toFixed(2)} readOnly /></td>
+                        <td style={{textAlign:'right'}}><input className="input" value={totals.totalAmount.toFixed(2)} readOnly /></td>
+                        <td><button type="button" className="btn danger btn-sm" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>Delete</button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="block sm:hidden space-y-2 mt-2">
+              {rows.map((r, idx) => {
+                const totals = computeRowTotals(r);
+                return (
+                  <div key={idx} className="card">
+                    <div className="card-body">
+                      <div className="data-pairs">
+                        <div className="pair"><strong>Product Code</strong><input className="input" value={r.product_code||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_code: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>Product Name</strong><input className="input" value={r.product_name||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, product_name: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>Price/Unit</strong><input className="input" value={r.price_per_unit||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>UOM</strong>
+                          <select className="input" value={r.uom||'Piece'} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: e.target.value } : row))}>
+                            <option value="Piece">Piece</option>
+                            <option value="Tray">Tray</option>
+                          </select>
+                        </div>
+                        <div className="pair"><strong>DoM</strong><input className="input" type="date" value={r.mfg_date||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>Shelf Life</strong><input className="input" value={r.shelf_life||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, shelf_life: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>Qty</strong><input className="input" value={r.quantity||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, quantity: e.target.value } : row))} /></div>
+                        <div className="pair"><strong>SGST %</strong><input className="input" value={totals.sgst_percent.toFixed(2)} readOnly /></div>
+                        <div className="pair"><strong>CGST %</strong><input className="input" value={totals.cgst_percent.toFixed(2)} readOnly /></div>
+                        <div className="pair" style={{textAlign:'right'}}><strong>Total</strong><div>₹ {totals.totalAmount.toFixed(2)}</div></div>
+                      </div>
+                      <div className="btn-group" style={{marginTop:10}}>
+                        <button type="button" className="btn danger btn-sm" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{display:'flex', justifyContent:'space-between', marginTop:8}}>
+              <button type="button" className="btn" onClick={()=> setRows(prev=> [...prev, { product_code:'', product_name:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }])}>+ Add Row</button>
+              <div style={{color:'#b6beca'}}>Rows: <strong>{rows.length}</strong></div>
+            </div>
+          </div>
           {/* New editable purchases table goes below */}
           <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
             <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
