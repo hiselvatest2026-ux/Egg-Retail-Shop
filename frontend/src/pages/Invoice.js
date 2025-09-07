@@ -7,16 +7,23 @@ const Invoice = () => {
   const { id } = useParams();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     (async () => {
-      const res = await getSaleInvoice(id);
-      setInvoice(res.data);
-      setLoading(false);
+      try {
+        const res = await getSaleInvoice(id);
+        setInvoice(res.data);
+      } catch (e) {
+        setError(e?.response?.data?.message || 'Failed to load invoice');
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [id]);
 
   if (loading) return <div className="p-4">Loading invoice...</div>;
+  if (error) return <div className="p-4">{error}</div>;
   if (!invoice) return <div className="p-4">Invoice not found.</div>;
 
   const { company, sale, items, total, totals } = invoice;
