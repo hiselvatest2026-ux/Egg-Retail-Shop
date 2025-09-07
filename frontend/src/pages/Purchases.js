@@ -128,7 +128,8 @@ const Purchases = () => {
         if (!productId) continue;
         await createPurchaseItem(purchaseId, { product_id: Number(productId), quantity: qty, price });
       }
-      setSuccess('Purchase saved.');
+      setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
+      setTimeout(()=> setSuccess(''), 2000);
       setForm({ vendor_id: '', total_purchase_value: '' });
       setRows([]);
       setEditing(null);
