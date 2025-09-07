@@ -332,6 +332,15 @@ const Sales = () => {
           {/* Controls: 2-column on web, stacked on mobile */}
           <div className="form-grid-2" style={{marginBottom:12}}>
             <div className="input-group" style={{overflow:'visible'}}>
+              <label>Customer</label>
+              <Dropdown
+                value={form.customer_id}
+                onChange={(v)=>setForm(prev=>({ ...prev, customer_id: v }))}
+                placeholder={'Select Customer'}
+                options={(customers||[]).map(c=>({ value:String(c.id), label:c.name }))}
+              />
+            </div>
+            <div className="input-group" style={{overflow:'visible'}}>
               <label>Sale Type</label>
               <Dropdown
                 value={form.sale_type}
@@ -479,6 +488,23 @@ const Sales = () => {
               <div style={{display:'flex', justifyContent:'flex-end', fontWeight:900}}>₹ {itemsTotalWithGst.toFixed(2)}</div>
             </div>
           )}
+          {/* Divider and actions */}
+          <div style={{height:1, background:'#3A3A4D', margin:'12px 0'}} />
+          <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', alignItems:'center'}}>
+            <label style={{display:'flex', alignItems:'center', gap:8}}>
+              <input type="checkbox" checked={recordPaymentNow} onChange={(e)=>setRecordPaymentNow(e.target.checked)} />
+              Record payment now
+            </label>
+            {recordPaymentNow && (
+              <>
+                <input className="input" placeholder="Amount" value={paymentAtCreate.amount} onChange={(e)=>setPaymentAtCreate(prev=>({ ...prev, amount:e.target.value }))} inputMode="decimal" />
+                <div style={{overflow:'visible'}}>
+                  <Dropdown value={paymentAtCreate.mode} onChange={(v)=>setPaymentAtCreate(prev=>({ ...prev, mode:v }))} options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]} />
+                </div>
+              </>
+            )}
+            <button className="btn primary" onClick={handleSubmit}>Generate Invoice</button>
+          </div>
         </Card>
         
         <Card title="Record Payments">
