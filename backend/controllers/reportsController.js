@@ -17,20 +17,34 @@ function sendCsv(res, filename, headers, rows) {
 
 exports.purchasesCsv = async (req, res) => {
   try {
+    // Prefer item-level details since header may be blank in new flow
     const result = await pool.query(
-      `SELECT p.id,
-              p.purchase_date,
-              p.vendor_id,
+      `WITH mm_guess AS (
+         SELECT p.id AS product_id,
+                CASE
+                  WHEN LOWER(p.name) LIKE 'egg%' THEN 'M00001'
+                  WHEN LOWER(p.name) LIKE 'paneer%' OR LOWER(p.name) LIKE 'panner%' THEN 'M00002'
+                  ELSE NULL
+                END AS part_code
+         FROM products p
+       )
+       SELECT pu.id AS id,
+              pu.purchase_date,
+              pu.vendor_id,
               v.vendor_code,
               v.name AS vendor_name,
-              p.product_name,
-              p.price_per_unit,
-              p.quantity,
-              p.gst_percent,
-              p.total
-       FROM purchases p
-       LEFT JOIN vendors v ON v.id = p.vendor_id
-       ORDER BY p.purchase_date DESC, p.id DESC`
+              pr.name AS product_name,
+              pi.price AS price_per_unit,
+              pi.quantity AS quantity,
+              COALESCE(mm.gst_percent, 0) AS gst_percent,
+              ROUND(pi.price * pi.quantity * (1 + (COALESCE(mm.gst_percent,0)/100.0)), 2) AS total
+       FROM purchase_items pi
+       JOIN purchases pu ON pu.id = pi.purchase_id
+       LEFT JOIN vendors v ON v.id = pu.vendor_id
+       LEFT JOIN products pr ON pr.id = pi.product_id
+       LEFT JOIN mm_guess g ON g.product_id = pi.product_id
+       LEFT JOIN metal_master mm ON mm.part_code = g.part_code
+       ORDER BY pu.purchase_date DESC, pu.id DESC, pi.id DESC`
     );
     const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','product_name','price_per_unit','quantity','gst_percent','total'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
