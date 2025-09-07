@@ -82,6 +82,9 @@ const Purchases = () => {
     const totalAmount = lineTotal + sgstAmt + cgstAmt;
     return { lineTotal, sgst_percent, cgst_percent, totalAmount };
   };
+  const itemsGrandTotal = useMemo(() => {
+    return (rows||[]).reduce((sum, r) => sum + computeRowTotals(r).totalAmount, 0);
+  }, [rows]);
   useEffect(() => { 
     fetchPurchases(); 
     (async()=>{ 
@@ -245,7 +248,7 @@ const Purchases = () => {
                   <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
                 </div>
                 <div className="actions-row" style={{justifyContent:'flex-end', marginTop:8}}>
-                  <button type="button" className="btn" onClick={()=>{
+                  <button type="button" className="btn primary" onClick={()=>{
                     if (!addForm.material_code) return;
                     const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
                     setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
@@ -307,6 +310,13 @@ const Purchases = () => {
                       </tr>
                     );
                   })}
+                  {rows.length > 0 && (
+                    <tr>
+                      <td colSpan={8}></td>
+                      <td style={{textAlign:'right', fontWeight:800, fontSize:16}}>₹ {itemsGrandTotal.toFixed(2)}</td>
+                      <td></td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -337,6 +347,14 @@ const Purchases = () => {
                   </div>
                 );
               })}
+              {rows.length > 0 && (
+                <div className="card" style={{marginTop:8}}>
+                  <div className="card-body" style={{display:'flex', justifyContent:'space-between'}}>
+                    <div style={{fontWeight:800}}>Items Total</div>
+                    <div style={{fontWeight:900}}>₹ {itemsGrandTotal.toFixed(2)}</div>
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{display:'flex', justifyContent:'flex-end', marginTop:8, gap:12}}>
               <button type="button" className="btn btn-mobile-full" onClick={()=> setRows(prev=> {
