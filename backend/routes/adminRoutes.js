@@ -50,6 +50,12 @@ router.post('/clear-transactions', async (_req, res) => {
     await pool.query('BEGIN');
     // Use TRUNCATE with RESTART IDENTITY to reset auto-increment IDs
     await pool.query('TRUNCATE payments, sale_items, sales, purchase_items, purchases RESTART IDENTITY CASCADE');
+    // Force-reset sequences even if not owned by table
+    try { await pool.query("SELECT setval(pg_get_serial_sequence('purchases','id'), 1, false)"); } catch(_) {}
+    try { await pool.query("SELECT setval(pg_get_serial_sequence('purchase_items','id'), 1, false)"); } catch(_) {}
+    try { await pool.query("SELECT setval(pg_get_serial_sequence('sales','id'), 1, false)"); } catch(_) {}
+    try { await pool.query("SELECT setval(pg_get_serial_sequence('sale_items','id'), 1, false)"); } catch(_) {}
+    try { await pool.query("SELECT setval(pg_get_serial_sequence('payments','id'), 1, false)"); } catch(_) {}
     await pool.query('COMMIT');
     res.json({ message: 'Transactions cleared (purchases, purchase_items, sales, sale_items, payments)' });
   } catch (e) {
