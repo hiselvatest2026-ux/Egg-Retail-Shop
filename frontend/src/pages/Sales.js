@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem, getRoutes } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
@@ -19,6 +19,8 @@ const Sales = () => {
   const [customers, setCustomers] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [products, setProducts] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [selectedRouteId, setSelectedRouteId] = useState('');
   const [lineItems, setLineItems] = useState([]);
   const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
   const [addForm, setAddForm] = useState({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
@@ -122,6 +124,8 @@ const Sales = () => {
         const today = new Date().toISOString().slice(0,10);
         const tr = await getRouteTrips({ date: today });
         setTrips(tr.data||[]);
+        const rr = await getRoutes();
+        setRoutes(rr.data||[]);
       } catch(e){ 
         console.error('data load failed', e);
       } 
