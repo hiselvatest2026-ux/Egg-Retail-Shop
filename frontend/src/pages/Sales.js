@@ -132,6 +132,24 @@ const Sales = () => {
     })(); 
   }, []);
 
+  // Auto-populate Sale Category from selected customer (Customer Master)
+  useEffect(() => {
+    if (!customers || customers.length === 0) return;
+    // If user selects a customer in payments filter, reflect their category into Sales Entry
+    if (paymentsFilter.customer_id) {
+      const cust = customers.find(c => String(c.id) === String(paymentsFilter.customer_id));
+      if (cust && cust.category && String(form.category) !== String(cust.category)) {
+        setForm(prev => ({ ...prev, category: cust.category }));
+      }
+      return;
+    }
+    // Otherwise, default to first available category if none selected yet
+    if (!form.category) {
+      const cats = Array.from(new Set((customers||[]).map(c=>c.category).filter(Boolean)));
+      if (cats.length > 0) setForm(prev => ({ ...prev, category: cats[0] }));
+    }
+  }, [paymentsFilter.customer_id, customers]);
+
   const reloadPayments = async () => {
     try {
       const res = await getPayments();
