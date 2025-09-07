@@ -159,6 +159,9 @@ export const createRoute = (data) => axios.post(`${API_URL}/routes`, data);
 export const updateRoute = (id, data) => axios.put(`${API_URL}/routes/${id}`, data);
 export const deleteRouteApi = (id) => axios.delete(`${API_URL}/routes/${id}`);
 
+// Admin utilities
+export const clearTransactions = () => axios.post(`${API_URL}/admin/clear-transactions`);
+
 // Sale Items
 export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);
 export const createSaleItem = (saleId, data) => axios.post(`${API_URL}/sales/${saleId}/items`, data);

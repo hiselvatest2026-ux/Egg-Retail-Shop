@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem, getRoutes, getLastPurchasePrice } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem, getRoutes, getLastPurchasePrice, clearTransactions } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
@@ -581,6 +581,11 @@ const Sales = () => {
         <Card title="Record Payments">
           {/* Desktop payments table */}
           <div className="hidden sm:block overflow-x-auto">
+            <div className="actions-row" style={{justifyContent:'flex-end', marginBottom:8}}>
+              <button className="btn secondary btn-sm" onClick={async()=>{
+                try { await clearTransactions(); await fetchSales(); await reloadPayments(); setSuccess('Transactions cleared'); setTimeout(()=>setSuccess(''), 2000); } catch(e){ setError('Failed to clear'); }
+              }}>Clear Transactions</button>
+            </div>
             <table className="table table-hover table-zebra mt-2">
               <thead>
                 <tr><th>ID</th><th>Customer</th><th style={{textAlign:'right'}}>Total</th><th style={{textAlign:'right'}}>Paid</th><th style={{textAlign:'right'}}>Balance</th><th style={{textAlign:'right'}}>Actions</th></tr>
