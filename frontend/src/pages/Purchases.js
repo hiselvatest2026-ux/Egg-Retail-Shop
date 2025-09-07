@@ -24,7 +24,16 @@ const Purchases = () => {
   const fetchPurchases = async () => {
     try {
       const res = await getPurchases();
-      setPurchases(res.data);
+      const list = res.data || [];
+      const seen = new Set();
+      const unique = [];
+      for (const p of list) {
+        const key = p && p.id != null ? String(p.id) : Math.random().toString(36);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(p);
+      }
+      setPurchases(unique);
     } catch (err) {
       console.error('Failed to load purchases', err);
     }
@@ -103,7 +112,16 @@ const Purchases = () => {
     }
   };
   const filteredPurchases = useMemo(() => {
-    let list = purchases || [];
+    // Deduplicate by id to avoid duplicate rows from backend merges or double fetches
+    const seen = new Set();
+    let list = (purchases || []).filter(p => {
+      const key = p && p.id != null ? String(p.id) : '';
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    // Optional: stable sort by id desc for consistency
+    list = list.slice().sort((a,b)=> Number(b.id||0) - Number(a.id||0));
     if (vendorFilter) list = list.filter(p => String(p.vendor_id) === String(vendorFilter));
     if (search) {
       const q = search.toLowerCase();
