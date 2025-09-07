@@ -158,5 +158,59 @@ router.put('/closing-stocks/materials', async (req, res) => {
   } catch (e) { res.status(500).send(e.message); }
 });
 
+// Detailed stock breakdown per product: opening, purchased, sold, adjustments, closing
+router.get('/stock-breakdown', async (req, res) => {
+  try {
+    const locId = req.query.location_id ? Number(req.query.location_id) : null;
+    const locPI = locId ? 'WHERE pi.location_id = $1' : '';
+    const locSI = locId ? 'WHERE si.location_id = $1' : '';
+    const params = locId ? [locId] : [];
+    const q = await pool.query(`
+      WITH purchase_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi ${locPI} GROUP BY product_id
+      ),
+      sales_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM sale_items si ${locSI} GROUP BY product_id
+      ),
+      adjustments AS (
+        SELECT product_id,
+               SUM(CASE WHEN adjustment_type IN ('Missing','Wastage','Breakage') THEN quantity ELSE 0 END) AS deducted
+        FROM stock_adjustments GROUP BY product_id
+      ),
+      opening AS (
+        SELECT product_id, quantity FROM opening_stocks
+      ),
+      all_ids AS (
+        SELECT id AS product_id FROM products
+        UNION SELECT product_id FROM purchase_items
+        UNION SELECT product_id FROM sale_items
+      )
+      SELECT a.product_id,
+             COALESCE(p.name, 'Product #' || a.product_id) AS name,
+             COALESCE(op.quantity,0) AS opening,
+             COALESCE(pq.qty,0) AS purchased,
+             COALESCE(sq.qty,0) AS sold,
+             COALESCE(adj.deducted,0) AS adjustments,
+             COALESCE(op.quantity,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.deducted,0) AS closing
+      FROM all_ids a
+      LEFT JOIN products p ON p.id = a.product_id
+      LEFT JOIN opening op ON op.product_id = a.product_id
+      LEFT JOIN purchase_qty pq ON pq.product_id = a.product_id
+      LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
+      LEFT JOIN adjustments adj ON adj.product_id = a.product_id
+      ORDER BY name ASC
+    `, params);
+    res.json(q.rows.map(r => ({
+      product_id: Number(r.product_id),
+      name: r.name,
+      opening: Number(r.opening||0),
+      purchased: Number(r.purchased||0),
+      sold: Number(r.sold||0),
+      adjustments: Number(r.adjustments||0),
+      closing: Number(r.closing||0)
+    })));
+  } catch (e) { res.status(500).send(e.message); }
+});
+
 module.exports = router;
 
