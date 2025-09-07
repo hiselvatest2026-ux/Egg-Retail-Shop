@@ -77,12 +77,12 @@ const Purchases = () => {
     const price = Number(row.price_per_unit || 0);
     const qtyInput = Number(row.quantity || 0);
     const effectiveQty = String(row.uom||'Piece') === 'Tray' ? (qtyInput * 30) : qtyInput;
-    const lineTotal = price * effectiveQty;
+    const baseAmount = price * effectiveQty;
     const { sgst_percent, cgst_percent } = deriveGstPercents(row);
-    const sgstAmt = lineTotal * (sgst_percent/100);
-    const cgstAmt = lineTotal * (cgst_percent/100);
-    const totalAmount = lineTotal + sgstAmt + cgstAmt;
-    return { lineTotal, sgst_percent, cgst_percent, totalAmount };
+    const sgst_amount = baseAmount * (sgst_percent/100);
+    const cgst_amount = baseAmount * (cgst_percent/100);
+    const totalAmount = baseAmount + sgst_amount + cgst_amount;
+    return { baseAmount, sgst_percent, cgst_percent, sgst_amount, cgst_amount, totalAmount };
   };
   const itemsGrandTotal = useMemo(() => {
     return (rows||[]).reduce((sum, r) => sum + computeRowTotals(r).totalAmount, 0);
@@ -217,7 +217,7 @@ const Purchases = () => {
 
           {/* Editable Purchases Table */}
           <div className="input-group" style={{gridColumn:'1/-1'}}>
-            <label>Purchases</label>
+            <label>Purchase Entry</label>
             {/* Add Item compact form */}
             <div className="card" style={{marginTop:8}}>
               <div className="card-body">
@@ -323,8 +323,8 @@ const Purchases = () => {
                     <th style={{minWidth:180}}>DOM</th>
                     <th style={{minWidth:160}}>Shelf Life</th>
                     <th style={{minWidth:120, textAlign:'right'}}>Quantity</th>
-                    <th style={{minWidth:120, textAlign:'right'}}>SGST %</th>
-                    <th style={{minWidth:120, textAlign:'right'}}>CGST %</th>
+                    <th style={{minWidth:120, textAlign:'right'}}>SGST</th>
+                    <th style={{minWidth:120, textAlign:'right'}}>CGST</th>
                     <th style={{minWidth:140, textAlign:'right'}}>Total Amount</th>
                     <th style={{width:72}}></th>
                   </tr>
@@ -342,8 +342,8 @@ const Purchases = () => {
                         <td>{r.mfg_date || '-'}</td>
                         <td>{r.shelf_life || '-'}</td>
                         <td style={{textAlign:'right'}}>{r.quantity || '-'}</td>
-                        <td style={{textAlign:'right'}}>{totals.sgst_percent.toFixed(2)}</td>
-                        <td style={{textAlign:'right'}}>{totals.cgst_percent.toFixed(2)}</td>
+                        <td style={{textAlign:'right'}}>{totals.sgst_amount.toFixed(2)}</td>
+                        <td style={{textAlign:'right'}}>{totals.cgst_amount.toFixed(2)}</td>
                         <td style={{textAlign:'right'}}>{totals.totalAmount.toFixed(2)}</td>
                         <td style={{textAlign:'center'}}>
                           <div className="btn-group" style={{justifyContent:'center'}}>
