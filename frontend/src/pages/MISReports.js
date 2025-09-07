@@ -4,8 +4,29 @@ import ShopChip from '../components/ShopChip';
 import axios from 'axios';
 
 const parseCsv = (text) => {
-  const lines = text.trim().split(/\r?\n/);
-  return lines.map(line => line.split(","));
+  const rows = [];
+  let i = 0, field = '', row = [], inQuotes = false;
+  const pushField = () => { row.push(field); field = ''; };
+  const pushRow = () => { rows.push(row); row = []; };
+  const s = text.replace(/\r/g, '');
+  while (i < s.length) {
+    const ch = s[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (s[i+1] === '"') { field += '"'; i += 2; continue; } // escaped quote
+        inQuotes = false; i++; continue;
+      } else { field += ch; i++; continue; }
+    } else {
+      if (ch === '"') { inQuotes = true; i++; continue; }
+      if (ch === ',') { pushField(); i++; continue; }
+      if (ch === '\n') { pushField(); pushRow(); i++; continue; }
+      field += ch; i++; continue;
+    }
+  }
+  // flush last field/row
+  pushField();
+  if (row.length > 1 || (row.length === 1 && row[0] !== '')) pushRow();
+  return rows;
 };
 
 const DataTable = ({ rows }) => {
