@@ -262,7 +262,7 @@ exports.getLastPurchasePrice = async (req, res) => {
     if (prodRes.rows.length === 0) return res.status(404).json({ message: 'Product not found for material' });
     const productId = prodRes.rows[0].id;
     const priceRes = await pool.query(`
-      SELECT pi.price
+      SELECT pi.price, pi.mfg_date
       FROM purchase_items pi
       JOIN purchases p ON p.id = pi.purchase_id
       WHERE pi.product_id=$1
@@ -270,7 +270,8 @@ exports.getLastPurchasePrice = async (req, res) => {
       LIMIT 1
     `, [productId]);
     if (priceRes.rows.length === 0) return res.status(404).json({ message: 'No purchase price found' });
-    return res.json({ price: Number(priceRes.rows[0].price) });
+    const row = priceRes.rows[0];
+    return res.json({ price: Number(row.price), dom: row.mfg_date });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

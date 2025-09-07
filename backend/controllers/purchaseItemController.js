@@ -29,8 +29,8 @@ exports.createItem = async (req, res) => {
     const { id } = req.params; // purchase id
     const { product_id, quantity, price } = req.body;
     const result = await pool.query(
-      'INSERT INTO purchase_items (purchase_id, product_id, quantity, price) VALUES ($1,$2,$3,$4) RETURNING *',
-      [id, product_id, quantity, price]
+      'INSERT INTO purchase_items (purchase_id, product_id, quantity, price, mfg_date) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [id, product_id, quantity, price, req.body.mfg_date || null]
     );
     await recalcPurchaseTotal(id);
     res.status(201).json(result.rows[0]);

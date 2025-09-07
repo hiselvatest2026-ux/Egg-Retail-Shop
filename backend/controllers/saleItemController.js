@@ -32,7 +32,8 @@ exports.listItems = async (req, res) => {
   try {
     const { id } = req.params; // sale id
     const result = await pool.query(
-      `SELECT si.id, si.product_id, p.name AS product_name, si.quantity, si.price, (si.quantity*si.price) AS line_total
+      `SELECT si.id, si.product_id, p.name AS product_name, si.quantity, si.price, (si.quantity*si.price) AS line_total,
+              (SELECT mfg_date FROM purchase_items pi WHERE pi.product_id = si.product_id ORDER BY pi.id DESC LIMIT 1) AS dom
        FROM sale_items si JOIN products p ON p.id = si.product_id
        WHERE si.sale_id = $1 ORDER BY si.id ASC`,
       [id]

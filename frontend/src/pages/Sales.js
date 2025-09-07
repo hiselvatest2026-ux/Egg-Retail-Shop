@@ -451,15 +451,24 @@ const Sales = () => {
                               // Fallback: try last purchase price
                               return getLastPurchasePrice({ material_code: code }).then(rr=>{
                                 const price = Number(rr?.data?.price || 0);
+                                const dom = rr?.data?.dom || '';
                                 if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                                if (dom) setAddForm(prev=>({ ...prev, dom: String(dom).slice(0,10) }));
                               }).catch(()=>{});
                             }
+                            // Also fill DOM from latest purchase mfg_date if available
+                            return getLastPurchasePrice({ material_code: code }).then(rr=>{
+                              const dom = rr?.data?.dom || '';
+                              if (dom) setAddForm(prev=>({ ...prev, dom: String(dom).slice(0,10) }));
+                            }).catch(()=>{});
                           })
                           .catch(()=>{
                             // Fallback on failure: last purchase price
                             getLastPurchasePrice({ material_code: code }).then(rr=>{
                               const price = Number(rr?.data?.price || 0);
+                              const dom = rr?.data?.dom || '';
                               if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                              if (dom) setAddForm(prev=>({ ...prev, dom: String(dom).slice(0,10) }));
                             }).catch(()=>{});
                           });
                       }
@@ -473,7 +482,7 @@ const Sales = () => {
                 <div style={{overflow:'visible'}}>
                   <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
-                <input className="input date" type="date" placeholder="DOM" value={addForm.dom||''} onChange={e=>setAddForm({...addForm, dom:e.target.value})} />
+                <input className="input date" type="date" placeholder="DOM" value={addForm.dom||''} onChange={e=>setAddForm({...addForm, dom:e.target.value})} readOnly />
                 <input className="input" placeholder="Quantity *" value={addForm.qty||''} onChange={e=>setAddForm({...addForm, qty:e.target.value})} inputMode="numeric" />
                 <input className="input" placeholder="SGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.sgstAmt? t.sgstAmt.toFixed(2):''; })()} readOnly />
                 <input className="input" placeholder="CGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.cgstAmt? t.cgstAmt.toFixed(2):''; })()} readOnly />
