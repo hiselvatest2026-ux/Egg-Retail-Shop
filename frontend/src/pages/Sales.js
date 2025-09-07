@@ -384,7 +384,7 @@ const Sales = () => {
               <Dropdown
                 value={form.sale_type}
                 onChange={(v)=>setForm(prev=>({ ...prev, sale_type: v }))}
-                options={[{value:'Cash',label:'Cash'},{value:'Credit',label:'Credit'},{value:'Gpay',label:'Gpay'}]}
+                options={[{value:'Cash',label:'Cash'},{value:'Credit',label:'Credit'}]}
               />
             </div>
             <div className="input-group" style={{overflow:'visible'}}>
