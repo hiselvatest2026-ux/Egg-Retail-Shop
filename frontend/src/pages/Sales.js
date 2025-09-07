@@ -193,6 +193,34 @@ const Sales = () => {
     } catch(_){}
     try {
       if (hasItems) {
+        // Pre-check stock for each line item; abort early if insufficient
+        const stockChecks = await Promise.all(lineItems.map(async (it) => {
+          let pid = it.product_id ? Number(it.product_id) : null;
+          if (!pid && it.material_code) {
+            const mat = materials.find(m=> String(m.part_code)===String(it.material_code));
+            if (mat) {
+              const prod = products.find(p=> String(p.name||'').toLowerCase() === String(mat.metal_type||'').toLowerCase());
+              if (prod) pid = Number(prod.id);
+            }
+          }
+          if (!pid && it.material_type) {
+            const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(it.material_type||'').toLowerCase());
+            if (prod2) pid = Number(prod2.id);
+          }
+          if (!pid) return null;
+          try {
+            const res = await getAvailable({ product_id: pid });
+            const availableNow = Number(res.data?.available||0);
+            const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : (it.effectiveQty != null ? Number(it.effectiveQty||0) : Number(it.qty_pieces||0));
+            return { pid, availableNow, required: effQty, label: it.material_type || it.material_code };
+          } catch (_) { return null; }
+        }));
+        const shortages = (stockChecks||[]).filter(chk => chk && chk.required > chk.availableNow);
+        if (shortages.length > 0) {
+          const first = shortages[0];
+          setError(`Insufficient stock for ${first.label || 'item'}: required ${first.required}, available ${first.availableNow}`);
+          return;
+        }
         const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null });
         const newSale = res.data;
         const tasks = lineItems.map(async (it) => {
@@ -252,7 +280,8 @@ const Sales = () => {
       setSuccess('Sale saved successfully.');
     } catch (err) {
       console.error('Failed to submit sale', err);
-      setError('Failed to save sale. Please try again.');
+      const msg = err?.response?.data?.message || err?.message || 'Failed to save sale. Please try again.';
+      setError(msg);
     }
   };
 
@@ -371,7 +400,7 @@ const Sales = () => {
               <label>Route Name</label>
               <Dropdown
                 value={selectedRouteId}
-                onChange={(v)=>setSelectedRouteId(v)}
+                onChange={(v)=>{ setSelectedRouteId(v); setForm(prev=>({ ...prev, route_trip_id: v })); }}
                 placeholder={'Select Route'}
                 options={(routes||[]).map(r=>({ value:String(r.id), label:`${r.route_name} - ${r.vehicle_number||'-'}` }))}
               />
