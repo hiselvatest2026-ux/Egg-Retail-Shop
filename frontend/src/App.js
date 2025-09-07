@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShopProvider } from './components/ShopContext';
 import ShopSwitcher from './components/ShopSwitcher';
-import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard } from 'react-icons/fi';
 import Purchases from './pages/Purchases';
 import Sales from './pages/Sales';
