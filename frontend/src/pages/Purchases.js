@@ -196,7 +196,7 @@ const Purchases = () => {
               <table className="table table-hover table-zebra mt-2">
                 <thead>
                   <tr>
-                    <th>Select Product (Material)</th>
+                    <th>Product (Material)</th>
                     <th style={{textAlign:'right'}}>Price/Unit</th>
                     <th>UOM</th>
                     <th>Date of Manufacturing</th>
@@ -215,14 +215,13 @@ const Purchases = () => {
                       <tr key={idx}>
                         <td style={{overflow:'visible'}}>
                           <Dropdown
-                            value={r.material_code || ''}
+                            value={r.material_code || (materials && materials[0] ? String(materials[0].part_code) : '')}
                             onChange={(code)=>{
                               const mat = materials.find(m=> String(m.part_code) === String(code));
                               const type = mat ? mat.metal_type : '';
                               setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
                             }}
-                            placeholder={'Select Product'}
-                            options={[{ value:'', label:'Select Product' }, ...(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))]}
+                            options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
                           />
                         </td>
                         <td style={{textAlign:'right'}}><input className="input" value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
@@ -297,7 +296,10 @@ const Purchases = () => {
               })}
             </div>
             <div style={{display:'flex', justifyContent:'space-between', marginTop:8}}>
-              <button type="button" className="btn" onClick={()=> setRows(prev=> [...prev, { material_code:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }])}>+ Add Row</button>
+              <button type="button" className="btn" onClick={()=> setRows(prev=> {
+                const first = (materials && materials[0]) ? materials[0] : null;
+                return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
+              })}>+ Add Row</button>
               <div style={{color:'#b6beca'}}>Rows: <strong>{rows.length}</strong></div>
             </div>
           </div>
