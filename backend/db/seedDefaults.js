@@ -29,14 +29,28 @@ async function seedDefaults() {
     try { await pool.query(`INSERT INTO purchase_items (purchase_id, product_id, quantity, price, location_id) VALUES ($1,2,12,200.00,$2)`, [p2.rows[0].id, warehouseId]); } catch (_) { await pool.query(`INSERT INTO purchase_items (purchase_id, product_id, quantity, price) VALUES ($1,2,12,200.00)`, [p2.rows[0].id]); }
   } catch (e) {}
 
+  // Seed Sales with diverse scenarios for better demos and invoices
   try {
-    const s1 = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (1,180.00,'Egg','Cash','Completed',0,'Cash') RETURNING id`);
-    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,30,6.00,$2)`, [s1.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,30,6.00)`, [s1.rows[0].id]); }
+    // A) Retail Cash sale, full payment, multiple items (Egg 0% GST + Paneer 5% GST)
+    // Total = (24*6) + (1*200*1.05) = 144 + 210 = 354.00
+    const sA = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (1,354.00,NULL,'Cash','Completed',0,'Cash') RETURNING id`);
+    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,24,6.00,$2)`, [sA.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,24,6.00)`, [sA.rows[0].id]); }
+    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,2,1,200.00,$2)`, [sA.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,2,1,200.00)`, [sA.rows[0].id]); }
+    try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (1,$1,354.00,'Cash')`, [sA.rows[0].id]); } catch (e) {}
 
-    const s2 = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (3,380.00,'Panner','Gpay','Completed',0,'Credit') RETURNING id`);
-    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,2,2,190.00,$2)`, [s2.rows[0].id, warehouseId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,2,2,190.00)`, [s2.rows[0].id]); }
+    // B) Wholesale Credit sale, partial payment, trays + pieces mix
+    // Eggs: 60 @ 5.50 = 330.00; Paneer: 5 @ 190 => 950 *1.05 = 997.50; Grand = 1327.50; Paid 500 => Balance 827.50
+    const sB = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (3,1327.50,NULL,'Credit','Completed',0,'Credit') RETURNING id`);
+    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,60,5.50,$2)`, [sB.rows[0].id, warehouseId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,60,5.50)`, [sB.rows[0].id]); }
+    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,2,5,190.00,$2)`, [sB.rows[0].id, warehouseId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,2,5,190.00)`, [sB.rows[0].id]); }
+    try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (3,$1,500.00,'Gpay')`, [sB.rows[0].id]); } catch (e) {}
+
+    // C) Retail Walk-in (use Retail category), Gpay full payment, single item
+    // Eggs: 12 @ 6 = 72.00
+    const sC = await pool.query(`INSERT INTO sales (customer_id, total, product_name, payment_method, status, discount, sale_type) VALUES (2,72.00,NULL,'Gpay','Completed',0,'Gpay') RETURNING id`);
+    try { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,1,12,6.00,$2)`, [sC.rows[0].id, mainOutletId]); } catch (_) { await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,1,12,6.00)`, [sC.rows[0].id]); }
+    try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (2,$1,72.00,'Gpay')`, [sC.rows[0].id]); } catch (e) {}
   } catch (e) {}
-  try { await pool.query(`INSERT INTO payments (customer_id, invoice_id, amount, payment_mode) VALUES (1,1,60.00,'Cash')`); } catch (e) {}
   try { await pool.query(`INSERT INTO stock_adjustments (product_id, adjustment_type, quantity, note) VALUES (1,'Breakage',2,'Damaged crate')`); } catch (e) {}
 
   // Routes and today's trip
