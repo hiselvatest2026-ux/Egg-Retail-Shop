@@ -199,24 +199,13 @@ const InventoryManagement = () => {
                 <td>{row.material_code}</td>
                 <td>{row.material_type}</td>
                 <td>
-                  <input className="input" value={row.quantity} onChange={e=>{
-                    const v = e.target.value; setClosingMaterials(prev=>prev.map(x=>x.material_code===row.material_code?{...x, quantity:v}:x));
-                  }} inputMode="numeric" />
+                  <input className="input" value={row.quantity} readOnly />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         <div className="actions-row">
-          <button className="btn" onClick={async()=>{
-            try { 
-              const cfg = locationId ? { params: { location_id: locationId } } : undefined;
-              await axios.put(`${baseUrl}/inventory/closing-stocks/materials`, { items: closingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }, cfg); 
-              await load(locationId); 
-            }
-            catch(e){ console.error('save closing materials failed', e); }
-          setSaveMsg('Closing stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
-          }}>Save Closing</button>
           <button className="btn secondary" onClick={loadClosing}>Refresh</button>
         </div>
         {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
