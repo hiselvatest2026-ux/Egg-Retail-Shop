@@ -58,12 +58,19 @@ exports.salesCsv = async (req, res) => {
          SELECT invoice_id, SUM(amount) AS paid
          FROM payments
          GROUP BY invoice_id
+       ),
+       items AS (
+         SELECT si.sale_id,
+                STRING_AGG(p.name || ' x' || si.quantity, '; ' ORDER BY si.id) AS items_text
+         FROM sale_items si
+         JOIN products p ON p.id = si.product_id
+         GROUP BY si.sale_id
        )
        SELECT s.id,
               s.sale_date,
               s.customer_id,
               c.name AS customer_name,
-              COALESCE(s.product_name, s.egg_type) AS product_name,
+              COALESCE(i.items_text, s.product_name, s.egg_type) AS product_name,
               COALESCE(s.category, 'Retail') AS category,
               COALESCE(s.sale_type, 'Cash') AS sale_type,
               s.payment_method,
@@ -76,6 +83,7 @@ exports.salesCsv = async (req, res) => {
        LEFT JOIN customers c ON c.id = s.customer_id
        LEFT JOIN paid p ON p.invoice_id = s.id
        LEFT JOIN route_trips rt ON rt.id = s.route_trip_id
+       LEFT JOIN items i ON i.sale_id = s.id
        ORDER BY s.sale_date DESC, s.id DESC`
     );
     const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','total','paid','balance','route_name','vehicle_number'];
