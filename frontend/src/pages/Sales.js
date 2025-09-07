@@ -48,6 +48,15 @@ const Sales = () => {
   const [payingSale, setPayingSale] = useState(null);
   const [payForm, setPayForm] = useState({ amount: '', mode: 'Cash' });
 
+  const itemsTotal = useMemo(() => {
+    if (!lineItems || lineItems.length === 0) return 0;
+    return lineItems.reduce((sum, it) => {
+      const effQty = it.qty_unit === 'Tray' ? (Number(it.trays||0) * 30) : Number(it.qty_pieces||0);
+      const price = Number(it.price_per_piece || 0);
+      return sum + (effQty * price);
+    }, 0);
+  }, [lineItems]);
+
   const fetchSales = async () => {
     try {
       const res = await getSales();
@@ -358,6 +367,15 @@ const Sales = () => {
                   }
                 } catch(_) {}
                 const effQty = itemForm.qty_unit==='Tray' ? (Number(itemForm.trays||0)*30) : Number(itemForm.qty_pieces||0);
+                // Stock validation per line
+                try {
+                  const stockRes = await getAvailable({ product_id: itemForm.product_id });
+                  const avail = Number(stockRes.data?.available||0);
+                  if (effQty > avail) {
+                    setError(`Insufficient stock for selected product. Available: ${avail}`);
+                    return;
+                  }
+                } catch(_) {}
                 const lineTotal = effQty * price;
                 setLineItems(prev=>[...prev, { ...itemForm, price_per_piece: price, effectiveQty: effQty, lineTotal }]);
                 setItemForm({ product_id:'', qty_unit:'Piece', qty_pieces:'', trays:'', price_per_piece:'' });
@@ -374,16 +392,92 @@ const Sales = () => {
                       const prod = products.find(p=>String(p.id)===String(it.product_id));
                       return (
                         <tr key={idx}>
-                          <td>{prod ? prod.name : it.product_id}</td>
-                          <td style={{textAlign:'right'}}>{it.effectiveQty}</td>
-                          <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
+                          <td style={{minWidth:180}}>
+                            <select className="input" value={it.product_id} onChange={e=>{
+                              const pid = e.target.value;
+                              setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, product_id: pid } : row));
+                            }}>
+                              {products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
+                            </select>
+                          </td>
+                          <td style={{textAlign:'right', minWidth:120}}>
+                            <input className="input" value={it.qty_unit==='Tray' ? Math.ceil((Number(it.effectiveQty||0))/30) : it.effectiveQty}
+                              onChange={e=>{
+                                const val = e.target.value;
+                                setLineItems(prev=>prev.map((row,i)=>{
+                                  if (i!==idx) return row;
+                                  const effQty = row.qty_unit==='Tray' ? Number(val||0)*30 : Number(val||0);
+                                  return { ...row, effectiveQty: effQty, qty_pieces: row.qty_unit==='Tray' ? '' : val, trays: row.qty_unit==='Tray' ? val : '', lineTotal: effQty * Number(row.price_per_piece||0) };
+                                }));
+                              }} />
+                          </td>
+                          <td style={{textAlign:'right', minWidth:120}}>
+                            <input className="input" value={it.price_per_piece}
+                              onChange={e=>{
+                                const price = Number(e.target.value||0);
+                                setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, price_per_piece: price, lineTotal: price * Number(row.effectiveQty||0) } : row));
+                              }} />
+                          </td>
                           <td style={{textAlign:'right'}}>{(Number(it.lineTotal||0)).toFixed(2)}</td>
-                          <td><button type="button" className="btn danger btn-sm" onClick={()=>setLineItems(prev=>prev.filter((_,i)=>i!==idx))}>Remove</button></td>
+                          <td>
+                            <div className="btn-group">
+                              <button type="button" className="btn secondary btn-sm" onClick={()=>{
+                                setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, qty_unit: row.qty_unit==='Tray' ? 'Piece' : 'Tray', effectiveQty: row.qty_unit==='Tray' ? Number(row.trays||0)*30 : Number(row.qty_pieces||0), lineTotal: Number(row.price_per_piece||0) * (row.qty_unit==='Tray' ? Number(row.trays||0)*30 : Number(row.qty_pieces||0)) } : row));
+                              }}>Toggle Unit</button>
+                              <button type="button" className="btn danger btn-sm" onClick={()=>setLineItems(prev=>prev.filter((_,i)=>i!==idx))}>Remove</button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+              </div>
+              {/* Mobile cards for line items */}
+              <div className="block sm:hidden space-y-2 mt-2">
+                {lineItems.map((it, idx) => {
+                  const prod = products.find(p=>String(p.id)===String(it.product_id));
+                  return (
+                    <div key={idx} className="card">
+                      <div className="card-body">
+                        <div className="data-pairs">
+                          <div className="pair"><strong>Product</strong>
+                            <select className="input" value={it.product_id} onChange={e=>{
+                              const pid = e.target.value;
+                              setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, product_id: pid } : row));
+                            }}>
+                              {products.map(p => (<option key={p.id} value={p.id}>{p.name}</option>))}
+                            </select>
+                          </div>
+                          <div className="pair"><strong>Qty (pcs)</strong>
+                            <input className="input" value={it.effectiveQty}
+                              onChange={e=>{
+                                const effQty = Number(e.target.value||0);
+                                setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, effectiveQty: effQty, qty_pieces: effQty, trays: '', lineTotal: effQty * Number(row.price_per_piece||0) } : row));
+                              }} />
+                          </div>
+                          <div className="pair"><strong>Price/pc</strong>
+                            <input className="input" value={it.price_per_piece}
+                              onChange={e=>{
+                                const price = Number(e.target.value||0);
+                                setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, price_per_piece: price, lineTotal: price * Number(row.effectiveQty||0) } : row));
+                              }} />
+                          </div>
+                          <div className="pair" style={{textAlign:'right'}}><strong>Line Total</strong><div>₹ {(Number(it.lineTotal||0)).toFixed(2)}</div></div>
+                        </div>
+                        <div className="btn-group" style={{marginTop:10}}>
+                          <button type="button" className="btn secondary btn-sm" onClick={()=>{
+                            setLineItems(prev=>prev.map((row,i)=> i===idx ? { ...row, qty_unit: row.qty_unit==='Tray' ? 'Piece' : 'Tray', effectiveQty: row.qty_unit==='Tray' ? Number(row.trays||0)*30 : Number(row.qty_pieces||0), lineTotal: Number(row.price_per_piece||0) * (row.qty_unit==='Tray' ? Number(row.trays||0)*30 : Number(row.qty_pieces||0)) } : row));
+                          }}>Toggle Unit</button>
+                          <button type="button" className="btn danger btn-sm" onClick={()=>setLineItems(prev=>prev.filter((_,i)=>i!==idx))}>Remove</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{display:'flex', justifyContent:'flex-end', marginTop:8}}>
+                <div style={{color:'#b6beca'}}>Items Total: <strong>₹ {itemsTotal.toFixed(2)}</strong></div>
               </div>
             </div>
           )}
