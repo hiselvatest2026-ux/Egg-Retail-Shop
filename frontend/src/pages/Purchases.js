@@ -16,6 +16,10 @@ const Purchases = () => {
   const [materials, setMaterials] = useState([]);
   const [products, setProducts] = useState([]);
   const [rows, setRows] = useState([]);
+  const [addForm, setAddForm] = useState({ material_code:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
+  const [editIndex, setEditIndex] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fetchPurchases = async () => {
@@ -192,6 +196,36 @@ const Purchases = () => {
           {/* Editable Purchases Table */}
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Purchases</label>
+            {/* Add Item compact form */}
+            <div className="card" style={{marginTop:8}}>
+              <div className="card-body">
+                <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
+                  <div style={{overflow:'visible'}}>
+                    <Dropdown
+                      value={addForm.material_code}
+                      onChange={(code)=> setAddForm(prev=>({ ...prev, material_code: code }))}
+                      placeholder={'Product (Material)'}
+                      options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
+                    />
+                  </div>
+                  <input className="input" placeholder="Price / Unit" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
+                  <div style={{overflow:'visible'}}>
+                    <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                  </div>
+                  <input className="input date" type="date" value={addForm.mfg_date} onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})} />
+                  <input className="input" placeholder="Shelf life (e.g., 12 days)" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
+                  <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
+                </div>
+                <div className="actions-row" style={{justifyContent:'flex-end', marginTop:8}}>
+                  <button type="button" className="btn" onClick={()=>{
+                    if (!addForm.material_code) return;
+                    const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
+                    setRows(prev=>[...prev, { ...addForm, material_type: mat ? mat.metal_type : '' }]);
+                    setAddForm({ material_code:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
+                  }}>Add Item</button>
+                </div>
+              </div>
+            </div>
             <div className="hidden sm:block overflow-x-auto">
               <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
                 <colgroup>
@@ -223,42 +257,25 @@ const Purchases = () => {
                 <tbody>
                   {rows.map((r, idx) => {
                     const totals = computeRowTotals(r);
+                    const mat = materials.find(m=> String(m.part_code) === String(r.material_code));
+                    const productLabel = mat ? `${mat.part_code} - ${mat.description || mat.metal_type}` : (r.material_type || r.material_code || '-');
                     return (
                       <tr key={idx}>
-                        <td style={{overflow:'visible'}}>
-                          <Dropdown
-                            value={r.material_code || (materials && materials[0] ? String(materials[0].part_code) : '')}
-                            onChange={(code)=>{
-                              const mat = materials.find(m=> String(m.part_code) === String(code));
-                              const type = mat ? mat.metal_type : '';
-                              setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
-                            }}
-                            options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
-                          />
+                        <td><div className="truncate" title={productLabel}>{productLabel}</div></td>
+                        <td style={{textAlign:'right'}}>{r.price_per_unit || '-'}</td>
+                        <td style={{textAlign:'center'}}>{r.uom || 'Piece'}</td>
+                        <td>{r.mfg_date || '-'}</td>
+                        <td>{r.shelf_life || '-'}</td>
+                        <td style={{textAlign:'right'}}>{r.quantity || '-'}</td>
+                        <td style={{textAlign:'right'}}>{totals.sgst_percent.toFixed(2)}</td>
+                        <td style={{textAlign:'right'}}>{totals.cgst_percent.toFixed(2)}</td>
+                        <td style={{textAlign:'right'}}>{totals.totalAmount.toFixed(2)}</td>
+                        <td style={{textAlign:'center'}}>
+                          <div className="btn-group" style={{justifyContent:'center'}}>
+                            <button type="button" className="btn icon btn-sm" title="Edit" onClick={()=>{ setEditIndex(idx); setEditForm(r); setShowEdit(true); }}>✏️</button>
+                            <button type="button" className="btn icon btn-sm" title="Delete" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>🗑️</button>
+                          </div>
                         </td>
-                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={r.price_per_unit||''} inputMode="decimal" onChange={e=>{
-                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: val } : row));
-                        }} /></td>
-                        <td style={{overflow:'visible', textAlign:'center'}}>
-                          <Dropdown
-                            value={r.uom || 'Piece'}
-                            onChange={(val)=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row))}
-                            options={[{value:'Piece', label:'Piece'},{value:'Tray', label:'Tray (30 pcs)'}]}
-                          />
-                        </td>
-                        <td><input className="input date" type="date" value={r.mfg_date||''} onChange={e=>{
-                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: val } : row));
-                        }} /></td>
-                        <td><input className="input" placeholder="days/months" value={r.shelf_life||''} onChange={e=>{
-                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, shelf_life: val } : row));
-                        }} /></td>
-                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={r.quantity||''} inputMode="numeric" onChange={e=>{
-                          const val = e.target.value; setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, quantity: val } : row));
-                        }} /></td>
-                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={totals.sgst_percent.toFixed(2)} readOnly /></td>
-                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={totals.cgst_percent.toFixed(2)} readOnly /></td>
-                        <td style={{textAlign:'right'}}><input className="input" style={{textAlign:'right'}} value={totals.totalAmount.toFixed(2)} readOnly /></td>
-                        <td style={{textAlign:'center'}}><button type="button" className="btn icon btn-sm" title="Delete" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>🗑️</button></td>
                       </tr>
                     );
                   })}
@@ -268,38 +285,24 @@ const Purchases = () => {
             <div className="block sm:hidden space-y-2 mt-2">
               {rows.map((r, idx) => {
                 const totals = computeRowTotals(r);
+                const mat = materials.find(m=> String(m.part_code) === String(r.material_code));
+                const productLabel = mat ? `${mat.part_code} - ${mat.description || mat.metal_type}` : (r.material_type || r.material_code || '-');
                 return (
                   <div key={idx} className="card">
                     <div className="card-body">
                       <div className="data-pairs">
-                        <div className="pair">
-                          <Dropdown
-                            value={r.material_code || ''}
-                            onChange={(code)=>{
-                              const mat = materials.find(m=> String(m.part_code) === String(code));
-                              const type = mat ? mat.metal_type : '';
-                              setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, material_code: code, material_type: type } : row));
-                            }}
-                            placeholder={'Select Product'}
-                            options={[{ value:'', label:'Select Product' }, ...materials.map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))]}
-                          />
-                        </div>
-                        <div className="pair"><strong>Price/Unit</strong><input className="input" value={r.price_per_unit||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, price_per_unit: e.target.value } : row))} /></div>
-                        <div className="pair"><strong>UOM</strong>
-                          <Dropdown
-                            value={r.uom || 'Piece'}
-                            onChange={(val)=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, uom: val } : row))}
-                            options={[{value:'Piece', label:'Piece'},{value:'Tray', label:'Tray (30 pcs)'}]}
-                          />
-                        </div>
-                        <div className="pair"><strong>DoM</strong><input className="input" type="date" value={r.mfg_date||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, mfg_date: e.target.value } : row))} /></div>
-                        <div className="pair"><strong>Shelf Life</strong><input className="input" value={r.shelf_life||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, shelf_life: e.target.value } : row))} /></div>
-                        <div className="pair"><strong>Qty</strong><input className="input" value={r.quantity||''} onChange={e=> setRows(prev=> prev.map((row,i)=> i===idx ? { ...row, quantity: e.target.value } : row))} /></div>
-                        <div className="pair"><strong>SGST %</strong><input className="input" value={totals.sgst_percent.toFixed(2)} readOnly /></div>
-                        <div className="pair"><strong>CGST %</strong><input className="input" value={totals.cgst_percent.toFixed(2)} readOnly /></div>
-                        <div className="pair" style={{textAlign:'right'}}><strong>Total</strong><div>₹ {totals.totalAmount.toFixed(2)}</div></div>
+                        <div className="pair"><strong>Product</strong><div>{productLabel}</div></div>
+                        <div className="pair"><strong>Price/Unit</strong><div style={{textAlign:'right'}}>{r.price_per_unit || '-'}</div></div>
+                        <div className="pair"><strong>UOM</strong><div>{r.uom || 'Piece'}</div></div>
+                        <div className="pair"><strong>Date of Manufacturing</strong><div>{r.mfg_date || '-'}</div></div>
+                        <div className="pair"><strong>Shelf Life</strong><div>{r.shelf_life || '-'}</div></div>
+                        <div className="pair"><strong>Quantity</strong><div style={{textAlign:'right'}}>{r.quantity || '-'}</div></div>
+                        <div className="pair"><strong>SGST %</strong><div style={{textAlign:'right'}}>{totals.sgst_percent.toFixed(2)}</div></div>
+                        <div className="pair"><strong>CGST %</strong><div style={{textAlign:'right'}}>{totals.cgst_percent.toFixed(2)}</div></div>
+                        <div className="pair" style={{textAlign:'right'}}><strong>Total Amount</strong><div>₹ {totals.totalAmount.toFixed(2)}</div></div>
                       </div>
-                      <div className="btn-group" style={{marginTop:10}}>
+                      <div className="btn-group" style={{marginTop:10, justifyContent:'flex-end'}}>
+                        <button type="button" className="btn secondary btn-sm" onClick={()=>{ setEditIndex(idx); setEditForm(r); setShowEdit(true); }}>Edit</button>
                         <button type="button" className="btn danger btn-sm" onClick={()=> setRows(prev=> prev.filter((_,i)=> i!==idx))}>Delete</button>
                       </div>
                     </div>
@@ -331,6 +334,50 @@ const Purchases = () => {
           {success && <div className="toast">{success}</div>}
         </form>
       </Card>
+      {/* Edit Modal */}
+      {showEdit && editForm && (
+        <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setShowEdit(false)}>
+          <div className="card" style={{width:'min(640px, 92vw)'}} onClick={e=>e.stopPropagation()}>
+            <div className="card-header"><div className="card-title">Edit Item</div></div>
+            <div className="card-body">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div style={{overflow:'visible'}}>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Product (Material)</label>
+                  <Dropdown value={editForm.material_code||''} onChange={(code)=>{
+                    const mat = materials.find(m=> String(m.part_code) === String(code));
+                    const type = mat ? mat.metal_type : '';
+                    setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
+                  }} options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Price / Unit</label>
+                  <input className="input" value={editForm.price_per_unit||''} onChange={e=>setEditForm({...editForm, price_per_unit:e.target.value})} />
+                </div>
+                <div style={{overflow:'visible'}}>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>UOM</label>
+                  <Dropdown value={editForm.uom||'Piece'} onChange={(v)=>setEditForm({...editForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Date of Manufacturing</label>
+                  <input className="input date" type="date" value={editForm.mfg_date||''} onChange={e=>setEditForm({...editForm, mfg_date:e.target.value})} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Shelf Life</label>
+                  <input className="input" value={editForm.shelf_life||''} onChange={e=>setEditForm({...editForm, shelf_life:e.target.value})} />
+                </div>
+                <div>
+                  <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Quantity</label>
+                  <input className="input" value={editForm.quantity||''} onChange={e=>setEditForm({...editForm, quantity:e.target.value})} />
+                </div>
+              </div>
+              <div className="actions-row" style={{justifyContent:'flex-end', marginTop:12}}>
+                <button className="btn" onClick={()=>{ setRows(prev=> prev.map((row,i)=> i===editIndex ? { ...row, ...editForm } : row)); setShowEdit(false); }}>Save</button>
+                <button className="btn secondary" onClick={()=>setShowEdit(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Purchases list removed as requested; available in MIS */}
     </div>
