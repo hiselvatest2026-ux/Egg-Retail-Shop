@@ -255,7 +255,27 @@ const Purchases = () => {
                   {addFormErrors.mfg_date && <div className="form-help" style={{gridColumn:'1/-1'}}>{addFormErrors.mfg_date}</div>}
                   <input className="input" placeholder="Shelf life (e.g., 12 days)" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
                   <div>
-                    <input className="input" placeholder="Quantity *" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
+                    <input className="input" placeholder="Quantity *" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" onKeyDown={(e)=>{
+                      if (e.key==='Enter') {
+                        e.preventDefault();
+                        const errs = {};
+                        if (!addForm.material_code) errs.material_code = 'Product required';
+                        const price = Number(addForm.price_per_unit);
+                        if (!(price>0)) errs.price_per_unit = 'Price required';
+                        if (!addForm.uom) errs.uom = 'UOM required';
+                        if (!addForm.mfg_date) errs.mfg_date = 'DOM required';
+                        const qty = Number(addForm.quantity);
+                        if (!(qty>0)) errs.quantity = 'Quantity required';
+                        if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
+                        setAddFormErrors({});
+                        const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
+                        setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
+                        // Sticky UOM and Price
+                        setAddForm(prev=>({ material_code:'', material_type:'', price_per_unit: prev.price_per_unit, uom: prev.uom||'Piece', mfg_date:'', shelf_life:'', quantity:'' }));
+                        setAddSuccess('Item added');
+                        setTimeout(()=>setAddSuccess(''), 1500);
+                      }
+                    }} />
                     {addFormErrors.quantity && <div className="form-help">{addFormErrors.quantity}</div>}
                   </div>
                 </div>
