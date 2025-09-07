@@ -218,13 +218,6 @@ const InventoryManagement = () => {
           setSaveMsg('Closing stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
           }}>Save Closing</button>
           <button className="btn secondary" onClick={loadClosing}>Refresh</button>
-          {!closingMaterials.length && (
-            <button className="btn secondary" onClick={async()=>{
-              if (!openingMaterials.length) { try { await loadOpening(); } catch(_){} }
-              const prefill = (openingMaterials||[]).map(o=>({ material_code:o.material_code, material_type:o.material_type, quantity: String(o.quantity || 0) }));
-              setClosingMaterials(prefill);
-            }}>Prefill from Opening</button>
-          )}
         </div>
         {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
       </Card>
