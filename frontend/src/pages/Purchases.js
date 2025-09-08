@@ -126,7 +126,7 @@ const Purchases = () => {
           }
         }
         if (!productId) continue;
-        await createPurchaseItem(purchaseId, { product_id: Number(productId), quantity: qty, price });
+        await createPurchaseItem(purchaseId, { product_id: Number(productId), quantity: qty, price, mfg_date: r.mfg_date || null });
       }
       setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
       setForm({ vendor_id: '', total_purchase_value: '' });
