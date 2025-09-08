@@ -80,6 +80,10 @@ const MISReports = () => {
     }
   };
 
+  // Auto-load purchases on mount and when All shops toggles
+  React.useEffect(()=>{ loadReport('purchases','purchases.csv'); }, []);
+  React.useEffect(()=>{ loadReport('purchases','purchases.csv'); }, [allShops]);
+
   return (
     <div className="page">
       <div className="page-header">

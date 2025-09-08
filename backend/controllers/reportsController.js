@@ -17,6 +17,12 @@ function sendCsv(res, filename, headers, rows) {
 
 exports.purchasesCsv = async (req, res) => {
   try {
+    const locHeader = req.headers['x-shop-id'];
+    const locId = locHeader ? Number(locHeader) : null;
+    const allShops = String(req.query.all_shops||'') === '1';
+    const locFilterPI = allShops ? '' : (locId ? 'WHERE pi.location_id = $1' : 'WHERE 1=1');
+    const locFilterPU = allShops ? '' : (locId ? 'WHERE EXISTS (SELECT 1 FROM purchase_items x WHERE x.purchase_id = pu.id AND x.location_id = $1)' : '');
+    const params = allShops ? [] : (locId ? [locId] : []);
     // Prefer item-level details; include fallback rows for header-only purchases with no items
     const result = await pool.query(
       `WITH mm_guess AS (
@@ -45,6 +51,7 @@ exports.purchasesCsv = async (req, res) => {
          LEFT JOIN products pr ON pr.id = pi.product_id
          LEFT JOIN mm_guess g ON g.product_id = pi.product_id
          LEFT JOIN metal_master mm ON mm.part_code = g.part_code
+         ${locFilterPI}
        ),
        header_only AS (
          SELECT pu.id AS id,
@@ -60,12 +67,13 @@ exports.purchasesCsv = async (req, res) => {
          FROM purchases pu
          LEFT JOIN vendors v ON v.id = pu.vendor_id
          WHERE NOT EXISTS (SELECT 1 FROM purchase_items pi WHERE pi.purchase_id = pu.id)
+         ${locFilterPU}
        )
        SELECT * FROM item_rows
        UNION ALL
        SELECT * FROM header_only
        ORDER BY purchase_date DESC, id DESC`
-    );
+    , params);
     const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','product_name','price_per_unit','quantity','gst_percent','total'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
