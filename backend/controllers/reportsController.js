@@ -94,28 +94,32 @@ exports.salesCsv = async (req, res) => {
          FROM sale_items si
          JOIN products p ON p.id = si.product_id
          GROUP BY si.sale_id
+       ),
+       computed AS (
+         SELECT sale_id, SUM(quantity * price) AS computed_total
+         FROM sale_items
+         GROUP BY sale_id
        )
        SELECT s.id,
               to_char((s.sale_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS sale_date,
               s.customer_id,
               c.name AS customer_name,
-              COALESCE(i.items_text, s.product_name, s.egg_type) AS product_name,
+              COALESCE(i.items_text, s.product_name, s.egg_type, CASE WHEN ct.computed_total IS NULL AND COALESCE(p.paid,0) > 0 THEN 'Payment Only' ELSE '-' END) AS product_name,
               COALESCE(s.category, 'Retail') AS category,
               COALESCE(s.sale_type, 'Cash') AS sale_type,
               s.payment_method,
-              s.total,
+              /* Prefer computed total from items; else sale.total; else paid to avoid negative balance */
+              COALESCE(ct.computed_total, NULLIF(s.total, 0), COALESCE(p.paid,0), 0) AS total,
               COALESCE(p.paid,0) AS paid,
-              (COALESCE(s.total,0) - COALESCE(p.paid,0)) AS balance,
-              rt.route_name,
-              rt.vehicle_number
+              (COALESCE(ct.computed_total, NULLIF(s.total, 0), COALESCE(p.paid,0), 0) - COALESCE(p.paid,0)) AS balance
        FROM sales s
        LEFT JOIN customers c ON c.id = s.customer_id
        LEFT JOIN paid p ON p.invoice_id = s.id
-       LEFT JOIN route_trips rt ON rt.id = s.route_trip_id
        LEFT JOIN items i ON i.sale_id = s.id
+       LEFT JOIN computed ct ON ct.sale_id = s.id
        ORDER BY s.sale_date DESC, s.id DESC`
     );
-    const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','total','paid','balance','route_name','vehicle_number'];
+    const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','total','paid','balance'];
     sendCsv(res, 'sales.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
