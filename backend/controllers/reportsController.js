@@ -147,76 +147,118 @@ exports.collectionsCsv = async (req, res) => {
 
 exports.stockCsv = async (req, res) => {
   try {
-    const { start, end } = req.query;
-    // Default period: today
-    const startExpr = start ? `TO_TIMESTAMP($1, 'YYYY-MM-DD"T"HH24:MI:SS')` : `DATE_TRUNC('day', NOW())`;
-    const endExpr = end ? `TO_TIMESTAMP(${start ? '$2' : '$1'}, 'YYYY-MM-DD"T"HH24:MI:SS')` : `NOW()`;
+    const { start, end, all_shops } = req.query;
+    const locHeader = req.headers['x-shop-id'];
+    const locId = all_shops === '1' ? null : (locHeader ? Number(locHeader) : null);
+    const hasWindow = !!start; // if start provided, use windowed mode; else snapshot-to-date
 
     const params = [];
-    if (start) params.push(start);
-    if (end) params.push(end);
+    const pushParam = (v) => { params.push(v); return `$${params.length}`; };
 
-    const sql = `
-      WITH all_ids AS (
-        SELECT id AS product_id, name FROM products
-      ),
-      opening_purchases AS (
-        SELECT pi.product_id, SUM(pi.quantity) AS qty
-        FROM purchase_items pi
-        JOIN purchases p ON p.id = pi.purchase_id
-        WHERE p.purchase_date < ${startExpr}
-        GROUP BY pi.product_id
-      ),
-      opening_sales AS (
-        SELECT si.product_id, SUM(si.quantity) AS qty
-        FROM sale_items si
-        JOIN sales s ON s.id = si.sale_id
-        WHERE s.sale_date < ${startExpr}
-        GROUP BY si.product_id
-      ),
-      opening_adj AS (
-        SELECT a.product_id, SUM(a.quantity) AS qty
-        FROM stock_adjustments a
-        WHERE a.created_at < ${startExpr}
-        GROUP BY a.product_id
-      ),
-      period_purchases AS (
-        SELECT pi.product_id, SUM(pi.quantity) AS qty
-        FROM purchase_items pi
-        JOIN purchases p ON p.id = pi.purchase_id
-        WHERE p.purchase_date >= ${startExpr} AND p.purchase_date <= ${endExpr}
-        GROUP BY pi.product_id
-      ),
-      period_sales AS (
-        SELECT si.product_id, SUM(si.quantity) AS qty
-        FROM sale_items si
-        JOIN sales s ON s.id = si.sale_id
-        WHERE s.sale_date >= ${startExpr} AND s.sale_date <= ${endExpr}
-        GROUP BY si.product_id
-      ),
-      period_adj AS (
-        SELECT a.product_id, SUM(a.quantity) AS qty
-        FROM stock_adjustments a
-        WHERE a.created_at >= ${startExpr} AND a.created_at <= ${endExpr}
-        GROUP BY a.product_id
-      )
-      SELECT 
-        coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id) AS product_id,
-        coalesce(ai.name, 'Product #' || coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id)) AS name,
-        COALESCE(op.qty,0) - COALESCE(os.qty,0) - COALESCE(oa.qty,0) AS opening,
-        COALESCE(pp.qty,0) AS purchase,
-        COALESCE(ps.qty,0) AS sales,
-        COALESCE(pa.qty,0) AS adjustments,
-        (COALESCE(op.qty,0) - COALESCE(os.qty,0) - COALESCE(oa.qty,0)) + COALESCE(pp.qty,0) - COALESCE(ps.qty,0) - COALESCE(pa.qty,0) AS closing
-      FROM all_ids ai
-      FULL OUTER JOIN opening_purchases op ON op.product_id = ai.product_id
-      FULL OUTER JOIN opening_sales os ON os.product_id = ai.product_id
-      FULL OUTER JOIN opening_adj oa ON oa.product_id = ai.product_id
-      FULL OUTER JOIN period_purchases pp ON pp.product_id = ai.product_id
-      FULL OUTER JOIN period_sales ps ON ps.product_id = ai.product_id
-      FULL OUTER JOIN period_adj pa ON pa.product_id = ai.product_id
-      ORDER BY name ASC
-    `;
+    const condPI = locId ? `WHERE pi.location_id = ${pushParam(locId)}` : '';
+    const condSI = locId ? `WHERE si.location_id = ${pushParam(locId)}` : '';
+
+    let sql;
+    if (!hasWindow) {
+      // Snapshot to date: opening from opening_stocks; purchases/sales/adjustments cumulative; closing derived
+      sql = `
+        WITH all_ids AS (
+          SELECT id AS product_id, name FROM products
+        ),
+        opening AS (
+          SELECT os.product_id, SUM(os.quantity) AS qty FROM opening_stocks os GROUP BY os.product_id
+        ),
+        purchase_qty AS (
+          SELECT pi.product_id, SUM(pi.quantity) AS qty FROM purchase_items pi ${condPI} GROUP BY pi.product_id
+        ),
+        sales_qty AS (
+          SELECT si.product_id, SUM(si.quantity) AS qty FROM sale_items si ${condSI} GROUP BY si.product_id
+        ),
+        adjustments AS (
+          SELECT sa.product_id,
+                 SUM(CASE WHEN sa.adjustment_type IN ('Wastage','Breakage','Missing') THEN sa.quantity ELSE 0 END) AS neg_qty
+          FROM stock_adjustments sa GROUP BY sa.product_id
+        )
+        SELECT 
+          coalesce(ai.product_id, op.product_id, pq.product_id, sq.product_id, adj.product_id) AS product_id,
+          coalesce(ai.name, 'Product #' || coalesce(ai.product_id, op.product_id, pq.product_id, sq.product_id, adj.product_id)) AS name,
+          COALESCE(op.qty,0) AS opening,
+          COALESCE(pq.qty,0) AS purchase,
+          COALESCE(sq.qty,0) AS sales,
+          COALESCE(adj.neg_qty,0) AS adjustments,
+          (COALESCE(op.qty,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.neg_qty,0)) AS closing
+        FROM all_ids ai
+        LEFT JOIN opening op ON op.product_id = ai.product_id
+        LEFT JOIN purchase_qty pq ON pq.product_id = ai.product_id
+        LEFT JOIN sales_qty sq ON sq.product_id = ai.product_id
+        LEFT JOIN adjustments adj ON adj.product_id = ai.product_id
+        ORDER BY name ASC`;
+    } else {
+      const startParam = pushParam(start);
+      const endParam = pushParam(end || start);
+      // Windowed report using provided start/end timestamps (inclusive)
+      sql = `
+        WITH all_ids AS (
+          SELECT id AS product_id, name FROM products
+        ),
+        opening_purchases AS (
+          SELECT pi.product_id, SUM(pi.quantity) AS qty
+          FROM purchase_items pi JOIN purchases p ON p.id = pi.purchase_id
+          WHERE p.purchase_date < TO_TIMESTAMP(${startParam}, 'YYYY-MM-DD"T"HH24:MI:SS') ${locId ? `AND pi.location_id = ${pushParam(locId)}` : ''}
+          GROUP BY pi.product_id
+        ),
+        opening_sales AS (
+          SELECT si.product_id, SUM(si.quantity) AS qty
+          FROM sale_items si JOIN sales s ON s.id = si.sale_id
+          WHERE s.sale_date < TO_TIMESTAMP(${startParam}, 'YYYY-MM-DD"T"HH24:MI:SS') ${locId ? `AND si.location_id = ${pushParam(locId)}` : ''}
+          GROUP BY si.product_id
+        ),
+        opening_adj AS (
+          SELECT a.product_id, SUM(a.quantity) AS qty
+          FROM stock_adjustments a
+          WHERE a.created_at < TO_TIMESTAMP(${startParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+          GROUP BY a.product_id
+        ),
+        period_purchases AS (
+          SELECT pi.product_id, SUM(pi.quantity) AS qty
+          FROM purchase_items pi JOIN purchases p ON p.id = pi.purchase_id
+          WHERE p.purchase_date >= TO_TIMESTAMP(${startParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+            AND p.purchase_date <= TO_TIMESTAMP(${endParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+            ${locId ? `AND pi.location_id = ${pushParam(locId)}` : ''}
+          GROUP BY pi.product_id
+        ),
+        period_sales AS (
+          SELECT si.product_id, SUM(si.quantity) AS qty
+          FROM sale_items si JOIN sales s ON s.id = si.sale_id
+          WHERE s.sale_date >= TO_TIMESTAMP(${startParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+            AND s.sale_date <= TO_TIMESTAMP(${endParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+            ${locId ? `AND si.location_id = ${pushParam(locId)}` : ''}
+          GROUP BY si.product_id
+        ),
+        period_adj AS (
+          SELECT a.product_id, SUM(a.quantity) AS qty
+          FROM stock_adjustments a
+          WHERE a.created_at >= TO_TIMESTAMP(${startParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+            AND a.created_at <= TO_TIMESTAMP(${endParam}, 'YYYY-MM-DD"T"HH24:MI:SS')
+          GROUP BY a.product_id
+        )
+        SELECT 
+          coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id) AS product_id,
+          coalesce(ai.name, 'Product #' || coalesce(ai.product_id, op.product_id, os.product_id, oa.product_id, pp.product_id, ps.product_id, pa.product_id)) AS name,
+          COALESCE(op.qty,0) - COALESCE(os.qty,0) - COALESCE(oa.qty,0) AS opening,
+          COALESCE(pp.qty,0) AS purchase,
+          COALESCE(ps.qty,0) AS sales,
+          COALESCE(pa.qty,0) AS adjustments,
+          (COALESCE(op.qty,0) - COALESCE(os.qty,0) - COALESCE(oa.qty,0)) + COALESCE(pp.qty,0) - COALESCE(ps.qty,0) - COALESCE(pa.qty,0) AS closing
+        FROM all_ids ai
+        FULL OUTER JOIN opening_purchases op ON op.product_id = ai.product_id
+        FULL OUTER JOIN opening_sales os ON os.product_id = ai.product_id
+        FULL OUTER JOIN opening_adj oa ON oa.product_id = ai.product_id
+        FULL OUTER JOIN period_purchases pp ON pp.product_id = ai.product_id
+        FULL OUTER JOIN period_sales ps ON ps.product_id = ai.product_id
+        FULL OUTER JOIN period_adj pa ON pa.product_id = ai.product_id
+        ORDER BY name ASC`;
+    }
 
     const result = await pool.query(sql, params);
     const headers = ['product_id','name','opening','purchase','sales','adjustments','closing'];
