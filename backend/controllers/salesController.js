@@ -184,11 +184,8 @@ exports.getSaleInvoice = async (req, res) => {
       [id]
     );
 
-    // Item rows
+    // Item rows (may be empty for some older/legacy sales)
     const items = itemsResult.rows || [];
-    if (!items || items.length === 0) {
-      return res.status(400).json({ message: 'No line items for this sale. Please add items before generating invoice.' });
-    }
 
     // Company settings
     const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
@@ -197,6 +194,18 @@ exports.getSaleInvoice = async (req, res) => {
     // Tax breakdown per item (assume intra-state split when taxable)
     const isTaxable = sale.tax_applicability === 'Taxable';
     let workingItems = items;
+    // Fallback: if there are no sale_items, synthesize a single item so invoice renders
+    if (!workingItems || workingItems.length === 0) {
+      const amount = Number(sale.total || 0);
+      // If total is 0, try to use paid amount as the displayed item amount
+      let paidAmount = 0;
+      try {
+        const pr = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);
+        paidAmount = Number(pr.rows[0]?.paid || 0);
+      } catch(_) {}
+      const fallback = amount > 0 ? amount : paidAmount;
+      workingItems = [{ id: 0, product_id: null, product_name: sale.product_name || 'Item', quantity: 1, price: Number(fallback||0), line_total: Number(fallback||0), hsn_sac: null, gst_percent: 0 }];
+    }
 
     // Compute taxes assuming stored prices are exclusive of tax
     let subtotal = 0, cgst_total = 0, sgst_total = 0, igst_total = 0;
