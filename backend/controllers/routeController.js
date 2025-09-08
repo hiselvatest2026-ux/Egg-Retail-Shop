@@ -7,7 +7,17 @@ exports.listRoutes = async (_req, res) => {
 
 exports.createRoute = async (req, res) => {
   try {
-    const { route_number, route_name, vehicle_number, active = true, salesman_name, mobile, area_name, pincode } = req.body;
+    let { route_number, route_name, vehicle_number, active = true, salesman_name, mobile, area_name, pincode } = req.body;
+    // Auto-generate route_number if missing (e.g., R001, R002 ...)
+    if (!route_number) {
+      try {
+        const nx = await pool.query(`SELECT COALESCE(MAX(NULLIF(regexp_replace(route_number, '\\D', '', 'g'), '')::INT), 0) + 1 AS nxt FROM routes`);
+        const n = String(nx.rows[0]?.nxt || 1);
+        route_number = 'R' + n.padStart(3, '0');
+      } catch (_) {
+        route_number = 'R001';
+      }
+    }
     // Backward-compatible insert: include only columns that exist
     const colsRes = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='routes'`);
     const present = new Set((colsRes.rows||[]).map(r=>r.column_name));
