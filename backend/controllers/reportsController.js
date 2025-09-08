@@ -21,7 +21,8 @@ exports.purchasesCsv = async (req, res) => {
     const locId = locHeader ? Number(locHeader) : null;
     const allShops = String(req.query.all_shops||'') === '1';
     const locFilterPI = allShops ? '' : (locId ? 'WHERE pi.location_id = $1' : 'WHERE 1=1');
-    const locFilterPU = allShops ? '' : (locId ? 'WHERE EXISTS (SELECT 1 FROM purchase_items x WHERE x.purchase_id = pu.id AND x.location_id = $1)' : '');
+    // Append to existing WHERE clause in header_only; must start with AND when present
+    const locFilterPU = allShops ? '' : (locId ? 'AND EXISTS (SELECT 1 FROM purchase_items x WHERE x.purchase_id = pu.id AND x.location_id = $1)' : '');
     const params = allShops ? [] : (locId ? [locId] : []);
     // Prefer item-level details; include fallback rows for header-only purchases with no items
     const result = await pool.query(
