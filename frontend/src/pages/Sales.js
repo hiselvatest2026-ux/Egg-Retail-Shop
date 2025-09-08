@@ -105,6 +105,22 @@ const Sales = () => {
     return (lineItems||[]).reduce((sum, it)=> sum + computeItemGst(it).total, 0);
   }, [lineItems, materials]);
 
+  // Live preview for current addForm line so total reflects instantly as user types
+  const addFormTotalWithGst = useMemo(() => {
+    const qtyNum = Number(addForm.qty||0);
+    const priceNum = Number(addForm.price_per_piece||0);
+    if (!(qtyNum>0) || !(priceNum>0)) return 0;
+    const itemLike = {
+      material_code: addForm.material_code,
+      material_type: addForm.material_type,
+      qty_unit: addForm.uom || 'Piece',
+      qty_pieces: (addForm.uom||'Piece') === 'Piece' ? qtyNum : '',
+      trays: (addForm.uom||'Piece') === 'Tray' ? qtyNum : '',
+      price_per_piece: priceNum
+    };
+    return computeItemGst(itemLike).total;
+  }, [addForm.material_code, addForm.material_type, addForm.uom, addForm.qty, addForm.price_per_piece, materials]);
+
   const fetchSales = async () => {
     try {
       const res = await getSales();
@@ -428,7 +444,7 @@ const Sales = () => {
               <label>Total Amount</label>
               {/* Highlighted total badge */}
               <div style={{display:'flex', alignItems:'center'}}>
-                <div className="badge" style={{fontSize:16, padding:'8px 12px', background:'#0d1520', color:'#60a5fa', borderColor:'#1e3a5f', fontWeight:900}}>₹ {itemsTotalWithGst.toFixed(2)}</div>
+                <div className="badge" style={{fontSize:16, padding:'8px 12px', background:'#0d1520', color:'#60a5fa', borderColor:'#1e3a5f', fontWeight:900}}>₹ {(itemsTotalWithGst + addFormTotalWithGst).toFixed(2)}</div>
               </div>
             </div>
           </div>
