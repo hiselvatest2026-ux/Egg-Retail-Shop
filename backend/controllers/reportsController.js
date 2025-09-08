@@ -37,7 +37,7 @@ exports.purchasesCsv = async (req, res) => {
        ),
        item_rows AS (
          SELECT pu.id AS id,
-                pu.purchase_date,
+                to_char((pu.purchase_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS purchase_date,
                 pu.vendor_id,
                 v.vendor_code,
                 v.name AS vendor_name,
@@ -56,7 +56,7 @@ exports.purchasesCsv = async (req, res) => {
        ),
        header_only AS (
          SELECT pu.id AS id,
-                pu.purchase_date,
+                to_char((pu.purchase_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS purchase_date,
                 pu.vendor_id,
                 v.vendor_code,
                 v.name AS vendor_name,
@@ -96,7 +96,7 @@ exports.salesCsv = async (req, res) => {
          GROUP BY si.sale_id
        )
        SELECT s.id,
-              s.sale_date,
+              to_char((s.sale_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS sale_date,
               s.customer_id,
               c.name AS customer_name,
               COALESCE(i.items_text, s.product_name, s.egg_type) AS product_name,
@@ -124,7 +124,7 @@ exports.collectionsCsv = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT p.id,
-              p.payment_date,
+              to_char((p.payment_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS payment_date,
               p.customer_id,
               c.name AS customer_name,
               p.invoice_id,
