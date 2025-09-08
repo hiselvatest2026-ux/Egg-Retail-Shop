@@ -187,6 +187,7 @@ const Sales = () => {
     setError(''); setSuccess('');
     if (!form.customer_id) { setError('Please select a customer.'); return; }
     const hasItems = lineItems.length > 0;
+    if (!hasItems) { setError('Add at least one item before generating invoice.'); return; }
     if (!hasItems) {
       if (!form.product_name || !form.material_code) { setError('Please select a product.'); return; }
       if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }

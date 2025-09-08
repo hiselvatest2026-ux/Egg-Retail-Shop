@@ -64,6 +64,26 @@ router.post('/clear-transactions', async (_req, res) => {
   }
 });
 
+// Backfill legacy sales without items: create a single fallback 0%-GST item equal to sale.total
+router.post('/migrate/backfill-sale-items', async (_req, res) => {
+  try {
+    await pool.query('BEGIN');
+    const salesRes = await pool.query(`SELECT s.id, s.total FROM sales s WHERE NOT EXISTS (SELECT 1 FROM sale_items si WHERE si.sale_id = s.id) AND COALESCE(s.total,0) > 0`);
+    let created = 0;
+    for (const row of salesRes.rows) {
+      const rate = Number(row.total||0);
+      if (!(rate>0)) continue;
+      await pool.query(`INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1, NULL, 1, $2)`, [row.id, rate]);
+      created++;
+    }
+    await pool.query('COMMIT');
+    res.json({ message: `Backfilled ${created} sales with synthetic line items.` });
+  } catch (e) {
+    try { await pool.query('ROLLBACK'); } catch(_){}
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // Danger: Clear ALL data (masters and transactions). Leaves empty DB with schema intact
 router.post('/clear-all', async (_req, res) => {
   try {

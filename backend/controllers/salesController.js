@@ -184,8 +184,11 @@ exports.getSaleInvoice = async (req, res) => {
       [id]
     );
 
-    // Item rows (may be empty for old records)
+    // Item rows
     const items = itemsResult.rows || [];
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: 'No line items for this sale. Please add items before generating invoice.' });
+    }
 
     // Company settings
     const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
@@ -194,23 +197,6 @@ exports.getSaleInvoice = async (req, res) => {
     // Tax breakdown per item (assume intra-state split when taxable)
     const isTaxable = sale.tax_applicability === 'Taxable';
     let workingItems = items;
-    // Fallback: if no sale_items present, synthesize a single item from sale.product_name and sale.total
-    if (!workingItems || workingItems.length === 0) {
-      let hsn = null, gstp = 0, prodName = sale.product_name || 'Product';
-      // Try to guess HSN/GST from metal_master by product keywords
-      const guessRes = await pool.query(`
-        SELECT hsn_sac, gst_percent FROM metal_master
-        WHERE (LOWER(metal_type) LIKE CASE WHEN LOWER($1) LIKE 'egg%' THEN 'egg%' ELSE '%' END)
-           OR (LOWER(metal_type) LIKE CASE WHEN LOWER($1) LIKE 'paneer%' OR LOWER($1) LIKE 'panner%' THEN 'paneer%' ELSE '%' END)
-        ORDER BY CASE WHEN LOWER(metal_type) LIKE 'egg%' THEN 0 WHEN LOWER(metal_type) LIKE 'paneer%' OR LOWER(metal_type) LIKE 'panner%' THEN 1 ELSE 2 END, id ASC
-        LIMIT 1
-      `, [prodName]);
-      if (guessRes.rows.length > 0) {
-        hsn = guessRes.rows[0].hsn_sac || null;
-        gstp = Number(guessRes.rows[0].gst_percent || 0);
-      }
-      workingItems = [{ id: 0, product_id: null, product_name: prodName, quantity: 1, price: Number(sale.total||0), line_total: Number(sale.total||0), hsn_sac: hsn, gst_percent: gstp }];
-    }
 
     // Compute taxes assuming stored prices are exclusive of tax
     let subtotal = 0, cgst_total = 0, sgst_total = 0, igst_total = 0;
