@@ -187,7 +187,23 @@ const Sales = () => {
     setError(''); setSuccess('');
     if (!form.customer_id) { setError('Please select a customer.'); return; }
     const hasItems = lineItems.length > 0;
-    if (!hasItems) { setError('Add at least one item before generating invoice.'); return; }
+    // Allow single-row quick invoice: if no items yet but Add Item form is valid, use it
+    const canUseAddForm = addForm.material_code && Number(addForm.qty||0) > 0 && Number(addForm.price_per_piece||0) > 0;
+    let itemsToSave = lineItems;
+    if (!hasItems && canUseAddForm) {
+      const qtyNum = Number(addForm.qty||0);
+      const effQty = (addForm.uom||'Piece')==='Tray' ? qtyNum*30 : qtyNum;
+      itemsToSave = [{
+        material_code: addForm.material_code,
+        material_type: addForm.material_type,
+        qty_unit: addForm.uom || 'Piece',
+        qty_pieces: (addForm.uom||'Piece')==='Piece' ? String(qtyNum) : '',
+        trays: (addForm.uom||'Piece')==='Tray' ? String(qtyNum) : '',
+        price_per_piece: Number(addForm.price_per_piece||0),
+        effectiveQty: effQty
+      }];
+    }
+    if (!hasItems && !canUseAddForm) { setError('Add at least one item (or fill Add Item and we will include it) before generating invoice.'); return; }
     if (!hasItems) {
       if (!form.product_name || !form.material_code) { setError('Please select a product.'); return; }
       if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Please enter a valid quantity.'); return; }
@@ -206,9 +222,9 @@ const Sales = () => {
       }
     } catch(_){}
     try {
-      if (hasItems) {
+      if (itemsToSave.length > 0) {
         // Pre-check stock for each line item; abort early if insufficient
-        const stockChecks = await Promise.all(lineItems.map(async (it) => {
+        const stockChecks = await Promise.all(itemsToSave.map(async (it) => {
           let pid = it.product_id ? Number(it.product_id) : null;
           if (!pid && it.material_code) {
             const mat = materials.find(m=> String(m.part_code)===String(it.material_code));
@@ -237,7 +253,7 @@ const Sales = () => {
         }
         const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null });
         const newSale = res.data;
-        const tasks = lineItems.map(async (it) => {
+        const tasks = itemsToSave.map(async (it) => {
           const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : (it.effectiveQty != null ? Number(it.effectiveQty||0) : Number(it.qty_pieces||0));
           const price = Number(it.price_per_piece || 0);
           if (!(effQty>0)) return null;
