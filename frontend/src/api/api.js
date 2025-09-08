@@ -26,6 +26,9 @@ axios.interceptors.request.use((config) => {
   } catch (_) {}
   return config;
 });
+
+// Set a sane global timeout to avoid hanging spinners (e.g., cold starts)
+axios.defaults.timeout = 10000; // 10 seconds
 export const getPurchases = () => axios.get(`${API_URL}/purchases`);
 export const createPurchase = (data) => axios.post(`${API_URL}/purchases`, data);
 export const updatePurchase = (id, data) => axios.put(`${API_URL}/purchases/${id}`, data);
