@@ -25,14 +25,21 @@ async function seedDefaults() {
   try { await pool.query(`INSERT INTO metal_master (part_code, metal_type, gst_percent, description) VALUES ('M00001','Egg',0,'Egg products'),('M00002','Panner',5,'Panner products')`); } catch (e) {}
   try { await pool.query(`INSERT INTO products (name, price, batch_number, expiry_date) VALUES ('Egg Large 12pc',6.00,'BATCH-EGG-001', NOW() + INTERVAL '20 days'),('Panner 200g',200.00,'BATCH-PAN-001', NOW() + INTERVAL '15 days')`); } catch (e) {}
   try { await pool.query(`INSERT INTO opening_stocks (product_id, quantity) VALUES (1, 100), (2, 40)`); await pool.query(`INSERT INTO opening_stocks_material (material_code, quantity) VALUES ('M00001',60),('M00002',20)`); } catch (e) {}
-  try { await pool.query(`INSERT INTO pricing_master (customer_id, category, material_code, base_price, gst_percent) VALUES 
-    (1,'Retail','M00001',6.00,0),
-    (1,'Retail','M00002',200.00,5),
-    (3,'Wholesale','M00001',5.50,0),
-    (3,'Wholesale','M00002',190.00,5),
-    (NULL,'Walk-in','M00001',6.00,0),
-    (NULL,'Walk-in','M00002',210.00,5)
-  `); } catch (e) {}
+  try {
+    await pool.query(`
+      INSERT INTO pricing_master (customer_id, category, material_code, base_price, gst_percent) VALUES 
+      (1,'Retail','M00001',6.00,0),
+      (1,'Retail','M00002',200.00,5),
+      (3,'Wholesale','M00001',5.50,0),
+      (3,'Wholesale','M00002',190.00,5),
+      (NULL,'Retail','M00001',6.00,0),
+      (NULL,'Retail','M00002',210.00,5),
+      (NULL,'Wholesale','M00001',5.50,0),
+      (NULL,'Wholesale','M00002',195.00,5),
+      (NULL,'Walk-in','M00001',6.00,0),
+      (NULL,'Walk-in','M00002',210.00,5)
+    `);
+  } catch (e) {}
   // Purchases and Sales per location (if location_id columns exist)
   try {
     const p1 = await pool.query(`INSERT INTO purchases (vendor_id, product_name, price_per_unit, quantity, gst_percent, total) VALUES (1,'Egg',6.00,150,0,900.00) RETURNING id`);
