@@ -61,9 +61,23 @@ router.get('/closing-stocks/materials', async (req, res) => {
     // Materials
     const matsRes = await pool.query(`SELECT part_code AS material_code, metal_type AS material_type FROM metal_master ORDER BY part_code ASC`);
     const materials = matsRes.rows;
-    // Opening (no location column at material level currently)
-    const openingRes = await pool.query(`SELECT material_code, COALESCE(quantity,0) AS quantity FROM opening_stocks_material`);
-    const openingMap = new Map(openingRes.rows.map(r=>[r.material_code, Number(r.quantity||0)]));
+    // Opening derived from product opening mapped to materials (keeps consistency with product-level view)
+    const openingRes = await pool.query(`
+      WITH gp AS (
+        SELECT id AS product_id,
+               CASE
+                 WHEN LOWER(name) LIKE 'egg%' THEN 'M00001'
+                 WHEN LOWER(name) LIKE 'paneer%' OR LOWER(name) LIKE 'panner%' THEN 'M00002'
+                 ELSE NULL
+               END AS part_code
+        FROM products
+      )
+      SELECT gp.part_code AS material_code, COALESCE(SUM(os.quantity),0) AS qty
+      FROM opening_stocks os
+      JOIN gp ON gp.product_id = os.product_id
+      GROUP BY gp.part_code
+    `);
+    const openingMap = new Map(openingRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
     // Guess mapping from product to material_code
     const purchRes = await pool.query(`
       WITH gp AS (
