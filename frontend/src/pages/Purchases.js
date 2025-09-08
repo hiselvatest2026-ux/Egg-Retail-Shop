@@ -98,6 +98,15 @@ const Purchases = () => {
     setError(''); setSuccess('');
     if (!form.vendor_id) { setError('Please select a vendor.'); return; }
     if (!rows.length) { setError('Please add at least one row.'); return; }
+    // Validate manual total equals computed items total
+    const manualTotalNum = Number(form.total_purchase_value);
+    if (!isFinite(manualTotalNum)) { setError('Please enter a valid Total Purchase Value.'); return; }
+    const manualCents = Math.round(manualTotalNum * 100);
+    const itemsCents = Math.round(Number(itemsGrandTotal || 0) * 100);
+    if (manualCents !== itemsCents) {
+      setError(`Total Purchase Value (₹ ${manualTotalNum.toFixed(2)}) must equal Items Total (₹ ${itemsGrandTotal.toFixed(2)}).`);
+      return;
+    }
     try {
       // Create minimal header, then items based on rows
       let purchaseId = editing;
@@ -211,6 +220,9 @@ const Purchases = () => {
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Total Purchase Value (manual)</label>
             <input className="input" type="number" step="0.01" value={form.total_purchase_value} inputMode="decimal" onChange={e=>setForm({...form, total_purchase_value: e.target.value})} />
+            {(rows.length>0 && String(form.total_purchase_value||'').length>0) && (Math.round(Number(form.total_purchase_value||0)*100) !== Math.round(itemsGrandTotal*100)) && (
+              <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
+            )}
           </div>
 
           {/* Editable Purchases Table */}
