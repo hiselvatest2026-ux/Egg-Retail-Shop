@@ -119,18 +119,34 @@ const Purchases = () => {
         const price = Number(r.price_per_unit || 0);
         const qty = Number(r.quantity || 0);
         if (!(qty>0)) continue;
-        // Map to a product_id if possible by material type
+        // Robust product mapping from material to product
+        const normalize = (s) => String(s||'').toLowerCase();
+        const isPaneerLike = (s) => /paneer|panner/.test(normalize(s));
+        const isEggLike = (s) => /egg/.test(normalize(s));
+        const findByHeuristics = (label) => {
+          const norm = normalize(label);
+          // Priority: exact contains, then keyword families
+          let cands = products.filter(p => {
+            const pn = normalize(p.name);
+            return pn === norm || pn.includes(norm) || norm.includes(pn);
+          });
+          if (cands.length === 0 && isPaneerLike(norm)) {
+            cands = products.filter(p => /paneer|panner/.test(normalize(p.name)));
+          }
+          if (cands.length === 0 && isEggLike(norm)) {
+            cands = products.filter(p => /egg/.test(normalize(p.name)));
+          }
+          return cands[0]?.id || null;
+        };
         let productId = null;
-        if (r.material_type) {
-          const prod = products.find(p => String(p.name).toLowerCase() === String(r.material_type).toLowerCase());
-          if (prod) productId = prod.id;
-        }
-        if (!productId && r.material_code) {
+        if (r.material_code) {
           const mat = materials.find(m => String(m.part_code) === String(r.material_code));
           if (mat) {
-            const prod2 = products.find(p => String(p.name).toLowerCase() === String(mat.metal_type||'').toLowerCase());
-            if (prod2) productId = prod2.id;
+            productId = findByHeuristics(mat.metal_type);
           }
+        }
+        if (!productId && r.material_type) {
+          productId = findByHeuristics(r.material_type);
         }
         if (!productId) continue;
         await createPurchaseItem(purchaseId, { product_id: Number(productId), quantity: qty, price, mfg_date: r.mfg_date || null });
