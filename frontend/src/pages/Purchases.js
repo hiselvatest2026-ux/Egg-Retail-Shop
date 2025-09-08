@@ -222,7 +222,8 @@ const Purchases = () => {
             <div className="card" style={{marginTop:8}}>
               <div className="card-body">
                 <div className="form-row" style={{alignItems:'end'}}>
-                  <div style={{overflow:'visible'}}>
+                  <div className="input-group" style={{overflow:'visible'}}>
+                    <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
                     <Dropdown
                       value={addForm.material_code}
                       onChange={(code)=>{
@@ -234,27 +235,36 @@ const Purchases = () => {
                     />
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
-                  <div>
-                    <input className="input" placeholder="Price / Unit *" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
+                  <div className="input-group">
+                    <label>Price / Unit <span style={{color:'#fca5a5'}}>*</span></label>
+                    <input className="input" placeholder="Price / Unit" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
                     {addFormErrors.price_per_unit && <div className="form-help">{addFormErrors.price_per_unit}</div>}
                   </div>
-                  <div style={{overflow:'visible'}}>
+                  <div className="input-group" style={{overflow:'visible'}}>
+                    <label>UOM <span style={{color:'#fca5a5'}}>*</span></label>
                     <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                     {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
                   </div>
-                  <input
-                    className="input date"
-                    type="date"
-                    aria-label="DOM"
-                    title="DOM"
-                    placeholder="DOM*"
-                    value={addForm.mfg_date}
-                    onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
-                  />
+                  <div className="input-group">
+                    <label>DOM <span style={{color:'#fca5a5'}}>*</span></label>
+                    <input
+                      className="input date"
+                      type="date"
+                      aria-label="DOM"
+                      title="DOM"
+                      placeholder="DOM"
+                      value={addForm.mfg_date}
+                      onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
+                    />
+                  </div>
                   {addFormErrors.mfg_date && <div className="form-help" style={{gridColumn:'1/-1'}}>{addFormErrors.mfg_date}</div>}
-                  <input className="input" placeholder="Shelf life (e.g., 12 days)" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
-                  <div>
-                    <input className="input" placeholder="Quantity *" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" onKeyDown={(e)=>{
+                  <div className="input-group">
+                    <label>Shelf Life</label>
+                    <input className="input" placeholder="e.g., 12 days" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
+                  </div>
+                  <div className="input-group">
+                    <label>Quantity <span style={{color:'#fca5a5'}}>*</span></label>
+                    <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" onKeyDown={(e)=>{
                       if (e.key==='Enter') {
                         e.preventDefault();
                         const errs = {};
