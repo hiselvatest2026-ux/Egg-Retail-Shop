@@ -346,29 +346,29 @@ const Purchases = () => {
             <div className="hidden sm:block overflow-x-auto">
               <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
                 <colgroup>
-                  <col style={{width:'28%'}} />
+                  <col style={{width:'24%'}} />
                   <col style={{width:'12%'}} />
-                  <col style={{width:'14%'}} />
-                  <col style={{width:'18%'}} />
+                  <col style={{width:'8%'}} />
+                  <col style={{width:'12%'}} />
+                  <col style={{width:'10%'}} />
+                  <col style={{width:'8%'}} />
+                  <col style={{width:'5%'}} />
+                  <col style={{width:'5%'}} />
                   <col style={{width:'16%'}} />
-                  <col style={{width:'12%'}} />
-                  <col style={{width:'12%'}} />
-                  <col style={{width:'12%'}} />
-                  <col style={{width:'14%'}} />
                   <col style={{width:'72px'}} />
                 </colgroup>
                 <thead>
                   <tr>
-                    <th style={{minWidth:280}}>Material (Code - Type)</th>
-                    <th style={{minWidth:120, textAlign:'right'}}>Price/Unit</th>
-                    <th style={{minWidth:140, textAlign:'center'}}>UOM</th>
-                    <th style={{minWidth:180}}>DOM</th>
-                    <th style={{minWidth:160}}>Shelf Life</th>
-                    <th style={{minWidth:120, textAlign:'right'}}>Quantity</th>
-                    <th style={{minWidth:120, textAlign:'right'}}>SGST</th>
-                    <th style={{minWidth:120, textAlign:'right'}}>CGST</th>
-                    <th style={{minWidth:140, textAlign:'right'}}>Total Amount</th>
-                    <th style={{width:72}}></th>
+                    <th>Material (Code - Type)</th>
+                    <th style={{textAlign:'right'}}>Price/Unit</th>
+                    <th style={{textAlign:'center'}}>UOM</th>
+                    <th>DOM</th>
+                    <th>Shelf Life</th>
+                    <th style={{textAlign:'right'}}>Quantity</th>
+                    <th style={{textAlign:'right'}}>SGST</th>
+                    <th style={{textAlign:'right'}}>CGST</th>
+                    <th style={{textAlign:'right'}}>Total Amount</th>
+                    <th style={{textAlign:'center'}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
