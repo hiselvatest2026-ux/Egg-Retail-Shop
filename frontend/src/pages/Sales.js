@@ -282,6 +282,24 @@ const Sales = () => {
     }
   };
 
+  const toDDMMYYYY = (d) => {
+    if (!d) return '';
+    const dt = new Date(d);
+    if (Number.isNaN(dt.getTime())) {
+      const s = String(d);
+      // try YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        const [y,m,dd] = s.slice(0,10).split('-');
+        return `${dd}-${m}-${y}`;
+      }
+      return s;
+    }
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth()+1).padStart(2, '0');
+    const yy = dt.getFullYear();
+    return `${dd}-${mm}-${yy}`;
+  };
+
   const fetchPricing = async () => {
     if (!form.customer_id || !form.material_code) {
       setPricingInfo(null);
@@ -442,13 +460,13 @@ const Sales = () => {
                                 const price = Number(rr?.data?.price || 0);
                                 const dom = rr?.data?.dom || '';
                                 if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
-                                if (dom) setAddForm(prev=>({ ...prev, dom: String(dom).slice(0,10) }));
+                                if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
                               }).catch(()=>{});
                             }
                             // Also fill DOM from latest purchase mfg_date if available
                             return getLastPurchasePrice({ material_code: code }).then(rr=>{
                               const dom = rr?.data?.dom || '';
-                              if (dom) setAddForm(prev=>({ ...prev, dom: String(dom).slice(0,10) }));
+                              if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
                             }).catch(()=>{});
                           })
                           .catch(()=>{
@@ -457,7 +475,7 @@ const Sales = () => {
                               const price = Number(rr?.data?.price || 0);
                               const dom = rr?.data?.dom || '';
                               if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
-                              if (dom) setAddForm(prev=>({ ...prev, dom: String(dom).slice(0,10) }));
+                              if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
                             }).catch(()=>{});
                           });
                       }
@@ -471,7 +489,7 @@ const Sales = () => {
                 <div style={{overflow:'visible'}}>
                   <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
-                <input className="input date" type="date" placeholder="DOM" value={addForm.dom||''} onChange={e=>setAddForm({...addForm, dom:e.target.value})} readOnly />
+                <input className="input" placeholder="DOM (dd-mm-yyyy)" value={addForm.dom||''} readOnly />
                 <input className="input" placeholder="Quantity *" value={addForm.qty||''} onChange={e=>setAddForm({...addForm, qty:e.target.value})} inputMode="numeric" />
                 <input className="input" placeholder="SGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.sgstAmt? t.sgstAmt.toFixed(2):''; })()} readOnly />
                 <input className="input" placeholder="CGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.cgstAmt? t.cgstAmt.toFixed(2):''; })()} readOnly />
@@ -481,7 +499,7 @@ const Sales = () => {
                   const qtyNum = Number(addForm.qty||0); const price = Number(addForm.price_per_piece||0);
                   if (!addForm.material_code || !(qtyNum>0) || !(price>0)) return;
                   const effQty = (addForm.uom||'Piece')==='Tray' ? qtyNum*30 : qtyNum;
-                  const newItem = { material_code:addForm.material_code, material_type:addForm.material_type, qty_unit:addForm.uom||'Piece', qty_pieces:(addForm.uom||'Piece')==='Piece'? String(qtyNum):'', trays:(addForm.uom||'Piece')==='Tray'? String(qtyNum):'', price_per_piece: price, effectiveQty: effQty };
+                  const newItem = { material_code:addForm.material_code, material_type:addForm.material_type, dom:addForm.dom||'', qty_unit:addForm.uom||'Piece', qty_pieces:(addForm.uom||'Piece')==='Piece'? String(qtyNum):'', trays:(addForm.uom||'Piece')==='Tray'? String(qtyNum):'', price_per_piece: price, effectiveQty: effQty };
                   const g = computeItemGst(newItem);
                   setLineItems(prev=>[...prev, { ...newItem, sgst_amount:g.sgstAmt, cgst_amount:g.cgstAmt, lineTotal:g.base, totalWithGst:g.total }]);
                   setAddForm({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
@@ -516,7 +534,7 @@ const Sales = () => {
                         <td>{label}</td>
                         <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
                         <td>{it.qty_unit||'Piece'}</td>
-                        <td>-</td>
+                        <td>{it.dom || '-'}</td>
                         <td style={{textAlign:'right'}}>{it.effectiveQty||0}</td>
                         <td style={{textAlign:'right'}}>{gst.sgstAmt.toFixed(2)}</td>
                         <td style={{textAlign:'right'}}>{gst.cgstAmt.toFixed(2)}</td>
