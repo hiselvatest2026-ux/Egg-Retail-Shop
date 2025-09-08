@@ -48,9 +48,9 @@ const Invoice = () => {
   );
   if (!invoice) return <div className="p-4">Invoice not found.</div>;
 
-  const { company, sale, items, total, totals } = invoice;
+  const { company = {}, sale, items, total, totals } = invoice;
 
-  const logoUrl = "https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg";
+  const logoUrl = company.logo_url;
 
   return (
     <div className="p-4">
@@ -61,10 +61,12 @@ const Invoice = () => {
       <Card title={`Invoice #${sale.id}`}>
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8}}>
           <div>
-            <div style={{display:'flex', alignItems:'center', gap:12}}>
-              <img src={logoUrl} alt="Company Logo" width={48} height={48} style={{borderRadius:8, border:'1px solid #243040', objectFit:'cover'}} />
-              <div className="text-xl font-bold">{company?.company_name || 'MyBharatMart POS'}</div>
-            </div>
+            {company?.company_name && (
+              <div style={{display:'flex', alignItems:'center', gap:12}}>
+                {logoUrl && <img src={logoUrl} alt="Company Logo" width={48} height={48} style={{borderRadius:8, border:'1px solid #243040', objectFit:'cover'}} />}
+                <div className="text-xl font-bold">{company.company_name}</div>
+              </div>
+            )}
             <div style={{whiteSpace:'pre-line'}}>{company?.address || ''}</div>
             <div>GSTIN: {company?.gstin || '-'}</div>
             <div>Phone: {company?.phone || '-'}</div>

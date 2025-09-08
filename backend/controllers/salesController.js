@@ -189,10 +189,7 @@ exports.getSaleInvoice = async (req, res) => {
 
     // Company settings
     const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
-    let company = settingsRes.rows[0] || { company_name: 'TRY ZEROEGG POS', logo_url: 'https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/ZeroEgg.jpeg' };
-    if (company.company_name === 'Egg Retail Shop') {
-      company = { ...company, company_name: 'TRY ZEROEGG POS' };
-    }
+    let company = settingsRes.rows[0] || {};
 
     // Tax breakdown per item (assume intra-state split when taxable)
     const isTaxable = sale.tax_applicability === 'Taxable';
