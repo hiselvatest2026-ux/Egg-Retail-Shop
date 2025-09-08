@@ -219,7 +219,7 @@ const Purchases = () => {
             {/* Add Item compact form */}
             <div className="card" style={{marginTop:8}}>
               <div className="card-body">
-                <div className="form-row" style={{alignItems:'end'}}>
+                <div className="form-row" style={{alignItems:'end', gridTemplateColumns:'repeat(6, minmax(0, 1fr))'}}>
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
                     <Dropdown
@@ -308,6 +308,13 @@ const Purchases = () => {
                 {addSuccess && <div className="toast" style={{marginTop:8}}>{addSuccess}</div>}
               </div>
             </div>
+            {/* Desktop toolbar above table */}
+            <div className="hidden sm:flex" style={{justifyContent:'flex-end', gap:8, marginTop:8}}>
+              <button type="button" className="btn secondary" onClick={()=> setRows(prev=> {
+                const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
+                return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
+              })}>+ Add Row</button>
+            </div>
             <div className="hidden sm:block overflow-x-auto">
               <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
                 <colgroup>
@@ -320,7 +327,7 @@ const Purchases = () => {
                   <col style={{width:'12%'}} />
                   <col style={{width:'12%'}} />
                   <col style={{width:'14%'}} />
-                  <col style={{width:'6%'}} />
+                  <col style={{width:'72px'}} />
                 </colgroup>
                 <thead>
                   <tr>
