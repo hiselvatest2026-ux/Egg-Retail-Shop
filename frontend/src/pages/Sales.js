@@ -475,7 +475,6 @@ const Sales = () => {
                 <input className="input" placeholder="Quantity *" value={addForm.qty||''} onChange={e=>setAddForm({...addForm, qty:e.target.value})} inputMode="numeric" />
                 <input className="input" placeholder="SGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.sgstAmt? t.sgstAmt.toFixed(2):''; })()} readOnly />
                 <input className="input" placeholder="CGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.cgstAmt? t.cgstAmt.toFixed(2):''; })()} readOnly />
-                <input className="input" placeholder="Total (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.total? t.total.toFixed(2):''; })()} readOnly />
               </div>
               <div className="actions-row" style={{justifyContent:'flex-end', marginTop:8}}>
                 <button type="button" className="btn primary" onClick={()=>{
@@ -504,7 +503,7 @@ const Sales = () => {
                     <th style={{textAlign:'right'}}>Quantity</th>
                     <th style={{textAlign:'right'}}>SGST</th>
                     <th style={{textAlign:'right'}}>CGST</th>
-                    <th style={{textAlign:'right'}}>Total Amount</th>
+                    
                   </tr>
                 </thead>
                 <tbody>
@@ -521,14 +520,11 @@ const Sales = () => {
                         <td style={{textAlign:'right'}}>{it.effectiveQty||0}</td>
                         <td style={{textAlign:'right'}}>{gst.sgstAmt.toFixed(2)}</td>
                         <td style={{textAlign:'right'}}>{gst.cgstAmt.toFixed(2)}</td>
-                        <td style={{textAlign:'right'}}>{gst.total.toFixed(2)}</td>
+                        
                       </tr>
                     );
                   })}
-                  <tr>
-                    <td colSpan={8}></td>
-                    <td style={{textAlign:'right', fontWeight:800}}>₹ {itemsTotalWithGst.toFixed(2)}</td>
-                  </tr>
+                  
                 </tbody>
               </table>
             </div>
