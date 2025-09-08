@@ -64,3 +64,36 @@ router.post('/clear-transactions', async (_req, res) => {
   }
 });
 
+// One-time: seed basic routes (compatible with older schemas)
+router.post('/seed/routes-basic', async (_req, res) => {
+  try {
+    // Introspect existing columns to avoid schema mismatch
+    const colsRes = await pool.query(`SELECT column_name FROM information_schema.columns WHERE table_name='routes'`);
+    const presentCols = new Set(colsRes.rows.map(r => r.column_name));
+    // Candidate rows
+    const baseRows = [
+      { route_number:'R001', route_name:'North Zone', vehicle_number:'TN-01-AB-1234', active:true, salesman_name:'Kumar', mobile:'9000000001', area_name:'Anna Nagar', pincode:'600040' },
+      { route_number:'R002', route_name:'South Zone', vehicle_number:'TN-02-CD-5678', active:true, salesman_name:'Vijay', mobile:'9000000002', area_name:'Velachery', pincode:'600042' },
+      { route_number:'R003', route_name:'East Belt', vehicle_number:'TN-03-EF-9012', active:true, salesman_name:'Arun', mobile:'9000000003', area_name:'Tambaram', pincode:'600059' },
+      { route_number:'R004', route_name:'West Belt', vehicle_number:'TN-04-GH-3456', active:true, salesman_name:'Siva', mobile:'9000000004', area_name:'Porur', pincode:'600116' },
+      { route_number:'R005', route_name:'City Express', vehicle_number:'TN-05-IJ-7890', active:false, salesman_name:'Mani', mobile:'9000000005', area_name:'Royapuram', pincode:'600013' }
+    ];
+    // Columns we try in order of priority
+    const preferred = ['route_number','route_name','vehicle_number','active','salesman_name','mobile','area_name','pincode'];
+    let inserted = 0;
+    await pool.query('BEGIN');
+    for (const row of baseRows) {
+      const cols = preferred.filter(c => presentCols.has(c));
+      const values = cols.map(c => row[c] ?? null);
+      const placeholders = cols.map((_,i)=>`$${i+1}`).join(',');
+      const sql = `INSERT INTO routes (${cols.join(',')}) VALUES (${placeholders})`;
+      try { await pool.query(sql, values); inserted++; } catch(_) { /* skip if unique conflict or other */ }
+    }
+    await pool.query('COMMIT');
+    res.json({ message: `Seeded routes (inserted ${inserted})` });
+  } catch (e) {
+    try { await pool.query('ROLLBACK'); } catch(_) {}
+    res.status(500).json({ message: e.message });
+  }
+});
+
