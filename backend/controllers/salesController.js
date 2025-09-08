@@ -214,7 +214,7 @@ exports.getSaleInvoice = async (req, res) => {
 
     // Compute taxes assuming stored prices are exclusive of tax
     let subtotal = 0, cgst_total = 0, sgst_total = 0, igst_total = 0;
-    const enrichedItems = workingItems.map(it => {
+    let enrichedItems = workingItems.map(it => {
       const qty = Number(it.quantity || 0);
       const rate = Number(it.price || 0);
       const lineTotalEx = Number((qty * rate).toFixed(2));
@@ -232,13 +232,21 @@ exports.getSaleInvoice = async (req, res) => {
       return { ...it, line_total: lineTotalEx + cgst + sgst + igst, taxable_value: lineTotalEx, cgst, sgst, igst, hsn_sac: hsn };
     });
 
-    const grand_total = Number((subtotal + cgst_total + sgst_total + igst_total).toFixed(2));
-    const total = isFinite(grand_total) ? grand_total : 0; // use computed grand total for invoice display
+    let grand_total = Number((subtotal + cgst_total + sgst_total + igst_total).toFixed(2));
+    let total = isFinite(grand_total) ? grand_total : 0; // use computed grand total for invoice display
     const round_off = 0;
 
-    // Payments summary and balance (after total is defined)
+    // Payments summary
     const payRes = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);
     const paid = Number(payRes.rows[0]?.paid || 0);
+
+    // Fallback: if no items and total is 0 but payments exist, synthesize a payment-only item to avoid negative balance displays
+    if ((!enrichedItems || enrichedItems.length === 0) && total === 0 && paid > 0) {
+      enrichedItems = [{ id: 0, product_id: null, product_name: 'Payment', quantity: 1, price: paid, line_total: paid, hsn_sac: null, gst_percent: 0, taxable_value: paid, cgst: 0, sgst: 0, igst: 0 }];
+      subtotal = paid; cgst_total = 0; sgst_total = 0; igst_total = 0;
+      grand_total = paid; total = paid;
+    }
+
     const balance = Number((total - paid).toFixed(2));
 
     res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance } });
