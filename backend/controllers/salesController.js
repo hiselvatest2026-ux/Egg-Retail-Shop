@@ -184,11 +184,8 @@ exports.getSaleInvoice = async (req, res) => {
       [id]
     );
 
-    const totalResult = await pool.query(
-      'SELECT COALESCE(SUM(quantity * price), 0) AS total FROM sale_items WHERE sale_id=$1',
-      [id]
-    );
-    const items = itemsResult.rows;
+    // Item rows (may be empty for old records)
+    const items = itemsResult.rows || [];
 
     // Company settings
     const settingsRes = await pool.query('SELECT * FROM settings ORDER BY id DESC LIMIT 1');
@@ -196,11 +193,6 @@ exports.getSaleInvoice = async (req, res) => {
     if (company.company_name === 'Egg Retail Shop') {
       company = { ...company, company_name: 'TRY ZEROEGG POS' };
     }
-
-    // Payments summary
-    const payRes = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);
-    const paid = Number(payRes.rows[0]?.paid || 0);
-    const balance = Number(total) - paid;
 
     // Tax breakdown per item (assume intra-state split when taxable)
     const isTaxable = sale.tax_applicability === 'Taxable';
@@ -244,10 +236,15 @@ exports.getSaleInvoice = async (req, res) => {
     });
 
     const grand_total = Number((subtotal + cgst_total + sgst_total + igst_total).toFixed(2));
-    const total = grand_total; // use computed grand total for invoice display
+    const total = isFinite(grand_total) ? grand_total : 0; // use computed grand total for invoice display
     const round_off = 0;
 
-    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance: Number((grand_total - paid).toFixed(2)) } });
+    // Payments summary and balance (after total is defined)
+    const payRes = await pool.query('SELECT COALESCE(SUM(amount),0) AS paid FROM payments WHERE invoice_id=$1', [id]);
+    const paid = Number(payRes.rows[0]?.paid || 0);
+    const balance = Number((total - paid).toFixed(2));
+
+    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance } });
   } catch (err) {
     res.status(500).send(err.message);
   }
