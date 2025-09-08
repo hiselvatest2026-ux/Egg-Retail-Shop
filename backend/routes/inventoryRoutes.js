@@ -56,7 +56,8 @@ router.put('/opening-stocks/materials', async (req, res) => {
 // Auto-derived closing stocks by material (normalized to pieces)
 router.get('/closing-stocks/materials', async (req, res) => {
   try {
-    const locId = req.query.location_id ? Number(req.query.location_id) : null;
+    const locHeader = req.headers['x-shop-id'];
+    const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
     // Materials
     const matsRes = await pool.query(`SELECT part_code AS material_code, metal_type AS material_type FROM metal_master ORDER BY part_code ASC`);
     const materials = matsRes.rows;
@@ -134,7 +135,8 @@ router.get('/closing-stocks/materials', async (req, res) => {
 // Product-level closing stocks (optional, derived)
 router.get('/closing-stocks', async (req, res) => {
   try {
-    const locId = req.query.location_id ? Number(req.query.location_id) : null;
+    const locHeader = req.headers['x-shop-id'];
+    const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
     const purch = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM purchase_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
     const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
     const purchMap = new Map(purch.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
@@ -161,7 +163,8 @@ router.put('/closing-stocks/materials', async (req, res) => {
 // Detailed stock breakdown per product: opening, purchased, sold, adjustments, closing
 router.get('/stock-breakdown', async (req, res) => {
   try {
-    const locId = req.query.location_id ? Number(req.query.location_id) : null;
+    const locHeader = req.headers['x-shop-id'];
+    const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
     const locPI = locId ? 'WHERE pi.location_id = $1' : '';
     const locSI = locId ? 'WHERE si.location_id = $1' : '';
     const params = locId ? [locId] : [];

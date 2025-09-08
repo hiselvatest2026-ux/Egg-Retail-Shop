@@ -42,7 +42,7 @@ const InventoryManagement = () => {
     } catch(e){ console.error('load opening failed', e);} }
   const loadClosing = async () => {
     try { 
-      const params = locationId ? { params: { location_id: locationId } } : undefined;
+      const params = locationId ? { params: { location_id: locationId } } : { params: {} };
       const m = await axios.get(`${baseUrl}/inventory/closing-stocks/materials`, params);
       setClosingMaterials(m.data||[]);
     } catch(e){ console.error('load closing failed', e);} }
