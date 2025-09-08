@@ -17,7 +17,7 @@ function sendCsv(res, filename, headers, rows) {
 
 exports.purchasesCsv = async (req, res) => {
   try {
-    // Prefer item-level details since header may be blank in new flow
+    // Prefer item-level details; include fallback rows for header-only purchases with no items
     const result = await pool.query(
       `WITH mm_guess AS (
          SELECT p.id AS product_id,
@@ -27,24 +27,44 @@ exports.purchasesCsv = async (req, res) => {
                   ELSE NULL
                 END AS part_code
          FROM products p
+       ),
+       item_rows AS (
+         SELECT pu.id AS id,
+                pu.purchase_date,
+                pu.vendor_id,
+                v.vendor_code,
+                v.name AS vendor_name,
+                pr.name AS product_name,
+                pi.price AS price_per_unit,
+                pi.quantity AS quantity,
+                COALESCE(mm.gst_percent, 0) AS gst_percent,
+                ROUND(pi.price * pi.quantity * (1 + (COALESCE(mm.gst_percent,0)/100.0)), 2) AS total
+         FROM purchase_items pi
+         JOIN purchases pu ON pu.id = pi.purchase_id
+         LEFT JOIN vendors v ON v.id = pu.vendor_id
+         LEFT JOIN products pr ON pr.id = pi.product_id
+         LEFT JOIN mm_guess g ON g.product_id = pi.product_id
+         LEFT JOIN metal_master mm ON mm.part_code = g.part_code
+       ),
+       header_only AS (
+         SELECT pu.id AS id,
+                pu.purchase_date,
+                pu.vendor_id,
+                v.vendor_code,
+                v.name AS vendor_name,
+                COALESCE(pu.product_name, '-') AS product_name,
+                pu.price_per_unit AS price_per_unit,
+                pu.quantity AS quantity,
+                COALESCE(pu.gst_percent, 0) AS gst_percent,
+                COALESCE(pu.total, 0) AS total
+         FROM purchases pu
+         LEFT JOIN vendors v ON v.id = pu.vendor_id
+         WHERE NOT EXISTS (SELECT 1 FROM purchase_items pi WHERE pi.purchase_id = pu.id)
        )
-       SELECT pu.id AS id,
-              pu.purchase_date,
-              pu.vendor_id,
-              v.vendor_code,
-              v.name AS vendor_name,
-              pr.name AS product_name,
-              pi.price AS price_per_unit,
-              pi.quantity AS quantity,
-              COALESCE(mm.gst_percent, 0) AS gst_percent,
-              ROUND(pi.price * pi.quantity * (1 + (COALESCE(mm.gst_percent,0)/100.0)), 2) AS total
-       FROM purchase_items pi
-       JOIN purchases pu ON pu.id = pi.purchase_id
-       LEFT JOIN vendors v ON v.id = pu.vendor_id
-       LEFT JOIN products pr ON pr.id = pi.product_id
-       LEFT JOIN mm_guess g ON g.product_id = pi.product_id
-       LEFT JOIN metal_master mm ON mm.part_code = g.part_code
-       ORDER BY pu.purchase_date DESC, pu.id DESC, pi.id DESC`
+       SELECT * FROM item_rows
+       UNION ALL
+       SELECT * FROM header_only
+       ORDER BY purchase_date DESC, id DESC`
     );
     const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','product_name','price_per_unit','quantity','gst_percent','total'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
