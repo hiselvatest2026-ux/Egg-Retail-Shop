@@ -60,18 +60,7 @@ const Invoice = () => {
       <div className="print-receipt">
       <Card title={`Invoice #${sale.id}`}>
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8}}>
-          <div>
-            {company?.company_name && (
-              <div style={{display:'flex', alignItems:'center', gap:12}}>
-                {logoUrl && <img src={logoUrl} alt="Company Logo" width={48} height={48} style={{borderRadius:8, border:'1px solid #243040', objectFit:'cover'}} />}
-                <div className="text-xl font-bold">{company.company_name}</div>
-              </div>
-            )}
-            <div style={{whiteSpace:'pre-line'}}>{company?.address || ''}</div>
-            <div>GSTIN: {company?.gstin || '-'}</div>
-            <div>Phone: {company?.phone || '-'}</div>
-            <div>Email: {company?.email || '-'}</div>
-          </div>
+          <div />
           <div>
             <div><strong>Invoice No:</strong> #{sale.id}</div>
             <div><strong>Date:</strong> {new Date(sale.sale_date).toLocaleString()}</div>
@@ -98,20 +87,30 @@ const Invoice = () => {
           </thead>
           <tbody>
             {items.length > 0 ? (
-              items.map((it, idx) => (
-                <tr key={it.id}>
-                  <td>{idx + 1}</td>
-                  <td>{it.hsn_sac || '-'}</td>
-                  <td>{it.product_name}</td>
-                  <td>{it.quantity}</td>
-                  <td>{Number(it.price).toFixed(2)}</td>
-                  <td>{Number(it.taxable_value||0).toFixed(2)}</td>
-                  <td>{Number(it.cgst||0).toFixed(2)}</td>
-                  <td>{Number(it.sgst||0).toFixed(2)}</td>
-                  <td>{Number(it.igst||0).toFixed(2)}</td>
-                  <td>{Number(it.line_total).toFixed(2)}</td>
-                </tr>
-              ))
+              items.map((it, idx) => {
+                const qty = Number(it.quantity || 0);
+                const rate = Number(it.price || 0);
+                const gstPercent = Number(it.gst_percent || 0);
+                const taxable = Number(it.taxable_value != null ? it.taxable_value : (qty * rate));
+                const cgst = Number(it.cgst != null ? it.cgst : (gstPercent > 0 ? (taxable * (gstPercent/2) / 100) : 0));
+                const sgst = Number(it.sgst != null ? it.sgst : (gstPercent > 0 ? (taxable * (gstPercent/2) / 100) : 0));
+                const igst = Number(it.igst || 0);
+                const lineTotal = Number(it.line_total != null ? it.line_total : (taxable + cgst + sgst + igst));
+                return (
+                  <tr key={it.id || idx}>
+                    <td>{idx + 1}</td>
+                    <td>{it.hsn_sac || '-'}</td>
+                    <td>{it.product_name}</td>
+                    <td>{qty}</td>
+                    <td>{rate.toFixed(2)}</td>
+                    <td>{taxable.toFixed(2)}</td>
+                    <td>{cgst.toFixed(2)}</td>
+                    <td>{sgst.toFixed(2)}</td>
+                    <td>{igst.toFixed(2)}</td>
+                    <td>{lineTotal.toFixed(2)}</td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan={10} style={{color:'#64748b'}}>No line items added yet.</td>
