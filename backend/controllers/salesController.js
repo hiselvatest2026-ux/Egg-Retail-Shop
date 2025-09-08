@@ -260,10 +260,15 @@ exports.getLastPurchasePrice = async (req, res) => {
     if (!material_code) return res.status(400).json({ message: 'material_code is required' });
     const mmRes = await pool.query('SELECT metal_type FROM metal_master WHERE part_code=$1', [material_code]);
     if (mmRes.rows.length === 0) return res.status(404).json({ message: 'Material not found' });
-    const metalType = mmRes.rows[0].metal_type;
-    const prodRes = await pool.query('SELECT id FROM products WHERE LOWER(name) LIKE LOWER($1) || '%' ORDER BY id ASC LIMIT 1', [metalType]);
+    const metalType = String(mmRes.rows[0].metal_type || '').trim();
+    // Try exact match first
+    let prodRes = await pool.query('SELECT id FROM products WHERE LOWER(name)=LOWER($1) ORDER BY id ASC LIMIT 1', [metalType]);
+    if (prodRes.rows.length === 0) {
+      // Fallback to contains match
+      prodRes = await pool.query('SELECT id FROM products WHERE LOWER(name) LIKE LOWER($1) ORDER BY id ASC LIMIT 1', [`%${metalType}%`]);
+    }
     if (prodRes.rows.length === 0) return res.status(404).json({ message: 'Product not found for material' });
-    const productId = prodRes.rows[0].id;
+    const productId = Number(prodRes.rows[0].id);
     const priceRes = await pool.query(`
       SELECT pi.price, pi.mfg_date
       FROM purchase_items pi
