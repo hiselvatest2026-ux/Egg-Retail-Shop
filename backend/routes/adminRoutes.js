@@ -64,6 +64,40 @@ router.post('/clear-transactions', async (_req, res) => {
   }
 });
 
+// Danger: Clear ALL data (masters and transactions). Leaves empty DB with schema intact
+router.post('/clear-all', async (_req, res) => {
+  try {
+    await pool.query('BEGIN');
+    await pool.query(`TRUNCATE 
+      payments,
+      sale_items,
+      sales,
+      purchase_items,
+      purchases,
+      stock_adjustments,
+      goods_receipts,
+      opening_stocks_material,
+      opening_stocks,
+      stock_counts,
+      pricing_master,
+      metal_master,
+      products,
+      customers,
+      suppliers,
+      vendors,
+      route_trips,
+      routes,
+      settings,
+      locations
+      RESTART IDENTITY CASCADE`);
+    await pool.query('COMMIT');
+    res.json({ message: 'All data cleared. Database is empty.' });
+  } catch (e) {
+    try { await pool.query('ROLLBACK'); } catch(_){}
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // One-time: seed basic routes (compatible with older schemas)
 router.post('/seed/routes-basic', async (_req, res) => {
   try {
