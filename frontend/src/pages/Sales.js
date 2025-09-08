@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getRouteTrips, createRouteTrip, getProducts, createSaleItem, getRoutes, getLastPurchasePrice, clearTransactions } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getProducts, createSaleItem, getLastPurchasePrice, clearTransactions } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
@@ -13,14 +13,12 @@ const Sales = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit: 'Piece', trays: '', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
-  const [trips, setTrips] = useState([]);
-  const [newTrip, setNewTrip] = useState({ route_name: '', vehicle_number: '', service_date: () => new Date().toISOString().slice(0,10) });
+  
   const [available, setAvailable] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [products, setProducts] = useState([]);
-  const [routes, setRoutes] = useState([]);
-  const [selectedRouteId, setSelectedRouteId] = useState('');
+  
   const [lineItems, setLineItems] = useState([]);
   const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
   const [addForm, setAddForm] = useState({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
@@ -134,14 +132,7 @@ const Sales = () => {
         const today = new Date().toISOString().slice(0,10);
         const tr = await getRouteTrips({ date: today });
         setTrips(tr.data||[]);
-        const rr = await getRoutes();
-        const routeList = rr.data||[];
-        setRoutes(routeList);
-        // Default select first active route if none chosen
-        if (!selectedRouteId && routeList.length) {
-          const firstActive = routeList.find(x=>x.active) || routeList[0];
-          setSelectedRouteId(String(firstActive.id));
-        }
+        
       } catch(e){ 
         console.error('data load failed', e);
       } 
@@ -414,15 +405,7 @@ const Sales = () => {
                 options={saleCategories.map(c=>({ value:c, label:c }))}
               />
             </div>
-            <div className="input-group" style={{overflow:'visible'}}>
-              <label>Route Name</label>
-              <Dropdown
-                value={selectedRouteId}
-                onChange={(v)=>{ setSelectedRouteId(v); }}
-                placeholder={'Select Route'}
-                options={(routes||[]).map(r=>({ value:String(r.id), label:`${r.route_name} - ${r.vehicle_number||'-'}` }))}
-              />
-            </div>
+            
             <div className="input-group">
               <label>Total Amount</label>
               {/* Highlighted total badge */}
