@@ -229,8 +229,8 @@ const Purchases = () => {
                         const mat = materials.find(m=> String(m.part_code) === String(code));
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
                       }}
-                      placeholder={'Product (Material) *'}
-                      options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))}
+                      placeholder={'Material Code - Type *'}
+                      options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
                     />
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
@@ -316,7 +316,7 @@ const Purchases = () => {
                 </colgroup>
                 <thead>
                   <tr>
-                    <th style={{minWidth:280}}>Product (Material)</th>
+                    <th style={{minWidth:280}}>Material (Code - Type)</th>
                     <th style={{minWidth:120, textAlign:'right'}}>Price/Unit</th>
                     <th style={{minWidth:140, textAlign:'center'}}>UOM</th>
                     <th style={{minWidth:180}}>DOM</th>
@@ -332,7 +332,7 @@ const Purchases = () => {
                   {rows.map((r, idx) => {
                     const totals = computeRowTotals(r);
                     const mat = materials.find(m=> String(m.part_code) === String(r.material_code));
-                    const productLabel = mat ? `${mat.part_code} - ${mat.description || mat.metal_type}` : (r.material_type || r.material_code || '-');
+                    const productLabel = mat ? `${mat.part_code} - ${mat.metal_type}` : (r.material_type || r.material_code || '-');
                     return (
                       <tr key={idx}>
                         <td><div className="truncate" title={productLabel}>{productLabel}</div></td>
@@ -367,12 +367,12 @@ const Purchases = () => {
               {rows.map((r, idx) => {
                 const totals = computeRowTotals(r);
                 const mat = materials.find(m=> String(m.part_code) === String(r.material_code));
-                const productLabel = mat ? `${mat.part_code} - ${mat.description || mat.metal_type}` : (r.material_type || r.material_code || '-');
+                const productLabel = mat ? `${mat.part_code} - ${mat.metal_type}` : (r.material_type || r.material_code || '-');
                 return (
                   <div key={idx} className="card">
                     <div className="card-body">
                       <div className="data-pairs">
-                        <div className="pair"><strong>Product</strong><div>{productLabel}</div></div>
+                        <div className="pair"><strong>Material</strong><div>{productLabel}</div></div>
                         <div className="pair"><strong>Price/Unit</strong><div style={{textAlign:'right'}}>{r.price_per_unit || '-'}</div></div>
                         <div className="pair"><strong>UOM</strong><div>{r.uom || 'Piece'}</div></div>
                         <div className="pair"><strong>DOM</strong><div>{r.mfg_date || '-'}</div></div>

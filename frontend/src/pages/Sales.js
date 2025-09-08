@@ -462,8 +462,8 @@ const Sales = () => {
                           });
                       }
                     }}
-                    placeholder={'Product Code *'}
-                    options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.description || m.metal_type}` }))}
+                    placeholder={'Material Code *'}
+                    options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
                   />
                 </div>
                 
@@ -495,8 +495,8 @@ const Sales = () => {
               <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
                 <thead>
                   <tr>
-                    <th>Product Code</th>
-                    <th>Product Name</th>
+                    <th>Material Code</th>
+                    <th>Material Type</th>
                     <th style={{textAlign:'right'}}>Price / unit</th>
                     <th>UOM</th>
                     <th>DOM</th>
@@ -508,7 +508,7 @@ const Sales = () => {
                 </thead>
                 <tbody>
                   {lineItems.map((it,idx)=>{
-                    const label = it.material_code ? `${it.material_code} - ${it.material_type||''}` : (it.material_type||'-');
+                    const label = it.material_type || '-';
                     const gst = computeItemGst(it);
                     return (
                       <tr key={idx}>
