@@ -18,17 +18,15 @@ const Purchases = () => {
   const [rows, setRows] = useState([]);
   const sortedMaterials = useMemo(() => {
     const source = Array.isArray(materials) ? [...materials] : [];
-    const priority = (m) => {
-      const name = String(m.description || m.metal_type || '').toLowerCase();
-      if (name.includes('egg')) return 0;
-      if (name.includes('panner') || name.includes('paneer')) return 1;
-      return 2;
+    const parseCode = (code) => {
+      const m = String(code||'').match(/(\d+)/);
+      return m ? Number(m[1]) : Number.MAX_SAFE_INTEGER;
     };
     source.sort((a,b) => {
-      const pa = priority(a);
-      const pb = priority(b);
-      if (pa !== pb) return pa - pb;
-      return String(a.metal_type||'').localeCompare(String(b.metal_type||''));
+      const ca = parseCode(a.part_code);
+      const cb = parseCode(b.part_code);
+      if (ca !== cb) return ca - cb;
+      return String(a.part_code||'').localeCompare(String(b.part_code||''));
     });
     return source;
   }, [materials]);
@@ -231,7 +229,7 @@ const Purchases = () => {
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
                       }}
                       placeholder={'Material Code - Type *'}
-                      options={(materials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                      options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
                     />
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
@@ -411,7 +409,7 @@ const Purchases = () => {
             </div>
             <div style={{display:'flex', justifyContent:'flex-end', marginTop:8, gap:12}}>
               <button type="button" className="btn btn-mobile-full" onClick={()=> setRows(prev=> {
-                const first = (materials && materials[0]) ? materials[0] : null;
+                const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
                 return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
               })}>+ Add Row</button>
             </div>
@@ -446,7 +444,7 @@ const Purchases = () => {
                     const mat = materials.find(m=> String(m.part_code) === String(code));
                     const type = mat ? mat.metal_type : '';
                     setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
-                  }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.description || m.metal_type}` }))} />
+                  }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))} />
                 </div>
                 
                 <div>
