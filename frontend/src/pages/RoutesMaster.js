@@ -67,8 +67,24 @@ const RoutesMaster = () => {
         </Card>
 
         <Card title="Routes">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-3" style={{flexWrap:'wrap'}}>
             <input className="input w-full sm:w-72" placeholder="Search" value={search} onChange={e=>setSearch(e.target.value)} />
+            <div className="btn-group" style={{marginLeft:'auto'}}>
+              <button className="btn secondary btn-sm" onClick={fetchAll}>Refresh</button>
+              <button className="btn btn-sm" onClick={async()=>{
+                try {
+                  const samples = [
+                    { route_name:'North Zone', truck_no:'TN-01-AB-1234', salesman_name:'Kumar', mobile:'9000000001', area_name:'Anna Nagar', pincode:'600040' },
+                    { route_name:'South Zone', truck_no:'TN-02-CD-5678', salesman_name:'Vijay', mobile:'9000000002', area_name:'Velachery', pincode:'600042' },
+                    { route_name:'East Belt', truck_no:'TN-03-EF-9012', salesman_name:'Arun', mobile:'9000000003', area_name:'Tambaram', pincode:'600059' }
+                  ];
+                  for (const r of samples) {
+                    await createRoute({ route_name:r.route_name, vehicle_number:r.truck_no, salesman_name:r.salesman_name, mobile:r.mobile, area_name:r.area_name, pincode:r.pincode, active:true });
+                  }
+                  await fetchAll();
+                } catch (_) {}
+              }}>Add Sample Routes</button>
+            </div>
           </div>
           <div className="hidden sm:block overflow-x-auto">
             <table className="table table-hover table-zebra mt-2">
@@ -93,6 +109,26 @@ const RoutesMaster = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="sm:hidden space-y-2">
+            {filtered.map(r => (
+              <div key={r.id} className="card">
+                <div className="card-body">
+                  <div className="data-pairs">
+                    <div className="pair"><strong>Route</strong><div>{r.route_name}</div></div>
+                    <div className="pair"><strong>Truck</strong><div>{r.truck_no || '-'}</div></div>
+                    <div className="pair"><strong>Salesman</strong><div>{r.salesman_name || '-'}</div></div>
+                    <div className="pair"><strong>Mobile</strong><div>{r.mobile || '-'}</div></div>
+                    <div className="pair"><strong>Area</strong><div>{r.area_name || '-'}</div></div>
+                    <div className="pair"><strong>Pincode</strong><div>{r.pincode || '-'}</div></div>
+                  </div>
+                  <div className="btn-group" style={{marginTop:10, justifyContent:'flex-end'}}>
+                    <button className="btn secondary btn-sm" onClick={()=>{ setEditing(r.id); setForm({ route_name:r.route_name, truck_no:r.truck_no, salesman_name:r.salesman_name, mobile:r.mobile, area_name:r.area_name, pincode:r.pincode }); }}>Edit</button>
+                    <button className="btn danger btn-sm" onClick={async()=>{ try { await deleteRouteApi(r.id); await fetchAll(); } catch(e){} }}>Delete</button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
       </div>
