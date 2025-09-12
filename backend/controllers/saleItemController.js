@@ -28,6 +28,13 @@ async function getAvailableStock(productId) {
   return Number(res.rows[0]?.available || 0);
 }
 
+async function ensureMapsToEggOrPaneer(productId) {
+  const res = await pool.query('SELECT name FROM products WHERE id=$1', [productId]);
+  if (res.rows.length === 0) return false;
+  const name = String(res.rows[0].name || '').toLowerCase();
+  return name.includes('egg') || name.includes('paneer') || name.includes('panner');
+}
+
 exports.listItems = async (req, res) => {
   try {
     const { id } = req.params; // sale id
@@ -53,6 +60,11 @@ exports.createItem = async (req, res) => {
     const available = await getAvailableStock(product_id);
     if (Number(quantity) > available) {
       return res.status(400).json({ message: 'Insufficient quantity' });
+    }
+    // Enforce mapping to Egg or Paneer only
+    const ok = await ensureMapsToEggOrPaneer(product_id);
+    if (!ok) {
+      return res.status(400).json({ message: 'Item must be Egg or Paneer' });
     }
     const result = await pool.query(
       'INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,$2,$3,$4,$5) RETURNING *',
@@ -86,6 +98,11 @@ exports.updateItem = async (req, res) => {
       if (Number(newQuantity) > availableNew) {
         return res.status(400).json({ message: 'Insufficient quantity' });
       }
+    }
+    // If product_id changes or provided, enforce mapping
+    if (product_id) {
+      const ok = await ensureMapsToEggOrPaneer(product_id);
+      if (!ok) return res.status(400).json({ message: 'Item must be Egg or Paneer' });
     }
     const result = await pool.query(
       'UPDATE sale_items SET product_id=COALESCE($1, product_id), quantity=COALESCE($2, quantity), price=COALESCE($3, price) WHERE id=$4 AND sale_id=$5 RETURNING *',

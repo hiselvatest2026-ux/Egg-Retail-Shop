@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendors, getMetals, getProducts, createPurchaseItem } from '../api/api';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import ShopChip from '../components/ShopChip';
+import MobileMaterialPicker from '../components/MobileMaterialPicker';
+// Shop chip removed (global stock)
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -10,7 +11,7 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '' });
+  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '', bill_no: '', bill_date: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -85,6 +86,14 @@ const Purchases = () => {
   const itemsGrandTotal = useMemo(() => {
     return (rows||[]).reduce((sum, r) => sum + computeRowTotals(r).totalAmount, 0);
   }, [rows]);
+  const addItemRef = useRef(null);
+  const canSave = useMemo(()=>{
+    const vendorOk = !!form.vendor_id;
+    const hasItems = rows && rows.length > 0;
+    const manual = Number(form.total_purchase_value||0);
+    const eq = Math.round(manual*100) === Math.round(Number(itemsGrandTotal||0)*100);
+    return vendorOk && hasItems && eq;
+  }, [form.vendor_id, form.total_purchase_value, itemsGrandTotal, rows]);
   useEffect(() => { 
     fetchPurchases(); 
     (async()=>{ 
@@ -206,7 +215,7 @@ const Purchases = () => {
           <h1 className="page-title">Purchases</h1>
           <p className="page-subtitle">Create and manage supplier purchases</p>
         </div>
-        <ShopChip />
+        <div className="badge" title="Build tag">build: 1207</div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -232,6 +241,17 @@ const Purchases = () => {
               </div>
             );
           })()}
+          {/* Bill details (optional) */}
+          <div className="form-grid-2-tight" style={{gridColumn:'1/-1'}}>
+            <div className="input-group">
+              <label>Bill No</label>
+              <input className="input" value={form.bill_no} onChange={e=>setForm(prev=>({ ...prev, bill_no: e.target.value }))} placeholder="Supplier bill no (optional)" />
+            </div>
+            <div className="input-group">
+              <label>Bill Date</label>
+              <input className="input date" type="date" value={form.bill_date} onChange={e=>setForm(prev=>({ ...prev, bill_date: e.target.value }))} />
+            </div>
+          </div>
           {/* New spec: manual total (optional) */}
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Total Purchase Value (manual)</label>
@@ -240,100 +260,110 @@ const Purchases = () => {
               <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
             )}
           </div>
+          <div className="actions-row" style={{gridColumn:'1/-1', justifyContent:'flex-end'}}>
+            <button type="button" className="btn secondary" onClick={()=>{ try { addItemRef.current?.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_){} }}>Next</button>
+          </div>
 
           {/* Editable Purchases Table */}
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Purchase Entry</label>
-            {/* Add Item compact form */}
-            <div className="card" style={{marginTop:8}}>
+            {/* Add Item compact form - strict mobile layout */}
+            <div ref={addItemRef} className="card" style={{marginTop:8}}>
               <div className="card-body">
-                <div className="form-row" style={{alignItems:'end', gridTemplateColumns:'repeat(6, minmax(0, 1fr))'}}>
+                <div className="p-3 mb-3" style={{padding:12, border:'1px solid #2a3040', borderRadius:12}}>
+                  {/* Material full width */}
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
-                    <Dropdown
-                      value={addForm.material_code}
-                      onChange={(code)=>{
-                        const mat = materials.find(m=> String(m.part_code) === String(code));
-                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
-                      }}
-                      placeholder={'Material Code - Type *'}
-                      options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
-                    />
+                    <div className="sm:hidden">
+                      <MobileMaterialPicker
+                        value={addForm.material_code}
+                        onChange={(code)=>{
+                          const mat = materials.find(m=> String(m.part_code) === String(code));
+                          setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                        }}
+                        placeholder={'Material Code - Type *'}
+                        options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                      />
+                    </div>
+                    <div className="hidden sm:block">
+                      <Dropdown
+                        value={addForm.material_code}
+                        onChange={(code)=>{
+                          const mat = materials.find(m=> String(m.part_code) === String(code));
+                          setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                        }}
+                        placeholder={'Material Code - Type *'}
+                        options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                      />
+                    </div>
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
-                  <div className="input-group">
-                    <label>Price / Unit <span style={{color:'#fca5a5'}}>*</span></label>
-                    <input className="input" placeholder="Price / Unit" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
-                    {addFormErrors.price_per_unit && <div className="form-help">{addFormErrors.price_per_unit}</div>}
+                  {/* Price / UOM two columns */}
+                  <div className="form-grid-2-tight" style={{marginTop:12}}>
+                    <div className="input-group">
+                      <label>Price / Unit <span style={{color:'#fca5a5'}}>*</span></label>
+                      <input className="input" placeholder="Price / Unit" value={addForm.price_per_unit} onChange={e=>setAddForm({...addForm, price_per_unit:e.target.value})} inputMode="decimal" />
+                      {addFormErrors.price_per_unit && <div className="form-help">{addFormErrors.price_per_unit}</div>}
+                    </div>
+                    <div className="input-group" style={{overflow:'visible'}}>
+                      <label>UOM <span style={{color:'#fca5a5'}}>*</span></label>
+                      <div className="btn-group">
+                        <button type="button" className={`btn btn-sm ${String(addForm.uom||'Piece')==='Piece'?'primary':''}`} onClick={()=>setAddForm(prev=>({...prev, uom:'Piece'}))}>Piece</button>
+                        <button type="button" className={`btn btn-sm ${String(addForm.uom||'Piece')==='Tray'?'primary':''}`} onClick={()=>setAddForm(prev=>({...prev, uom:'Tray'}))}>Tray</button>
+                      </div>
+                      {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
+                    </div>
                   </div>
-                  <div className="input-group" style={{overflow:'visible'}}>
-                    <label>UOM <span style={{color:'#fca5a5'}}>*</span></label>
-                    <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
-                    {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
+                  {/* DOM / Shelf Life two columns */}
+                  <div className="form-grid-2-tight" style={{marginTop:12}}>
+                    <div className="input-group">
+                      <label>DOM <span style={{color:'#fca5a5'}}>*</span></label>
+                      <input className="input date" type="date" value={addForm.mfg_date} onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})} />
+                    </div>
+                    <div className="input-group">
+                      <label>Shelf Life</label>
+                      <input className="input" placeholder="e.g., 12 days" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
+                    </div>
                   </div>
-                  <div className="input-group">
-                    <label>DOM <span style={{color:'#fca5a5'}}>*</span></label>
-                    <input
-                      className="input date"
-                      type="date"
-                      aria-label="DOM"
-                      title="DOM"
-                      placeholder="DOM"
-                      value={addForm.mfg_date}
-                      onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
-                    />
-                  </div>
-                  {addFormErrors.mfg_date && <div className="form-help" style={{gridColumn:'1/-1'}}>{addFormErrors.mfg_date}</div>}
-                  <div className="input-group">
-                    <label>Shelf Life</label>
-                    <input className="input" placeholder="e.g., 12 days" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
-                  </div>
-                  <div className="input-group">
+                  {addFormErrors.mfg_date && <div className="form-help" style={{marginTop:6}}>{addFormErrors.mfg_date}</div>}
+                  {/* Quantity full width */}
+                  <div className="input-group" style={{marginTop:12}}>
                     <label>Quantity <span style={{color:'#fca5a5'}}>*</span></label>
-                    <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" onKeyDown={(e)=>{
-                      if (e.key==='Enter') {
-                        e.preventDefault();
-                        const errs = {};
-                        if (!addForm.material_code) errs.material_code = 'Product required';
-                        const price = Number(addForm.price_per_unit);
-                        if (!(price>0)) errs.price_per_unit = 'Price required';
-                        if (!addForm.uom) errs.uom = 'UOM required';
-                        if (!addForm.mfg_date) errs.mfg_date = 'DOM required';
-                        const qty = Number(addForm.quantity);
-                        if (!(qty>0)) errs.quantity = 'Quantity required';
-                        if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
-                        setAddFormErrors({});
-                        const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
-                        setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
-                        // Sticky UOM and Price
-                        setAddForm(prev=>({ material_code:'', material_type:'', price_per_unit: prev.price_per_unit, uom: prev.uom||'Piece', mfg_date:'', shelf_life:'', quantity:'' }));
-                        setAddSuccess('Item added');
-                        setTimeout(()=>setAddSuccess(''), 1500);
-                      }
-                    }} />
+                    <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
                     {addFormErrors.quantity && <div className="form-help">{addFormErrors.quantity}</div>}
                   </div>
+                  {/* Quick-add chips */}
+                  <div className="actions-row" style={{marginTop:8, gap:6}}>
+                    <button type="button" className="btn btn-sm secondary" onClick={()=>setAddForm(prev=>({...prev, quantity:String(12), uom:'Piece'}))}>12 pcs</button>
+                    <button type="button" className="btn btn-sm secondary" onClick={()=>setAddForm(prev=>({...prev, quantity:String(1), uom:'Tray'}))}>1 Tray</button>
+                    <button type="button" className="btn btn-sm secondary" onClick={()=>setAddForm(prev=>({...prev, quantity:String(2), uom:'Tray'}))}>2 Trays</button>
+                  </div>
+                  {/* Actions stacked on mobile */}
+                  <div className="actions-row" style={{marginTop:12, gap:10, flexDirection:'column'}}>
+                    <button type="button" className="btn outlined btn-mobile-full" onClick={()=>{
+                      const errs = {};
+                      if (!addForm.material_code) errs.material_code = 'Product required';
+                      const price = Number(addForm.price_per_unit);
+                      if (!(price>0)) errs.price_per_unit = 'Price required';
+                      if (!addForm.uom) errs.uom = 'UOM required';
+                      if (!addForm.mfg_date) errs.mfg_date = 'DOM required';
+                      const qty = Number(addForm.quantity);
+                      if (!(qty>0)) errs.quantity = 'Quantity required';
+                      if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
+                      setAddFormErrors({});
+                      const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
+                      setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
+                      setAddForm({ material_code:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
+                      setAddSuccess('Item added');
+                      setTimeout(()=>setAddSuccess(''), 1500);
+                    }}>➕ Add Item</button>
+                    <button type="button" className="btn outlined btn-mobile-full" onClick={()=> setRows(prev=> {
+                      const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
+                      return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
+                    })}>➕ Add Row</button>
+                  </div>
+                  {addSuccess && <div className="toast" style={{marginTop:8}}>{addSuccess}</div>}
                 </div>
-                <div className="actions-row" style={{justifyContent:'flex-end', marginTop:8}}>
-                  <button type="button" className="btn primary" onClick={()=>{
-                    const errs = {};
-                    if (!addForm.material_code) errs.material_code = 'Product required';
-                    const price = Number(addForm.price_per_unit);
-                    if (!(price>0)) errs.price_per_unit = 'Price required';
-                    if (!addForm.uom) errs.uom = 'UOM required';
-                    if (!addForm.mfg_date) errs.mfg_date = 'DOM required';
-                    const qty = Number(addForm.quantity);
-                    if (!(qty>0)) errs.quantity = 'Quantity required';
-                    if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
-                    setAddFormErrors({});
-                    const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
-                    setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
-                    setAddForm({ material_code:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
-                    setAddSuccess('Item added');
-                    setTimeout(()=>setAddSuccess(''), 1500);
-                  }}>Add Item</button>
-                </div>
-                {addSuccess && <div className="toast" style={{marginTop:8}}>{addSuccess}</div>}
               </div>
             </div>
             {/* Desktop toolbar above table */}
@@ -442,8 +472,8 @@ const Purchases = () => {
                 </div>
               )}
             </div>
-            <div style={{display:'flex', justifyContent:'flex-end', marginTop:8, gap:12}}>
-              <button type="button" className="btn btn-mobile-full" onClick={()=> setRows(prev=> {
+            <div className="hidden sm:flex" style={{justifyContent:'flex-end', marginTop:8, gap:12}}>
+              <button type="button" className="btn" onClick={()=> setRows(prev=> {
                 const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
                 return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
               })}>+ Add Row</button>
@@ -451,7 +481,7 @@ const Purchases = () => {
           </div>
           {/* New editable purchases table goes below */}
           <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
-            <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
+            <button className="btn cta w-full sm:w-auto" type="submit" disabled={!canSave}>{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
                 type="button"
