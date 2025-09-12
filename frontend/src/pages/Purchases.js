@@ -206,7 +206,7 @@ const Purchases = () => {
           <h1 className="page-title">Purchases</h1>
           <p className="page-subtitle">Create and manage supplier purchases</p>
         </div>
-        {/* Shop chip removed */}
+        <div className="badge" title="Build tag">build: 1207</div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
