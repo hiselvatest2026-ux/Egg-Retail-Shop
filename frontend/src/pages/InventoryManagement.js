@@ -28,12 +28,30 @@ const InventoryManagement = () => {
   const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
   const loadOpening = async () => {
     try { 
-      const [p, m] = await Promise.all([
+      const [p, m, ps] = await Promise.all([
         axios.get(`${baseUrl}/inventory/opening-stocks`),
-        axios.get(`${baseUrl}/inventory/opening-stocks/materials`)
+        axios.get(`${baseUrl}/inventory/opening-stocks/materials`),
+        axios.get(`${baseUrl}/products/stock`)
       ]);
       setOpening(p.data||[]);
-      setOpeningMaterials(m.data||[]);
+      // Compute opening + purchases at material level
+      const productsStock = Array.isArray(ps.data) ? ps.data : [];
+      const purchasedByMaterial = {};
+      for (const row of productsStock) {
+        const name = String(row.name||'').toLowerCase();
+        let code = '';
+        if (name.includes('egg')) code = 'M00001';
+        else if (name.includes('paneer') || name.includes('panner')) code = 'M00002';
+        if (!code) continue;
+        purchasedByMaterial[code] = (purchasedByMaterial[code]||0) + Number(row.purchased_qty||0);
+      }
+      const mat = Array.isArray(m.data) ? m.data : [];
+      const merged = mat.map(r => {
+        const base = Number(r.quantity||0);
+        const add = Number(purchasedByMaterial[r.material_code]||0);
+        return { ...r, quantity: String(base + add) };
+      });
+      setOpeningMaterials(merged);
     } catch(e){ console.error('load opening failed', e);} }
   const loadClosing = async () => {
     try { 
