@@ -488,8 +488,11 @@ const Sales = () => {
           </div>
           {/* Divider */}
           <div style={{height:1, background:'#3A3A4D', margin:'6px 0 12px 0'}} />
-          <div className="card-header" style={{borderRadius:12, marginBottom:12}}>
+          <div className="card-header" style={{borderRadius:12, marginBottom:12, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
             <div className="card-title" style={{fontSize:18}}>Add Item</div>
+            <div className="sm:hidden" style={{display:'flex', alignItems:'center'}}>
+              <div className="badge" style={{fontSize:14, padding:'6px 10px', background:'#0d1520', color:'#60a5fa', borderColor:'#1e3a5f', fontWeight:900}}>₹ {(itemsTotalWithGst + addFormTotalWithGst).toFixed(2)}</div>
+            </div>
           </div>
           {/* Add Item row */}
           <div className="card">
@@ -601,7 +604,7 @@ const Sales = () => {
                     <th style={{textAlign:'right'}}>Quantity</th>
                     <th style={{textAlign:'right'}}>SGST</th>
                     <th style={{textAlign:'right'}}>CGST</th>
-                    
+                    <th style={{textAlign:'center'}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -612,13 +615,55 @@ const Sales = () => {
                       <tr key={idx}>
                         <td>{it.material_code}</td>
                         <td>{label}</td>
-                        <td style={{textAlign:'right'}}>{Number(it.price_per_piece||0).toFixed(2)}</td>
-                        <td>{it.qty_unit||'Piece'}</td>
-                        <td>{it.dom || '-'}</td>
-                        <td style={{textAlign:'right'}}>{it.effectiveQty||0}</td>
+                        <td style={{textAlign:'right'}}>
+                          {editIdx === idx ? (
+                            <input className="input" value={editForm?.price_per_piece||''} onChange={e=>setEditForm(prev=>({...prev, price_per_piece:e.target.value}))} inputMode="decimal" />
+                          ) : (
+                            Number(it.price_per_piece||0).toFixed(2)
+                          )}
+                        </td>
+                        <td>
+                          {editIdx === idx ? (
+                            <select className="input" value={editForm?.qty_unit||'Piece'} onChange={e=>setEditForm(prev=>({...prev, qty_unit:e.target.value}))}>
+                              <option value="Piece">Piece</option>
+                              <option value="Tray">Tray</option>
+                            </select>
+                          ) : (it.qty_unit||'Piece')}
+                        </td>
+                        <td>
+                          {editIdx === idx ? (
+                            <input className="input" value={editForm?.dom||''} onChange={e=>setEditForm(prev=>({...prev, dom:e.target.value}))} />
+                          ) : (it.dom || '-')}
+                        </td>
+                        <td style={{textAlign:'right'}}>
+                          {editIdx === idx ? (
+                            <input className="input" value={editForm?.effectiveQty|| (editForm?.qty_unit==='Tray' ? String(Number(editForm?.trays||0)*30) : String(editForm?.qty_pieces||''))} onChange={e=>{
+                              const v = e.target.value; setEditForm(prev=>{
+                                if ((prev?.qty_unit||'Piece') === 'Tray') return { ...prev, effectiveQty: Number(v)||0, trays: String(Math.ceil((Number(v)||0)/30)) };
+                                return { ...prev, effectiveQty: Number(v)||0, qty_pieces: String(Number(v)||0) };
+                              });
+                            }} inputMode="numeric" />
+                          ) : (it.effectiveQty||0)}
+                        </td>
                         <td style={{textAlign:'right'}}>{gst.sgstAmt.toFixed(2)}</td>
                         <td style={{textAlign:'right'}}>{gst.cgstAmt.toFixed(2)}</td>
-                        
+                        <td style={{textAlign:'center'}}>
+                          {editIdx === idx ? (
+                            <div className="btn-group" style={{justifyContent:'center'}}>
+                              <button type="button" className="btn btn-sm" onClick={()=>{
+                                if (!editForm) { setEditIdx(null); return; }
+                                setLineItems(prev=> prev.map((row,i)=> i===idx ? { ...row, ...editForm } : row));
+                                setEditIdx(null); setEditForm(null);
+                              }}>Save</button>
+                              <button type="button" className="btn secondary btn-sm" onClick={()=>{ setEditIdx(null); setEditForm(null); }}>Cancel</button>
+                            </div>
+                          ) : (
+                            <div className="btn-group" style={{justifyContent:'center'}}>
+                              <button type="button" className="btn btn-sm" onClick={()=>{ setEditIdx(idx); setEditForm(it); }}>Edit</button>
+                              <button type="button" className="btn danger btn-sm" onClick={()=> setLineItems(prev=> prev.filter((_,i)=> i!==idx))}>Delete</button>
+                            </div>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
