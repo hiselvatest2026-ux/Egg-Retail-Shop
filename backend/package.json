@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "migrate": "node migrate.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "clear:tx": "node scripts/clearTransactions.js",
+    "stock:show": "node scripts/showClosingStocks.js"
   },
   "dependencies": {
     "express": "^4.18.2",
