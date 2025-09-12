@@ -733,6 +733,7 @@ const Sales = () => {
                 </div>
               </div>
             </details>
+            {error && <div className="form-help" style={{flex:'1 1 100%'}}>{error}</div>}
             <button type="submit" className="btn primary">Generate Invoice</button>
           </div>
         </Card>
