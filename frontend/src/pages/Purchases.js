@@ -271,23 +271,26 @@ const Purchases = () => {
                     <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                     {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
                   </div>
-                  <div className="input-group">
-                    <label>DOM <span style={{color:'#fca5a5'}}>*</span></label>
-                    <input
-                      className="input date"
-                      type="date"
-                      aria-label="DOM"
-                      title="DOM"
-                      placeholder="DOM"
-                      value={addForm.mfg_date}
-                      onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
-                    />
+                  {/* Small fields aligned two-column on mobile */}
+                  <div className="form-grid-2-tight" style={{gridColumn:'1/-1'}}>
+                    <div className="input-group">
+                      <label>DOM <span style={{color:'#fca5a5'}}>*</span></label>
+                      <input
+                        className="input date"
+                        type="date"
+                        aria-label="DOM"
+                        title="DOM"
+                        placeholder="DOM"
+                        value={addForm.mfg_date}
+                        onChange={e=>setAddForm({...addForm, mfg_date:e.target.value})}
+                      />
+                    </div>
+                    <div className="input-group">
+                      <label>Shelf Life</label>
+                      <input className="input" placeholder="e.g., 12 days" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
+                    </div>
                   </div>
                   {addFormErrors.mfg_date && <div className="form-help" style={{gridColumn:'1/-1'}}>{addFormErrors.mfg_date}</div>}
-                  <div className="input-group">
-                    <label>Shelf Life</label>
-                    <input className="input" placeholder="e.g., 12 days" value={addForm.shelf_life} onChange={e=>setAddForm({...addForm, shelf_life:e.target.value})} />
-                  </div>
                   <div className="input-group">
                     <label>Quantity <span style={{color:'#fca5a5'}}>*</span></label>
                     <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" onKeyDown={(e)=>{
@@ -315,7 +318,7 @@ const Purchases = () => {
                   </div>
                 </div>
                 <div className="actions-row" style={{justifyContent:'flex-end', marginTop:8}}>
-                  <button type="button" className="btn primary" onClick={()=>{
+                  <button type="button" className="btn outlined" onClick={()=>{
                     const errs = {};
                     if (!addForm.material_code) errs.material_code = 'Product required';
                     const price = Number(addForm.price_per_unit);
@@ -451,7 +454,7 @@ const Purchases = () => {
           </div>
           {/* New editable purchases table goes below */}
           <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
-            <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
+            <button className="btn cta w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
                 type="button"
