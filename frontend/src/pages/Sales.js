@@ -289,6 +289,26 @@ const Sales = () => {
         } else { 
           const res = await createSale(payload);
           const newSale = res.data;
+          // Also create a sale_item so stock reduces automatically
+          try {
+            // Map material_code/product_name to product_id
+            let productId = null;
+            const mat = materials.find(m=> String(m.part_code)===String(form.material_code));
+            if (mat) {
+              const prod = products.find(p=> String(p.name||'').toLowerCase() === String(mat.metal_type||'').toLowerCase());
+              if (prod) productId = Number(prod.id);
+            }
+            if (!productId && form.product_name) {
+              const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(form.product_name||'').toLowerCase());
+              if (prod2) productId = Number(prod2.id);
+            }
+            const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
+            const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
+            const pricePerPiece = unitFinal > 0 ? unitFinal : (Number(form.total||0) / (qty||1));
+            if (productId && qty>0 && pricePerPiece>0) {
+              await createSaleItem(newSale.id, { product_id: productId, quantity: qty, price: pricePerPiece });
+            }
+          } catch(_e) {}
           if (recordPaymentNow) {
             const amt = Number(paymentAtCreate.amount || form.total || 0);
             const mode = paymentAtCreate.mode || 'Cash';
@@ -649,7 +669,11 @@ const Sales = () => {
                         {balance>0 ? `₹ ${balance.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}` : 'Paid ✅'}
                       </td>
                       <td style={{textAlign:'right'}}>
-                        <button className="btn primary btn-sm" onClick={()=>setPayingSale(s)}>Record Payment</button>
+                        {balance > 0 ? (
+                          <button className="btn primary btn-sm" onClick={()=>setPayingSale(s)}>Record Payment</button>
+                        ) : (
+                          <span style={{color:'#22c55e', fontWeight:700}}>Paid</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -676,7 +700,11 @@ const Sales = () => {
                       </div>
                     </div>
                     <div className="actions-row" style={{marginTop:10}}>
-                      <button className="btn primary btn-mobile-full" onClick={()=>setPayingSale(s)}>Record Payment</button>
+                      {balance > 0 ? (
+                        <button className="btn primary btn-mobile-full" onClick={()=>setPayingSale(s)}>Record Payment</button>
+                      ) : (
+                        <span style={{color:'#22c55e', fontWeight:700}}>Paid</span>
+                      )}
                     </div>
                   </div>
                 </div>
