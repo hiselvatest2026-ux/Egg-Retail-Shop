@@ -4,7 +4,7 @@ import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingF
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import ShopChip from '../components/ShopChip';
+// Removed ShopChip
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
@@ -12,7 +12,7 @@ const Sales = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit: 'Piece', trays: '', sale_type: 'Cash', payment_mode: 'Cash', route_trip_id: '' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit: 'Piece', trays: '', sale_type: 'Cash', payment_mode: 'Cash' });
   
   const [available, setAvailable] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -146,9 +146,7 @@ const Sales = () => {
         (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
         setPaymentsByInvoice(map);
         setPaymentsList(pays.data||[]);
-        const today = new Date().toISOString().slice(0,10);
-        const tr = await getRouteTrips({ date: today });
-        setTrips(tr.data||[]);
+        // Removed route trips (location/shop removed)
         
       } catch(e){ 
         console.error('data load failed', e);
@@ -267,7 +265,7 @@ const Sales = () => {
           setError(`Insufficient stock for ${first.label || 'item'}: required ${first.required}, available ${first.availableNow}`);
           return;
         }
-        const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null });
+        const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type });
         const newSale = res.data;
         const tasks = itemsToSave.map(async (it) => {
           const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : (it.effectiveQty != null ? Number(it.effectiveQty||0) : Number(it.qty_pieces||0));
@@ -324,7 +322,7 @@ const Sales = () => {
         const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
         const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
         const pricePerPiece = unitFinal > 0 ? unitFinal : (Number(form.total||0) / (qty||1));
-        const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null };
+        const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type };
         if (editing) { 
           await updateSale(editing, payload); 
         } else { 
@@ -462,7 +460,7 @@ const Sales = () => {
           <h1 className="page-title">Sales</h1>
           <p className="page-subtitle">Record sales and access invoices</p>
         </div>
-        <ShopChip />
+        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
