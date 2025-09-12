@@ -546,7 +546,21 @@ const Sales = () => {
                             // Also fill DOM from latest purchase mfg_date if available
                             return getLastPurchasePrice({ material_code: code }).then(rr=>{
                               const dom = rr?.data?.dom || '';
-                              if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                              if (dom) {
+                                setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                              } else {
+                                // Fallback: compute DOM from Material Master shelf_life (e.g., "12 days")
+                                const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
+                                const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
+                                if (numDays > 0) {
+                                  const d = new Date();
+                                  d.setDate(d.getDate() - numDays);
+                                  const dd = String(d.getDate()).padStart(2,'0');
+                                  const mm = String(d.getMonth()+1).padStart(2,'0');
+                                  const yy = d.getFullYear();
+                                  setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
+                                }
+                              }
                             }).catch(()=>{});
                           })
                           .catch(()=>{
@@ -555,7 +569,21 @@ const Sales = () => {
                               const price = Number(rr?.data?.price || 0);
                               const dom = rr?.data?.dom || '';
                               if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
-                              if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                              if (dom) {
+                                setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                              } else {
+                                // Fallback: compute DOM from shelf_life
+                                const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
+                                const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
+                                if (numDays > 0) {
+                                  const d = new Date();
+                                  d.setDate(d.getDate() - numDays);
+                                  const dd = String(d.getDate()).padStart(2,'0');
+                                  const mm = String(d.getMonth()+1).padStart(2,'0');
+                                  const yy = d.getFullYear();
+                                  setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
+                                }
+                              }
                             }).catch(()=>{});
                           });
                       }
