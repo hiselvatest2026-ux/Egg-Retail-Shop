@@ -230,12 +230,20 @@ const Sales = () => {
           if (!pid && it.material_code) {
             const mat = materials.find(m=> String(m.part_code)===String(it.material_code));
             if (mat) {
-              const prod = products.find(p=> String(p.name||'').toLowerCase() === String(mat.metal_type||'').toLowerCase());
+              const label = String(mat.metal_type||'').toLowerCase();
+              let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
+                || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+              if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+              if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
               if (prod) pid = Number(prod.id);
             }
           }
           if (!pid && it.material_type) {
-            const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(it.material_type||'').toLowerCase());
+            const label = String(it.material_type||'').toLowerCase();
+            let prod2 = products.find(p=> String(p.name||'').toLowerCase() === label)
+              || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+            if (!prod2 && /egg/.test(label)) prod2 = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+            if (!prod2 && /paneer|panner/.test(label)) prod2 = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
             if (prod2) pid = Number(prod2.id);
           }
           if (!pid) return null;
@@ -304,11 +312,19 @@ const Sales = () => {
             let productId = null;
             const mat = materials.find(m=> String(m.part_code)===String(form.material_code));
             if (mat) {
-              const prod = products.find(p=> String(p.name||'').toLowerCase() === String(mat.metal_type||'').toLowerCase());
+              const label = String(mat.metal_type||'').toLowerCase();
+              let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
+                || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+              if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+              if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
               if (prod) productId = Number(prod.id);
             }
             if (!productId && form.product_name) {
-              const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(form.product_name||'').toLowerCase());
+              const label = String(form.product_name||'').toLowerCase();
+              let prod2 = products.find(p=> String(p.name||'').toLowerCase() === label)
+                || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+              if (!prod2 && /egg/.test(label)) prod2 = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+              if (!prod2 && /paneer|panner/.test(label)) prod2 = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
               if (prod2) productId = Number(prod2.id);
             }
             if (!productId) {
