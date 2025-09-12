@@ -151,22 +151,3 @@ router.post('/seed/routes-basic', async (_req, res) => {
   }
 });
 
-// Recompute opening stocks from purchases (global, all locations)
-router.post('/opening/recompute', async (_req, res) => {
-  try {
-    await pool.query('BEGIN');
-    await pool.query('TRUNCATE opening_stocks');
-    await pool.query(`
-      INSERT INTO opening_stocks (product_id, quantity)
-      SELECT product_id, COALESCE(SUM(quantity),0) AS qty
-      FROM purchase_items
-      GROUP BY product_id
-    `);
-    await pool.query('COMMIT');
-    res.json({ message: 'Opening stocks recomputed from purchases' });
-  } catch (e) {
-    try { await pool.query('ROLLBACK'); } catch(_){}
-    res.status(500).json({ message: e.message });
-  }
-});
-

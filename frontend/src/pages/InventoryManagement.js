@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import { getStock, getInventoryInsightsByLocation, getLocations, runSeed, recomputeOpening } from '../api/api';
+import { getStock, getInventoryInsightsByLocation, getLocations, runSeed } from '../api/api';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown';
 import ShopChip from '../components/ShopChip';
@@ -93,7 +93,6 @@ const InventoryManagement = () => {
             />
           </div>
           <button className="btn secondary" onClick={async()=>{ try { await runSeed(); await load(locationId); } catch(e){ console.error('seed failed', e);} }}>Seed Demo Data</button>
-          <button className="btn secondary" onClick={async()=>{ try { await recomputeOpening(); await loadOpening(); await loadClosing(); } catch(e){ console.error('recompute failed', e);} }}>Recompute Opening from Purchases</button>
         </div>
         <div className="stat-grid">
           <div className="stat"><div className="stat-label">Total SKUs</div><div className="stat-value">{totalSkus}</div></div>

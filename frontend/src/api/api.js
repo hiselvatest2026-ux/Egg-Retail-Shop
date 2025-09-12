@@ -158,7 +158,6 @@ export const getTotalCollection = (params) => axios.get(`${API_URL}/collection-a
 
 // Admin utilities
 export const clearTransactions = () => axios.post(`${API_URL}/admin/clear-transactions`);
-export const recomputeOpening = () => axios.post(`${API_URL}/admin/opening/recompute`);
 
 // Sale Items
 export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);
