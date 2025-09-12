@@ -5,7 +5,7 @@ import Dropdown from '../components/Dropdown';
 
 const Customers = () => {
   const [customers, setCustomers] = useState([]);
-  const [form, setForm] = useState({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable' , contact_info: '', credit_limit: ''});
+  const [form, setForm] = useState({ name: '', phone: '', category: 'Retail', gstin: '', contact_info: '', credit_limit: ''});
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -46,7 +46,7 @@ const Customers = () => {
         console.log('Create result:', result);
         setSuccess('Customer added.');
       }
-      setForm({ name: '', phone: '', category: 'Retail', gstin: '', tax_applicability: 'Taxable', contact_info: '', credit_limit: '' });
+      setForm({ name: '', phone: '', category: 'Retail', gstin: '', contact_info: '', credit_limit: '' });
       setEditing(null);
       await fetchCustomers();
     } catch (e) {
@@ -55,7 +55,7 @@ const Customers = () => {
     }
   };
 
-  const startEdit = (c) => { setEditing(c.id); setForm({ name: c.name || '', phone: c.phone || '', category: c.category || 'Retail', gstin: c.gstin || '', tax_applicability: c.tax_applicability || 'Taxable', contact_info: c.contact_info || '', credit_limit: c.credit_limit || '' }); };
+  const startEdit = (c) => { setEditing(c.id); setForm({ name: c.name || '', phone: c.phone || '', category: c.category || 'Retail', gstin: c.gstin || '', contact_info: c.contact_info || '', credit_limit: c.credit_limit || '' }); };
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -91,14 +91,7 @@ const Customers = () => {
           <label>GSTIN</label>
           <input className="input" type="text" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} placeholder="If applicable" />
         </div>
-        <div className="input-group" style={{overflow:'visible'}}>
-          <label>Tax Applicability</label>
-          <Dropdown
-            value={form.tax_applicability}
-            onChange={(v)=>setForm({...form, tax_applicability: v})}
-            options={[{value:'Taxable',label:'Taxable'},{value:'Non-Taxable',label:'Non-Taxable'}]}
-          />
-        </div>
+        
         <div className="input-group">
           <label>Contact</label>
           <input className="input" type="text" value={form.contact_info} onChange={e=>setForm({...form, contact_info: e.target.value})} />
@@ -109,7 +102,7 @@ const Customers = () => {
         </div>
         <div className="actions-row">
           <button className="btn w-full sm:w-auto" type="submit" onClick={() => console.log('Button clicked!')}>{editing ? 'Update' : 'Add'}</button>
-          {editing && <button type="button" className="btn secondary w-full sm:w-auto" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', tax_applicability:'Taxable', contact_info:'', credit_limit:'' }); }}>Cancel</button>}
+          {editing && <button type="button" className="btn secondary w-full sm:w-auto" onClick={()=>{ setEditing(null); setForm({ name: '', phone:'', category:'Retail', gstin:'', contact_info:'', credit_limit:'' }); }}>Cancel</button>}
         </div>
         {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
         {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
@@ -119,7 +112,7 @@ const Customers = () => {
       <Card title="Customers List">
         <div className="hidden sm:block">
           <table className="table table-hover mt-2">
-            <thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Phone</th><th>Category</th><th>Credit Limit</th><th>GSTIN</th><th>Tax Applicability</th><th>Contact</th><th>Actions</th></tr></thead>
+            <thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Phone</th><th>Category</th><th>Credit Limit</th><th>GSTIN</th><th>Contact</th><th>Actions</th></tr></thead>
             <tbody>
               {customers.map(c => (
                 <tr key={c.id}>
@@ -130,7 +123,6 @@ const Customers = () => {
                   <td>{c.category || '-'}</td>
                   <td>₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                   <td>{c.gstin || '-'}</td>
-                  <td>{c.tax_applicability || '-'}</td>
                   <td>{c.contact_info || '-'}</td>
                   <td>
                     <div className="btn-group">
@@ -157,7 +149,6 @@ const Customers = () => {
                   <div className="pair"><strong>Phone:</strong> {c.phone || '-'}</div>
                   <div className="pair" style={{textAlign:'right'}}><strong>Credit:</strong><div>₹ {Number(c.credit_limit||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}</div></div>
                   <div className="pair"><strong>GSTIN:</strong> {c.gstin || '-'}</div>
-                  <div className="pair" style={{flexBasis:'100%'}}><strong>Tax:</strong> {c.tax_applicability || '-'}</div>
                   <div className="pair" style={{flexBasis:'100%'}}><strong>Contact:</strong> {c.contact_info || '-'}</div>
                 </div>
                 <div className="btn-group" style={{marginTop:10}}>

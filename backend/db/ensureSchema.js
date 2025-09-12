@@ -32,7 +32,7 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS phone VARCHAR(20);"
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS category VARCHAR(20);"
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS gstin VARCHAR(20);"
-    ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS tax_applicability VARCHAR(20);"
+    
     ,"CREATE SEQUENCE IF NOT EXISTS customer_code_seq START 1;"
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS customer_code VARCHAR(20);"
     ,"ALTER TABLE IF EXISTS customers ADD COLUMN IF NOT EXISTS credit_limit NUMERIC(10,2) DEFAULT 0;"

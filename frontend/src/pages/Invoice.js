@@ -77,7 +77,6 @@ const Invoice = () => {
             <div style={{whiteSpace:'pre-line'}}>{sale.customer_address || ''}</div>
             <div>Phone: {sale.customer_phone || '-'}</div>
             <div>GSTIN: {sale.customer_gstin || '-'}</div>
-            <div>Tax Status: {sale.tax_applicability || '-'}</div>
           </div>
         </div>
 

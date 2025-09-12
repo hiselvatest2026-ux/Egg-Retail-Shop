@@ -82,19 +82,8 @@ exports.getPricingForSale = async (req, res) => {
     
     // Get customer tax applicability (optional)
     let isTaxable = true;
-    if (customer_id) {
-      const customerResult = await pool.query(
-        'SELECT tax_applicability FROM customers WHERE id = $1',
-        [customer_id]
-      );
-      if (customerResult.rows.length === 0) {
-        // If missing, default to taxable instead of failing
-        isTaxable = true;
-      } else {
-        const customer = customerResult.rows[0];
-        isTaxable = customer.tax_applicability === 'Taxable';
-      }
-    }
+    // Customer tax applicability removed; default to taxable
+    isTaxable = true;
     
     // Get pricing information
     let pricingQuery = `
@@ -144,7 +133,7 @@ exports.getSaleInvoice = async (req, res) => {
   try {
     const { id } = req.params;
     const saleResult = await pool.query(
-      `SELECT s.*, c.name AS customer_name, c.tax_applicability, c.phone AS customer_phone, c.gstin AS customer_gstin,
+      `SELECT s.*, c.name AS customer_name, c.phone AS customer_phone, c.gstin AS customer_gstin,
               COALESCE(c.customer_code, 'C' || LPAD(CAST(c.id AS TEXT), 6, '0')) AS customer_code,
               COALESCE(c.contact_info, '') AS customer_address,
               rt.route_name AS route_name, rt.vehicle_number AS route_vehicle
@@ -192,7 +181,7 @@ exports.getSaleInvoice = async (req, res) => {
     let company = settingsRes.rows[0] || {};
 
     // Tax breakdown per item (assume intra-state split when taxable)
-    const isTaxable = sale.tax_applicability === 'Taxable';
+    const isTaxable = true;
     let workingItems = items;
     // Fallback: if there are no sale_items, synthesize a single item so invoice renders
     if (!workingItems || workingItems.length === 0) {
