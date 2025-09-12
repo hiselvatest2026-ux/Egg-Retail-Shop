@@ -447,8 +447,8 @@ const Purchases = () => {
                 </div>
               )}
             </div>
-            <div style={{display:'flex', justifyContent:'flex-end', marginTop:8, gap:12}}>
-              <button type="button" className="btn btn-mobile-full" onClick={()=> setRows(prev=> {
+            <div className="hidden sm:flex" style={{justifyContent:'flex-end', marginTop:8, gap:12}}>
+              <button type="button" className="btn" onClick={()=> setRows(prev=> {
                 const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
                 return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
               })}>+ Add Row</button>
