@@ -246,6 +246,13 @@ const Sales = () => {
             return { pid, availableNow, required: effQty, label: it.material_type || it.material_code };
           } catch (_) { return null; }
         }));
+        // Guard: ensure all items mapped to a product
+        const unmapped = (itemsToSave||[]).filter((it, i)=> !stockChecks[i] || !stockChecks[i].pid);
+        if (unmapped.length > 0) {
+          const first = unmapped[0];
+          setError(`Cannot map item to product: ${first.material_type || first.material_code}. Please verify Material Master and Products.`);
+          return;
+        }
         const shortages = (stockChecks||[]).filter(chk => chk && chk.required > chk.availableNow);
         if (shortages.length > 0) {
           const first = shortages[0];
@@ -302,6 +309,10 @@ const Sales = () => {
             if (!productId && form.product_name) {
               const prod2 = products.find(p=> String(p.name||'').toLowerCase() === String(form.product_name||'').toLowerCase());
               if (prod2) productId = Number(prod2.id);
+            }
+            if (!productId) {
+              setError('Cannot map selected item to a product. Please verify Material Master and Products.');
+              return;
             }
             const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
             const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
