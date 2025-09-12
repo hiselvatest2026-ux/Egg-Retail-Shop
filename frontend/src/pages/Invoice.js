@@ -82,14 +82,20 @@ const Invoice = () => {
 
         <table className="table mb-4">
           <thead>
-            <tr><th>#</th><th>HSN/SAC</th><th>Product</th><th>Qty</th><th>Rate</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr>
+            <tr><th>#</th><th>HSN/SAC</th><th>Product</th><th>Qty</th><th>Price per Unit</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr>
           </thead>
           <tbody>
             {items.length > 0 ? (
               items.map((it, idx) => {
                 const qty = Number(it.quantity || 0);
                 const rate = Number(it.price || 0);
-                const gstPercent = Number(it.gst_percent || 0);
+                let gstPercent = Number(it.gst_percent || 0);
+                if (!gstPercent) {
+                  const nm = String(it.product_name||'').toLowerCase();
+                  if (nm.includes('paneer') || nm.includes('panner') || String(it.hsn_sac||'') === '0406') {
+                    gstPercent = 5;
+                  }
+                }
                 const taxable = Number(it.taxable_value != null ? it.taxable_value : (qty * rate));
                 const cgst = Number(it.cgst != null ? it.cgst : (gstPercent > 0 ? (taxable * (gstPercent/2) / 100) : 0));
                 const sgst = Number(it.sgst != null ? it.sgst : (gstPercent > 0 ? (taxable * (gstPercent/2) / 100) : 0));
