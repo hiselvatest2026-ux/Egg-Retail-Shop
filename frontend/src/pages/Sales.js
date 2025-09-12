@@ -20,6 +20,7 @@ const Sales = () => {
   const [products, setProducts] = useState([]);
   
   const [lineItems, setLineItems] = useState([]);
+  const [availableHint, setAvailableHint] = useState(null);
   const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
   const [addForm, setAddForm] = useState({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
   const [addErrors, setAddErrors] = useState({});
@@ -58,7 +59,7 @@ const Sales = () => {
     }
   }, [activeTab]);
   const [paymentsList, setPaymentsList] = useState([]);
-  const [paymentsFilter, setPaymentsFilter] = useState({ customer_id: '', invoice_id: '' });
+  const [paymentsFilter, setPaymentsFilter] = useState({ customer_id: '', invoice_id: '', showPaid: false });
   const [recordPaymentNow, setRecordPaymentNow] = useState(false);
   const [paymentAtCreate, setPaymentAtCreate] = useState({ amount: '', mode: 'Cash' });
   const [paymentsByInvoice, setPaymentsByInvoice] = useState({});
@@ -538,12 +539,38 @@ const Sales = () => {
                   />
                 </div>
                 
-                <input className="input" placeholder="Price / unit *" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" readOnly />
+                <div className="input-group">
+                  <label>Price / unit *</label>
+                  <div style={{display:'flex', gap:8}}>
+                    <input className="input" placeholder="Price / unit" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" />
+                    <button type="button" className="btn secondary btn-sm" title="Override price" onClick={()=>{/* price already editable; this button acts as hint chip */}}>
+                      {pricingInfo?.final_price ? `Pricing Master${pricingInfo?.is_taxable===false?' (Non-taxable)':''}` : 'Manual'}
+                    </button>
+                  </div>
+                </div>
                 <div style={{overflow:'visible'}}>
                   <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
                 <input className="input" placeholder="DOM (dd-mm-yyyy)" value={addForm.dom||''} readOnly />
-                <input className="input" placeholder="Quantity *" value={addForm.qty||''} onChange={e=>setAddForm({...addForm, qty:e.target.value})} inputMode="numeric" />
+                <div className="input-group">
+                  <label>Quantity *</label>
+                  <input className="input" placeholder="Quantity" value={addForm.qty||''} onChange={async e=>{
+                    const val = e.target.value; setAddForm(prev=>({...prev, qty: val}));
+                    try {
+                      // try to fetch available for current material
+                      const mat = sortedMaterials.find(m=> String(m.part_code)===String(addForm.material_code));
+                      if (mat) {
+                        const prod = products.find(p=> String(p.name||'').toLowerCase() === String(mat.metal_type||'').toLowerCase());
+                        if (prod) {
+                          const res = await getAvailable({ product_id: prod.id });
+                          const avail = Number(res.data?.available||0);
+                          setAvailableHint(avail);
+                        }
+                      }
+                    } catch(_) { setAvailableHint(null); }
+                  }} inputMode="numeric" />
+                  {availableHint != null && <div className="form-help">Available: {availableHint}</div>}
+                </div>
                 <input className="input" placeholder="SGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.sgstAmt? t.sgstAmt.toFixed(2):''; })()} readOnly />
                 <input className="input" placeholder="CGST (auto)" value={(()=>{ const t=computeItemGst({ ...addForm, qty_unit:addForm.uom, qty_pieces:addForm.uom==='Piece'?addForm.qty:'', trays:addForm.uom==='Tray'?addForm.qty:'' }); return t.cgstAmt? t.cgstAmt.toFixed(2):''; })()} readOnly />
               </div>
@@ -626,27 +653,41 @@ const Sales = () => {
           )}
           {/* Divider and actions */}
           <div style={{height:1, background:'#3A3A4D', margin:'12px 0'}} />
-          <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', alignItems:'center'}}>
-            <label style={{display:'flex', alignItems:'center', gap:8}}>
-              <input type="checkbox" checked={recordPaymentNow} onChange={(e)=>setRecordPaymentNow(e.target.checked)} />
-              Record payment now
-            </label>
-            {recordPaymentNow && (
-              <>
-                <input className="input" placeholder="Amount" value={paymentAtCreate.amount} onChange={(e)=>setPaymentAtCreate(prev=>({ ...prev, amount:e.target.value }))} inputMode="decimal" />
-                <div style={{overflow:'visible'}}>
-                  <Dropdown value={paymentAtCreate.mode} onChange={(v)=>setPaymentAtCreate(prev=>({ ...prev, mode:v }))} options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]} />
+          <div className="actions-row sticky-actions" style={{flexWrap:'wrap', justifyContent:'flex-end', alignItems:'center', gap:12}}>
+            <details className="accordion" style={{flex: '1 1 280px', maxWidth: 520}}>
+              <summary>Collect Payment Now</summary>
+              <div className="accordion-body">
+                <div className="form-grid" style={{gridTemplateColumns:'repeat(2, minmax(0,1fr))'}}>
+                  <div className="input-group">
+                    <label>Amount</label>
+                    <input className="input" placeholder={`₹ ${(itemsTotalWithGst + addFormTotalWithGst).toFixed(2)}`} value={paymentAtCreate.amount} onChange={(e)=>setPaymentAtCreate(prev=>({ ...prev, amount:e.target.value }))} inputMode="decimal" />
+                  </div>
+                  <div className="input-group" style={{overflow:'visible'}}>
+                    <label>Mode</label>
+                    <Dropdown value={paymentAtCreate.mode} onChange={(v)=>setPaymentAtCreate(prev=>({ ...prev, mode:v }))} options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]} />
+                  </div>
                 </div>
-              </>
-            )}
-            <button className="btn primary" onClick={handleSubmit}>Generate Invoice</button>
+                <div className="form-help">Tip: Leave amount blank to auto-use invoice total.</div>
+                <div style={{marginTop:8}}>
+                  <button type="button" className="btn secondary btn-sm" onClick={()=>{
+                    const suggested = (itemsTotalWithGst + addFormTotalWithGst).toFixed(2);
+                    setPaymentAtCreate(prev=>({ ...prev, amount: suggested }));
+                  }}>Use Invoice Total</button>
+                </div>
+              </div>
+            </details>
+            <button className="btn primary" onClick={()=>{ if (!paymentAtCreate.amount) { /* do nothing; still allowed */ } setRecordPaymentNow(Boolean(paymentAtCreate.amount)); handleSubmit(new Event('submit')); }}>Generate Invoice</button>
           </div>
         </Card>
         
         <Card title="Record Payments">
           {/* Desktop payments table */}
           <div className="hidden sm:block overflow-x-auto">
-            <div className="actions-row" style={{justifyContent:'flex-end', marginBottom:8}}>
+            <div className="actions-row" style={{justifyContent:'space-between', marginBottom:8}}>
+              <label style={{display:'flex', alignItems:'center', gap:8}}>
+                <input type="checkbox" checked={Boolean(paymentsFilter.showPaid)} onChange={(e)=>setPaymentsFilter(prev=>({...prev, showPaid: e.target.checked}))} />
+                Include paid invoices
+              </label>
               <button className="btn secondary btn-sm" onClick={async()=>{
                 try { await clearTransactions(); await fetchSales(); await reloadPayments(); setSuccess('Transactions cleared'); setTimeout(()=>setSuccess(''), 2000); } catch(e){ setError('Failed to clear'); }
               }}>Clear Transactions</button>
@@ -656,7 +697,11 @@ const Sales = () => {
                 <tr><th>ID</th><th>Customer</th><th style={{textAlign:'right'}}>Total</th><th style={{textAlign:'right'}}>Paid</th><th style={{textAlign:'right'}}>Balance</th><th style={{textAlign:'right'}}>Actions</th></tr>
               </thead>
               <tbody>
-                {sales.map(s => {
+                {sales.filter(s=>{
+                  const paid = Number(paymentsByInvoice[String(s.id)]||0);
+                  const balance = Math.max(0, Number(s.total) - paid);
+                  return paymentsFilter.showPaid ? true : balance > 0;
+                }).map(s => {
                   const paid = Number(paymentsByInvoice[String(s.id)]||0);
                   const balance = Math.max(0, Number(s.total) - paid);
                   return (
@@ -683,7 +728,11 @@ const Sales = () => {
           </div>
           {/* Mobile payments cards */}
           <div className="sm:hidden cards-mobile" style={{marginTop:12}}>
-            {sales.map(s=>{
+            {sales.filter(s=>{
+              const paid = Number(paymentsByInvoice[String(s.id)]||0);
+              const balance = Math.max(0, Number(s.total) - paid);
+              return paymentsFilter.showPaid ? true : balance > 0;
+            }).map(s=>{
               const paid = Number(paymentsByInvoice[String(s.id)]||0);
               const balance = Math.max(0, Number(s.total) - paid);
               const customerName = customers.find(c=>String(c.id)===String(s.customer_id))?.name || `#${s.customer_id}`;
