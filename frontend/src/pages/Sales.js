@@ -457,6 +457,7 @@ const Sales = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <Card title="Sales Entry">
+          <form onSubmit={handleSubmit}>
           {/* Section header emphasis */}
           <div className="card-header" style={{borderRadius:12, marginBottom:12}}>
             <div className="card-title" style={{fontSize:18}}>Sale Details</div>
@@ -736,6 +737,7 @@ const Sales = () => {
             {error && <div className="form-help" style={{flex:'1 1 100%'}}>{error}</div>}
             <button type="submit" className="btn primary">Generate Invoice</button>
           </div>
+          </form>
         </Card>
         
         <Card title="Record Payments">
