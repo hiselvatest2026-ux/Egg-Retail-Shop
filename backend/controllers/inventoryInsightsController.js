@@ -2,17 +2,14 @@ const pool = require('../models/db');
 
 exports.getInsights = async (req, res) => {
   try {
-    const { location_id } = req.query;
-    const locFilterPI = location_id ? 'AND pi.location_id = $1' : '';
-    const locFilterSI = location_id ? 'AND si.location_id = $1' : '';
-    const params = location_id ? [location_id] : [];
+    const params = [];
     // Current stock with value (using product price * stock as a naive value)
     const stockRes = await pool.query(`
       WITH purchase_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi WHERE 1=1 ${locFilterPI} GROUP BY product_id
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi GROUP BY product_id
       ),
       sales_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM sale_items si WHERE 1=1 ${locFilterSI} GROUP BY product_id
+        SELECT product_id, SUM(quantity) AS qty FROM sale_items si GROUP BY product_id
       ),
       adjustments AS (
         SELECT product_id, SUM(quantity) AS qty FROM stock_adjustments WHERE adjustment_type IN ('Missing','Wastage','Breakage') GROUP BY product_id
@@ -36,7 +33,7 @@ exports.getInsights = async (req, res) => {
     const moversRes = await pool.query(`
       SELECT si.product_id, p.name, SUM(si.quantity) AS qty
       FROM sale_items si JOIN sales s ON s.id=si.sale_id JOIN products p ON p.id=si.product_id
-      WHERE s.sale_date >= NOW() - INTERVAL '30 days' ${location_id ? 'AND si.location_id = $1' : ''}
+      WHERE s.sale_date >= NOW() - INTERVAL '30 days'
       GROUP BY si.product_id, p.name
       ORDER BY qty DESC
     `, params);
@@ -48,7 +45,7 @@ exports.getInsights = async (req, res) => {
     const avgRes = await pool.query(`
       SELECT si.product_id, AVG(si.quantity) AS avg_qty
       FROM sale_items si JOIN sales s ON s.id=si.sale_id
-      WHERE s.sale_date >= NOW() - INTERVAL '30 days' ${location_id ? 'AND si.location_id = $1' : ''}
+      WHERE s.sale_date >= NOW() - INTERVAL '30 days'
       GROUP BY si.product_id
     `, params);
     const avgMap = new Map(avgRes.rows.map(r => [String(r.product_id), Number(r.avg_qty||0)]));

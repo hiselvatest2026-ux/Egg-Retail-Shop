@@ -15,17 +15,7 @@ if (!API_URL) {
 }
 console.log('API_URL resolved to:', API_URL);
 
-// Attach current shop header to every request
-axios.interceptors.request.use((config) => {
-  try {
-    const shopId = (typeof window !== 'undefined') ? window.localStorage.getItem('currentShopId') : null;
-    if (shopId) {
-      config.headers = config.headers || {};
-      config.headers['X-Shop-Id'] = shopId;
-    }
-  } catch (_) {}
-  return config;
-});
+// Single-shop mode: no special headers
 
 // Set a sane global timeout to avoid hanging spinners (e.g., cold starts)
 axios.defaults.timeout = 10000; // 10 seconds
@@ -52,8 +42,6 @@ export const getProducts = () => axios.get(`${API_URL}/products`);
 export const getStock = (params) => axios.get(`${API_URL}/products/stock`, { params });
 export const getAvailable = (params) => axios.get(`${API_URL}/products/available`, { params });
 export const getInventoryInsights = () => axios.get(`${API_URL}/inventory/insights`);
-export const getInventoryInsightsByLocation = (params) => axios.get(`${API_URL}/inventory/insights`, { params });
-export const getLocations = () => axios.get(`${API_URL}/locations`);
 export const runSeed = () => axios.post(`${API_URL}/admin/seed`);
 
 // Purchase Orders removed

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import { getStock, getInventoryInsightsByLocation, getLocations, runSeed } from '../api/api';
+import { getStock, getInventoryInsights, runSeed } from '../api/api';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown';
-import ShopChip from '../components/ShopChip';
 
 const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
@@ -17,12 +16,11 @@ const InventoryManagement = () => {
   const [closing, setClosing] = useState([]);
   const [closingMaterials, setClosingMaterials] = useState([]);
   const [saveMsg, setSaveMsg] = useState('');
-  const load = async (loc) => {
+  const load = async () => {
     try {
-      const params = loc ? { location_id: loc } : undefined;
       const [r, i] = await Promise.all([
-        getStock(params),
-        getInventoryInsightsByLocation(params)
+        getStock(),
+        getInventoryInsights()
       ]);
       setRows(r.data||[]);
       setLowCount((r.data||[]).filter(x=>Number(x.stock)<=5).length);
@@ -32,21 +30,19 @@ const InventoryManagement = () => {
   const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
   const loadOpening = async () => {
     try { 
-      const params = locationId ? { params: { location_id: locationId } } : undefined;
       const [p, m] = await Promise.all([
-        axios.get(`${baseUrl}/inventory/opening-stocks`, params),
-        axios.get(`${baseUrl}/inventory/opening-stocks/materials`, params)
+        axios.get(`${baseUrl}/inventory/opening-stocks`),
+        axios.get(`${baseUrl}/inventory/opening-stocks/materials`)
       ]);
       setOpening(p.data||[]);
       setOpeningMaterials(m.data||[]);
     } catch(e){ console.error('load opening failed', e);} }
   const loadClosing = async () => {
     try { 
-      const params = locationId ? { params: { location_id: locationId } } : { params: {} };
-      const m = await axios.get(`${baseUrl}/inventory/closing-stocks/materials`, params);
+      const m = await axios.get(`${baseUrl}/inventory/closing-stocks/materials`);
       setClosingMaterials(m.data||[]);
     } catch(e){ console.error('load closing failed', e);} }
-  useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
+  useEffect(() => { (async()=>{ try{ await load(); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load failed', e);} })(); }, [tab]);
 
   const totalSkus = rows.length;
   const totalStock = rows.reduce((s,r)=>s+Number(r.stock||0),0);
@@ -57,7 +53,7 @@ const InventoryManagement = () => {
           <h1 className="page-title">Inventory Management</h1>
           <p className="page-subtitle">Live stock by product</p>
         </div>
-        <ShopChip />
+        
       </div>
 
       <div className="actions-row" style={{marginBottom:12}}>
@@ -70,15 +66,7 @@ const InventoryManagement = () => {
       <>
       <Card title="Stock Overview">
         <div className="actions-row" style={{marginBottom:12, overflow:'visible'}}>
-          <div style={{minWidth:260, width:260}}>
-            <Dropdown
-              value={String(locationId)}
-              onChange={(v)=>setLocationId(v)}
-              placeholder={'All locations'}
-              options={[{ value:'', label:'All locations' }, ...locations.map(l=>({ value:String(l.id), label:l.name }))]}
-            />
-          </div>
-          <button className="btn secondary" onClick={async()=>{ try { await runSeed(); await load(locationId); } catch(e){ console.error('seed failed', e);} }}>Seed Demo Data</button>
+          <button className="btn secondary" onClick={async()=>{ try { await runSeed(); await load(); } catch(e){ console.error('seed failed', e);} }}>Seed Demo Data</button>
         </div>
         <div className="stat-grid">
           <div className="stat"><div className="stat-label">Total SKUs</div><div className="stat-value">{totalSkus}</div></div>
