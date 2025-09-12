@@ -303,30 +303,7 @@ const Purchases = () => {
                   {addFormErrors.mfg_date && <div className="form-help sm:col-span-6">{addFormErrors.mfg_date}</div>}
                   <div className="input-group">
                     <label>Quantity <span style={{color:'#fca5a5'}}>*</span></label>
-                    <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" onKeyDown={(e)=>{
-                      if (e.key==='Enter') {
-                        e.preventDefault();
-                        const errs = {};
-                        if (!addForm.material_code) errs.material_code = 'Product required';
-                        const price = Number(addForm.price_per_unit);
-                        if (!(price>0)) errs.price_per_unit = 'Price required';
-                        if (!addForm.uom) errs.uom = 'UOM required';
-                        if (!addForm.mfg_date) errs.mfg_date = 'DOM required';
-                        const qty = Number(addForm.quantity);
-                        if (!(qty>0)) errs.quantity = 'Quantity required';
-                        if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
-                        setAddFormErrors({});
-                        const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
-                        const norm = (mat && mat.metal_type) ? String(mat.metal_type).toLowerCase() : '';
-                        const auto = (products||[]).find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
-                        const mappedId = auto ? String(auto.id) : '';
-                        setRows(prev=>[...prev, { ...addForm, product_id: mappedId, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
-                        // Sticky UOM and Price
-                        setAddForm(prev=>({ material_code:'', material_type:'', price_per_unit: prev.price_per_unit, uom: prev.uom||'Piece', mfg_date:'', shelf_life:'', quantity:'' }));
-                        setAddSuccess('Item added');
-                        setTimeout(()=>setAddSuccess(''), 1500);
-                      }
-                    }} />
+                    <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
                     {addFormErrors.quantity && <div className="form-help">{addFormErrors.quantity}</div>}
                   </div>
                 </div>
