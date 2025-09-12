@@ -300,44 +300,36 @@ const Sales = () => {
         }
         navigate(`/invoice/${newSale.id}`);
       } else {
+        // Quick single-row: map product BEFORE creating sale to avoid orphan invoices
+        let productId = null;
+        const mat = materials.find(m=> String(m.part_code)===String(form.material_code));
+        if (mat) {
+          const label = String(mat.metal_type||'').toLowerCase();
+          let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
+            || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+          if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+          if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+          if (prod) productId = Number(prod.id);
+        }
+        if (!productId && form.product_name) {
+          const label = String(form.product_name||'').toLowerCase();
+          let prod2 = products.find(p=> String(p.name||'').toLowerCase() === label)
+            || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+          if (!prod2 && /egg/.test(label)) prod2 = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+          if (!prod2 && /paneer|panner/.test(label)) prod2 = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+          if (prod2) productId = Number(prod2.id);
+        }
+        if (!productId) { setError('Cannot map selected item to a product. Please verify Material Master and Products.'); return; }
+        const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
+        const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
+        const pricePerPiece = unitFinal > 0 ? unitFinal : (Number(form.total||0) / (qty||1));
         const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null };
         if (editing) { 
           await updateSale(editing, payload); 
         } else { 
           const res = await createSale(payload);
           const newSale = res.data;
-          // Also create a sale_item so stock reduces automatically
-          try {
-            // Map material_code/product_name to product_id
-            let productId = null;
-            const mat = materials.find(m=> String(m.part_code)===String(form.material_code));
-            if (mat) {
-              const label = String(mat.metal_type||'').toLowerCase();
-              let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
-                || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
-              if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-              if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
-              if (prod) productId = Number(prod.id);
-            }
-            if (!productId && form.product_name) {
-              const label = String(form.product_name||'').toLowerCase();
-              let prod2 = products.find(p=> String(p.name||'').toLowerCase() === label)
-                || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
-              if (!prod2 && /egg/.test(label)) prod2 = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-              if (!prod2 && /paneer|panner/.test(label)) prod2 = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
-              if (prod2) productId = Number(prod2.id);
-            }
-            if (!productId) {
-              setError('Cannot map selected item to a product. Please verify Material Master and Products.');
-              return;
-            }
-            const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
-            const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
-            const pricePerPiece = unitFinal > 0 ? unitFinal : (Number(form.total||0) / (qty||1));
-            if (productId && qty>0 && pricePerPiece>0) {
-              await createSaleItem(newSale.id, { product_id: productId, quantity: qty, price: pricePerPiece });
-            }
-          } catch(_e) {}
+          await createSaleItem(newSale.id, { product_id: productId, quantity: qty, price: pricePerPiece });
           if (willRecordPayment) {
             const amt = Number(paymentAtCreate.amount || form.total || 0);
             const mode = paymentAtCreate.mode || 'Cash';
