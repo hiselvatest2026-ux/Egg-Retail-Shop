@@ -54,8 +54,9 @@ const Dashboard = () => {
   }, [data]);
 
   const lowStockChart = useMemo(() => {
-    const labels = data?.low_stock?.map(d => d.name) ?? [];
-    const values = data?.low_stock?.map(d => d.stock) ?? [];
+    const lowStock = Array.isArray(data?.low_stock) ? data.low_stock : [];
+    const labels = lowStock.map(d => d?.name ?? '');
+    const values = lowStock.map(d => Number(d?.stock ?? 0));
     return {
       labels,
       datasets: [{ label: 'Stock', data: values, backgroundColor: 'rgba(16, 185, 129, .5)' }]
