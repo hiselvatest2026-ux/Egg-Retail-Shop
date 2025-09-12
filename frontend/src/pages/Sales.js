@@ -4,7 +4,7 @@ import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingF
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import ShopChip from '../components/ShopChip';
+// ShopChip removed (global stock)
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
@@ -28,7 +28,11 @@ const Sales = () => {
   const [editForm, setEditForm] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const sortedMaterials = useMemo(()=>{
-    const src = Array.isArray(materials) ? [...materials] : [];
+    // Restrict to Egg/Panner types to ensure correct mapping
+    const src = (Array.isArray(materials) ? materials : []).filter(m => {
+      const n = String(m.metal_type || '').toLowerCase();
+      return n.includes('egg') || n.includes('panner') || n.includes('paneer');
+    }).slice();
     const pr = (m)=>{
       const n = String(m.description || m.metal_type || '').toLowerCase();
       if (n.includes('egg')) return 0;
@@ -283,21 +287,8 @@ const Sales = () => {
         }
         navigate(`/invoice/${newSale.id}`);
       } else {
-        const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, route_trip_id: form.route_trip_id || null };
-        if (editing) { 
-          await updateSale(editing, payload); 
-        } else { 
-          const res = await createSale(payload);
-          const newSale = res.data;
-          if (recordPaymentNow) {
-            const amt = Number(paymentAtCreate.amount || form.total || 0);
-            const mode = paymentAtCreate.mode || 'Cash';
-            if (amt > 0) {
-              await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
-            }
-          }
-          navigate(`/invoice/${newSale.id}`);
-        }
+        setError('Add at least one item before generating invoice.');
+        return;
       }
       setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit:'Piece', trays:'', sale_type:'Cash', payment_mode:'Cash' });
       setLineItems([]);
