@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendors, getMetals, getProducts, createPurchaseItem } from '../api/api';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
+import MobileMaterialPicker from '../components/MobileMaterialPicker';
 // Shop chip removed (global stock)
 
 const Purchases = () => {
@@ -10,7 +11,7 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '' });
+  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '', bill_no: '', bill_date: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -85,6 +86,14 @@ const Purchases = () => {
   const itemsGrandTotal = useMemo(() => {
     return (rows||[]).reduce((sum, r) => sum + computeRowTotals(r).totalAmount, 0);
   }, [rows]);
+  const addItemRef = useRef(null);
+  const canSave = useMemo(()=>{
+    const vendorOk = !!form.vendor_id;
+    const hasItems = rows && rows.length > 0;
+    const manual = Number(form.total_purchase_value||0);
+    const eq = Math.round(manual*100) === Math.round(Number(itemsGrandTotal||0)*100);
+    return vendorOk && hasItems && eq;
+  }, [form.vendor_id, form.total_purchase_value, itemsGrandTotal, rows]);
   useEffect(() => { 
     fetchPurchases(); 
     (async()=>{ 
@@ -232,6 +241,17 @@ const Purchases = () => {
               </div>
             );
           })()}
+          {/* Bill details (optional) */}
+          <div className="form-grid-2-tight" style={{gridColumn:'1/-1'}}>
+            <div className="input-group">
+              <label>Bill No</label>
+              <input className="input" value={form.bill_no} onChange={e=>setForm(prev=>({ ...prev, bill_no: e.target.value }))} placeholder="Supplier bill no (optional)" />
+            </div>
+            <div className="input-group">
+              <label>Bill Date</label>
+              <input className="input date" type="date" value={form.bill_date} onChange={e=>setForm(prev=>({ ...prev, bill_date: e.target.value }))} />
+            </div>
+          </div>
           {/* New spec: manual total (optional) */}
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Total Purchase Value (manual)</label>
@@ -240,26 +260,42 @@ const Purchases = () => {
               <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
             )}
           </div>
+          <div className="actions-row" style={{gridColumn:'1/-1', justifyContent:'flex-end'}}>
+            <button type="button" className="btn secondary" onClick={()=>{ try { addItemRef.current?.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_){} }}>Next</button>
+          </div>
 
           {/* Editable Purchases Table */}
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Purchase Entry</label>
             {/* Add Item compact form - strict mobile layout */}
-            <div className="card" style={{marginTop:8}}>
+            <div ref={addItemRef} className="card" style={{marginTop:8}}>
               <div className="card-body">
                 <div className="p-3 mb-3" style={{padding:12, border:'1px solid #2a3040', borderRadius:12}}>
                   {/* Material full width */}
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
-                    <Dropdown
-                      value={addForm.material_code}
-                      onChange={(code)=>{
-                        const mat = materials.find(m=> String(m.part_code) === String(code));
-                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
-                      }}
-                      placeholder={'Material Code - Type *'}
-                      options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
-                    />
+                    <div className="sm:hidden">
+                      <MobileMaterialPicker
+                        value={addForm.material_code}
+                        onChange={(code)=>{
+                          const mat = materials.find(m=> String(m.part_code) === String(code));
+                          setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                        }}
+                        placeholder={'Material Code - Type *'}
+                        options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                      />
+                    </div>
+                    <div className="hidden sm:block">
+                      <Dropdown
+                        value={addForm.material_code}
+                        onChange={(code)=>{
+                          const mat = materials.find(m=> String(m.part_code) === String(code));
+                          setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                        }}
+                        placeholder={'Material Code - Type *'}
+                        options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                      />
+                    </div>
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
                   {/* Price / UOM two columns */}
@@ -271,7 +307,10 @@ const Purchases = () => {
                     </div>
                     <div className="input-group" style={{overflow:'visible'}}>
                       <label>UOM <span style={{color:'#fca5a5'}}>*</span></label>
-                      <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                      <div className="btn-group">
+                        <button type="button" className={`btn btn-sm ${String(addForm.uom||'Piece')==='Piece'?'primary':''}`} onClick={()=>setAddForm(prev=>({...prev, uom:'Piece'}))}>Piece</button>
+                        <button type="button" className={`btn btn-sm ${String(addForm.uom||'Piece')==='Tray'?'primary':''}`} onClick={()=>setAddForm(prev=>({...prev, uom:'Tray'}))}>Tray</button>
+                      </div>
                       {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
                     </div>
                   </div>
@@ -292,6 +331,12 @@ const Purchases = () => {
                     <label>Quantity <span style={{color:'#fca5a5'}}>*</span></label>
                     <input className="input" placeholder="Quantity" value={addForm.quantity} onChange={e=>setAddForm({...addForm, quantity:e.target.value})} inputMode="numeric" />
                     {addFormErrors.quantity && <div className="form-help">{addFormErrors.quantity}</div>}
+                  </div>
+                  {/* Quick-add chips */}
+                  <div className="actions-row" style={{marginTop:8, gap:6}}>
+                    <button type="button" className="btn btn-sm secondary" onClick={()=>setAddForm(prev=>({...prev, quantity:String(12), uom:'Piece'}))}>12 pcs</button>
+                    <button type="button" className="btn btn-sm secondary" onClick={()=>setAddForm(prev=>({...prev, quantity:String(1), uom:'Tray'}))}>1 Tray</button>
+                    <button type="button" className="btn btn-sm secondary" onClick={()=>setAddForm(prev=>({...prev, quantity:String(2), uom:'Tray'}))}>2 Trays</button>
                   </div>
                   {/* Actions stacked on mobile */}
                   <div className="actions-row" style={{marginTop:12, gap:10, flexDirection:'column'}}>
@@ -436,7 +481,7 @@ const Purchases = () => {
           </div>
           {/* New editable purchases table goes below */}
           <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
-            <button className="btn cta w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
+            <button className="btn cta w-full sm:w-auto" type="submit" disabled={!canSave}>{editing ? 'Update Purchase' : 'Add Purchase'}</button>
             {editing && (
               <button
                 type="button"
