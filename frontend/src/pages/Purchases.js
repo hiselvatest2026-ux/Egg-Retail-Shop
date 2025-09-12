@@ -132,6 +132,7 @@ const Purchases = () => {
       setRows([]);
       setEditing(null);
       await fetchPurchases();
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { type: 'opening' } })); } catch(_) {}
     } catch (err) {
       console.error('Failed to submit purchase', err);
       setError('Failed to save purchase. Please try again.');

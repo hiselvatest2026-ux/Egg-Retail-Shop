@@ -48,6 +48,20 @@ const InventoryManagement = () => {
     } catch(e){ console.error('load closing failed', e);} }
   useEffect(() => { (async()=>{ try{ const locs = await getLocations(); setLocations(locs.data||[]); await load(locationId); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load locs failed', e);} })(); }, [locationId, tab]);
 
+  // Auto-refresh when purchases/sales emit events
+  useEffect(() => {
+    const onRefresh = async (e) => {
+      try {
+        const kind = e?.detail?.type;
+        await load(locationId);
+        if (kind === 'opening') await loadOpening();
+        if (kind === 'closing') await loadClosing();
+      } catch (err) { /* ignore */ }
+    };
+    if (typeof window !== 'undefined') window.addEventListener('inventory:refresh', onRefresh);
+    return () => { if (typeof window !== 'undefined') window.removeEventListener('inventory:refresh', onRefresh); };
+  }, [locationId]);
+
   const totalSkus = rows.length;
   const totalStock = rows.reduce((s,r)=>s+Number(r.stock||0),0);
   return (

@@ -298,6 +298,7 @@ const Sales = () => {
             await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
           }
         }
+        try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { type: 'closing' } })); } catch(_) {}
         navigate(`/invoice/${newSale.id}`);
       } else {
         // Quick single-row: map product BEFORE creating sale to avoid orphan invoices
@@ -337,6 +338,7 @@ const Sales = () => {
               await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
             }
           }
+          try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { type: 'closing' } })); } catch(_) {}
           navigate(`/invoice/${newSale.id}`);
         }
       }
