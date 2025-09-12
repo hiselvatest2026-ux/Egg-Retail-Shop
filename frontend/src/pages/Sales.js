@@ -281,7 +281,8 @@ const Sales = () => {
           return createSaleItem(newSale.id, { product_id: pid, quantity: effQty, price });
         });
         await Promise.all(tasks);
-        if (recordPaymentNow) {
+        const willRecordPayment = Number(paymentAtCreate.amount||0) > 0;
+        if (willRecordPayment) {
           const sum = lineItems.reduce((s,li)=> s + (Number(li.price_per_piece||0) * (li.qty_unit==='Tray' ? Number(li.trays||0)*30 : Number(li.qty_pieces||0))), 0);
           const amt = Number(paymentAtCreate.amount || sum || 0);
           const mode = paymentAtCreate.mode || 'Cash';
@@ -321,7 +322,7 @@ const Sales = () => {
               await createSaleItem(newSale.id, { product_id: productId, quantity: qty, price: pricePerPiece });
             }
           } catch(_e) {}
-          if (recordPaymentNow) {
+          if (willRecordPayment) {
             const amt = Number(paymentAtCreate.amount || form.total || 0);
             const mode = paymentAtCreate.mode || 'Cash';
             if (amt > 0) {
@@ -732,7 +733,7 @@ const Sales = () => {
                 </div>
               </div>
             </details>
-            <button className="btn primary" onClick={()=>{ if (!paymentAtCreate.amount) { /* do nothing; still allowed */ } setRecordPaymentNow(Boolean(paymentAtCreate.amount)); handleSubmit(new Event('submit')); }}>Generate Invoice</button>
+            <button type="submit" className="btn primary">Generate Invoice</button>
           </div>
         </Card>
         
