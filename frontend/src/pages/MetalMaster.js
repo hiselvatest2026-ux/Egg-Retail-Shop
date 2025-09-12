@@ -20,12 +20,12 @@ const MetalMaster = () => {
     if (!form.metal_type || !form.gst_percent) { setError('Material Type and GST % are required.'); return; }
     try {
       if (editing) {
-        console.log('Updating metal:', editing, { metal_type: form.metal_type, description: form.description });
-        await updateMetal(editing, { metal_type: form.metal_type, description: form.description });
+        console.log('Updating metal:', editing, { metal_type: form.metal_type, description: form.description, shelf_life: form.shelf_life });
+        await updateMetal(editing, { metal_type: form.metal_type, description: form.description, shelf_life: form.shelf_life });
         setSuccess('Material updated. (GST % not editable)');
       } else {
-        console.log('Creating metal:', { metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description });
-        const result = await createMetal({ metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description });
+        console.log('Creating metal:', { metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description, shelf_life: form.shelf_life });
+        const result = await createMetal({ metal_type: form.metal_type, gst_percent: Number(form.gst_percent), description: form.description, shelf_life: form.shelf_life });
         console.log('Create metal result:', result);
         setSuccess('Material created.');
       }
