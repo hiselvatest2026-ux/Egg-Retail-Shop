@@ -67,6 +67,7 @@ async function ensureSchema() {
       gst_percent NUMERIC(5,2) NOT NULL,
       description VARCHAR(255)
     );`
+    ,"ALTER TABLE IF EXISTS metal_master ADD COLUMN IF NOT EXISTS shelf_life VARCHAR(50);"
     ,`CREATE TABLE IF NOT EXISTS pricing_master (
       id SERIAL PRIMARY KEY,
       customer_id INT REFERENCES customers(id),

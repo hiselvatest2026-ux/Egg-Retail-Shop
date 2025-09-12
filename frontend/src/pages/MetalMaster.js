@@ -5,7 +5,7 @@ import { getMetals, createMetal, updateMetal, deleteMetal } from '../api/api';
 
 const MetalMaster = () => {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ part_code:'', metal_type:'Egg', gst_percent:'0', description:'' });
+  const [form, setForm] = useState({ part_code:'', metal_type:'Egg', gst_percent:'0', description:'', shelf_life:'' });
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -29,7 +29,7 @@ const MetalMaster = () => {
         console.log('Create metal result:', result);
         setSuccess('Material created.');
       }
-      setForm({ part_code:'', metal_type:'Egg', gst_percent:'0', description:'' });
+      setForm({ part_code:'', metal_type:'Egg', gst_percent:'0', description:'', shelf_life:'' });
       setEditing(null);
       await load();
     } catch (e) { 
@@ -52,7 +52,7 @@ const MetalMaster = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Material' : 'Add Material'}>
-        <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
+        <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(6, minmax(0,1fr))'}}>
           <div className="input-group">
             <label>Material Code</label>
             <input className="input" value={form.part_code} disabled readOnly placeholder="Auto-generated (Mxxxxx)" />
@@ -76,9 +76,13 @@ const MetalMaster = () => {
             <label>Material Description</label>
             <input className="input" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} />
           </div>
+          <div className="input-group">
+            <label>Shelf Life</label>
+            <input className="input" title="Eg.. 12 days" placeholder="Eg.. 12 days" value={form.shelf_life} onChange={e=>setForm({...form, shelf_life:e.target.value})} />
+          </div>
           <div className="actions-row">
             <button className="btn" type="submit" onClick={() => console.log('Metal button clicked!')}>{editing ? 'Update' : 'Add'}</button>
-            {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ part_code:'', metal_type:'', gst_percent:'', description:'' }); }}>Cancel</button>}
+            {editing && <button type="button" className="btn secondary" onClick={()=>{ setEditing(null); setForm({ part_code:'', metal_type:'', gst_percent:'', description:'', shelf_life:'' }); }}>Cancel</button>}
           </div>
           {error && <div className="form-help" style={{gridColumn:'1/-1'}}>{error}</div>}
           {success && <div className="toast" style={{gridColumn:'1/-1'}}>{success}</div>}
@@ -89,7 +93,7 @@ const MetalMaster = () => {
 
       <Card title="Material">
         <table className="table table-hover">
-          <thead><tr><th>#</th><th>Material Code</th><th>Material Type</th><th>GST %</th><th>Material Description</th><th>Actions</th></tr></thead>
+          <thead><tr><th>#</th><th>Material Code</th><th>Material Type</th><th>GST %</th><th>Material Description</th><th>Shelf Life</th><th>Actions</th></tr></thead>
           <tbody>
             {visibleRows.map(r => (
               <tr key={r.id}>
@@ -98,9 +102,10 @@ const MetalMaster = () => {
                 <td>{r.metal_type}</td>
                 <td>{Number(r.gst_percent).toFixed(2)}</td>
                 <td>{r.description || '-'}</td>
+                <td>{r.shelf_life || '-'}</td>
                 <td>
                   <div className="btn-group">
-                    <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
+                    <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'', shelf_life:r.shelf_life||'' }); }}>Edit</button>
                     <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
                   </div>
                 </td>
@@ -121,9 +126,10 @@ const MetalMaster = () => {
                   <div className="pair"><strong>Type</strong><div>{r.metal_type}</div></div>
                   <div className="pair" style={{textAlign:'right'}}><strong>GST %</strong><div>{Number(r.gst_percent).toFixed(2)}</div></div>
                   <div className="pair" style={{flexBasis:'100%'}}><strong>Description</strong><div>{r.description || '-'}</div></div>
+                  <div className="pair" style={{flexBasis:'100%'}}><strong>Shelf Life</strong><div>{r.shelf_life || '-'}</div></div>
                 </div>
                 <div className="btn-group" style={{marginTop:10}}>
-                  <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'' }); }}>Edit</button>
+                  <button className="btn btn-sm" onClick={()=>{ setEditing(r.id); setForm({ part_code:r.part_code, metal_type:r.metal_type, gst_percent:String(r.gst_percent), description:r.description||'', shelf_life:r.shelf_life||'' }); }}>Edit</button>
                   <button className="btn danger btn-sm" onClick={async()=>{ await deleteMetal(r.id); await load(); }}>Delete</button>
                 </div>
               </div>
