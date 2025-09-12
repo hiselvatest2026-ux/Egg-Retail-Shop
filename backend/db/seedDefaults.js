@@ -22,7 +22,7 @@ async function seedDefaults() {
     ('City Mart','city@example.com','9000000003','Wholesale','33YYYBB2222Y6', 5000),
     ('Walk-in Customer','-', '9000000004','Walk-in','', 0)
   `); } catch (e) {}
-  try { await pool.query(`INSERT INTO metal_master (part_code, metal_type, gst_percent, description) VALUES ('M00001','Egg',0,'Egg products'),('M00002','Panner',5,'Panner products')`); } catch (e) {}
+  try { await pool.query(`INSERT INTO metal_master (part_code, metal_type, gst_percent, description, shelf_life) VALUES ('M00001','Egg',0,'Egg products','12 days'),('M00002','Panner',5,'Panner products','15 days')`); } catch (e) {}
   try { await pool.query(`INSERT INTO products (name, price, batch_number, expiry_date) VALUES ('Egg Large 12pc',6.00,'BATCH-EGG-001', NOW() + INTERVAL '20 days'),('Panner 200g',200.00,'BATCH-PAN-001', NOW() + INTERVAL '15 days')`); } catch (e) {}
   try { await pool.query(`INSERT INTO opening_stocks (product_id, quantity) VALUES (1, 100), (2, 40)`); await pool.query(`INSERT INTO opening_stocks_material (material_code, quantity) VALUES ('M00001',60),('M00002',20)`); } catch (e) {}
   try {
