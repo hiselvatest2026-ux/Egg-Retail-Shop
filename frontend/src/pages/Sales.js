@@ -22,7 +22,7 @@ const Sales = () => {
   const [lineItems, setLineItems] = useState([]);
   const [availableHint, setAvailableHint] = useState(null);
   const [itemForm, setItemForm] = useState({ product_id: '', qty_unit: 'Piece', qty_pieces: '', trays: '', price_per_piece: '' });
-  const [addForm, setAddForm] = useState({ material_code:'', material_type:'', product_id:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
+  const [addForm, setAddForm] = useState({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
   const [addErrors, setAddErrors] = useState({});
   const [addSuccess, setAddSuccess] = useState('');
   const [editIdx, setEditIdx] = useState(null);
@@ -300,12 +300,11 @@ const Sales = () => {
         navigate(`/invoice/${newSale.id}`);
       } else {
         // Quick single-row: map product BEFORE creating sale to avoid orphan invoices
-        let productId = addForm.product_id ? Number(addForm.product_id) : null;
+        let productId = null;
         const mat = materials.find(m=> String(m.part_code)===String(form.material_code));
         if (mat) {
           const label = String(mat.metal_type||'').toLowerCase();
-          let prod = productId ? products.find(p=> Number(p.id) === Number(productId)) : null;
-          if (!prod) prod = products.find(p=> String(p.name||'').toLowerCase() === label)
+          let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
             || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
           if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
           if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
@@ -565,14 +564,7 @@ const Sales = () => {
                     options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
                   />
                 </div>
-                <div style={{overflow:'visible'}}>
-                  <Dropdown
-                    value={addForm.product_id||''}
-                    onChange={(v)=> setAddForm(prev=>({ ...prev, product_id: v }))}
-                    placeholder={'Product override (optional)'}
-                    options={(products||[]).map(p=>({ value:String(p.id), label:`${p.name} (#${p.id})` }))}
-                  />
-                </div>
+                
                 
                 <div className="input-group">
                   <label>Price / unit *</label>
@@ -614,24 +606,22 @@ const Sales = () => {
                   const qtyNum = Number(addForm.qty||0); const price = Number(addForm.price_per_piece||0);
                   if (!addForm.material_code || !(qtyNum>0) || !(price>0)) return;
                   const effQty = (addForm.uom||'Piece')==='Tray' ? qtyNum*30 : qtyNum;
-                  // Prefer explicit product override
-                  let pid = addForm.product_id ? String(addForm.product_id) : '';
-                  if (!pid) {
-                    const mat = sortedMaterials.find(m=> String(m.part_code)===String(addForm.material_code));
-                    if (mat) {
-                      const norm = String(mat.metal_type||'').toLowerCase();
-                      let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
-                        || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
-                      if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-                      if (!prod && /paneer|panner/.test(norm)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
-                      if (prod) pid = String(prod.id);
-                    }
+                  // Auto-map product from material; no manual override
+                  let pid = '';
+                  const mat = sortedMaterials.find(m=> String(m.part_code)===String(addForm.material_code));
+                  if (mat) {
+                    const norm = String(mat.metal_type||'').toLowerCase();
+                    let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
+                      || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                    if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+                    if (!prod && /paneer|panner/.test(norm)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+                    if (prod) pid = String(prod.id);
                   }
-                  if (!pid) { setError('Cannot map item to a product. Please choose Product override.'); return; }
+                  if (!pid) { setError('Cannot map item to a product. Please verify Material and Products master.'); return; }
                   const newItem = { material_code:addForm.material_code, material_type:addForm.material_type, product_id: pid, dom:addForm.dom||'', qty_unit:addForm.uom||'Piece', qty_pieces:(addForm.uom||'Piece')==='Piece'? String(qtyNum):'', trays:(addForm.uom||'Piece')==='Tray'? String(qtyNum):'', price_per_piece: price, effectiveQty: effQty };
                   const g = computeItemGst(newItem);
                   setLineItems(prev=>[...prev, { ...newItem, sgst_amount:g.sgstAmt, cgst_amount:g.cgstAmt, lineTotal:g.base, totalWithGst:g.total }]);
-                  setAddForm({ material_code:'', material_type:'', product_id:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
+                  setAddForm({ material_code:'', material_type:'', price_per_piece:'', uom:'Piece', dom:'', shelf_life:'', qty:'' });
                 }}>Add Item</button>
               </div>
             </div>
