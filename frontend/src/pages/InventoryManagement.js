@@ -179,11 +179,7 @@ const InventoryManagement = () => {
           </tbody>
         </table>
         <div className="actions-row">
-          <button className="btn" onClick={async()=>{
-            try { await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items: openingMaterials.map(o=>({ material_code:o.material_code, quantity: Number(o.quantity||0) })) }); await load(locationId); }
-            catch(e){ console.error('save opening materials failed', e); }
-          setSaveMsg('Opening stocks updated'); setTimeout(()=>setSaveMsg(''), 3000);
-          }}>Save Product Opening</button>
+          <button className="btn" type="button" disabled title="Disabled as per policy">Save Product Opening</button>
           <button className="btn secondary" onClick={loadOpening}>Refresh</button>
         </div>
         {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
