@@ -3,6 +3,7 @@ import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendor
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
 import ShopChip from '../components/ShopChip';
+import axios from 'axios';
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -146,6 +147,21 @@ const Purchases = () => {
         if (!(qty>0)) continue;
         await createPurchaseItem(purchaseId, { product_id: Number(r.product_id), quantity: qty, price, mfg_date: r.mfg_date || null });
       }
+      // Update opening stocks (materials) so Opening tab reflects increment immediately
+      try {
+        const aggregate = {};
+        for (const r of rowsToUse) {
+          const code = String(r.material_code||'').trim();
+          const qty = Number(r.quantity||0);
+          if (!code || !(qty>0)) continue;
+          aggregate[code] = (aggregate[code]||0) + qty;
+        }
+        const items = Object.entries(aggregate).map(([material_code, quantity])=>({ material_code, quantity }));
+        if (items.length) {
+          const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
+          await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items });
+        }
+      } catch(_) { /* ignore */ }
       setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
       setForm({ vendor_id: '', total_purchase_value: '' });
       setRows([]);
