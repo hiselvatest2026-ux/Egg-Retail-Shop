@@ -30,7 +30,7 @@ const Purchases = () => {
     });
     return source;
   }, [materials]);
-  const [addForm, setAddForm] = useState({ material_code:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
+  const [addForm, setAddForm] = useState({ material_code:'', product_id:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
   const [editIndex, setEditIndex] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
@@ -108,6 +108,12 @@ const Purchases = () => {
       return;
     }
     try {
+      // Guard: ensure each row has product mapping
+      const bad = (rows||[]).find(r=> !r.product_id);
+      if (bad) {
+        setError(`Cannot map Material ${bad.material_code || bad.material_type || ''} to a Product. Please pick 'Product (override)' for this row.`);
+        return;
+      }
       // Create minimal header, then items based on rows
       let purchaseId = editing;
       if (!editing) {
@@ -119,37 +125,7 @@ const Purchases = () => {
         const price = Number(r.price_per_unit || 0);
         const qty = Number(r.quantity || 0);
         if (!(qty>0)) continue;
-        // Robust product mapping from material to product
-        const normalize = (s) => String(s||'').toLowerCase();
-        const isPaneerLike = (s) => /paneer|panner/.test(normalize(s));
-        const isEggLike = (s) => /egg/.test(normalize(s));
-        const findByHeuristics = (label) => {
-          const norm = normalize(label);
-          // Priority: exact contains, then keyword families
-          let cands = products.filter(p => {
-            const pn = normalize(p.name);
-            return pn === norm || pn.includes(norm) || norm.includes(pn);
-          });
-          if (cands.length === 0 && isPaneerLike(norm)) {
-            cands = products.filter(p => /paneer|panner/.test(normalize(p.name)));
-          }
-          if (cands.length === 0 && isEggLike(norm)) {
-            cands = products.filter(p => /egg/.test(normalize(p.name)));
-          }
-          return cands[0]?.id || null;
-        };
-        let productId = null;
-        if (r.material_code) {
-          const mat = materials.find(m => String(m.part_code) === String(r.material_code));
-          if (mat) {
-            productId = findByHeuristics(mat.metal_type);
-          }
-        }
-        if (!productId && r.material_type) {
-          productId = findByHeuristics(r.material_type);
-        }
-        if (!productId) continue;
-        await createPurchaseItem(purchaseId, { product_id: Number(productId), quantity: qty, price, mfg_date: r.mfg_date || null });
+        await createPurchaseItem(purchaseId, { product_id: Number(r.product_id), quantity: qty, price, mfg_date: r.mfg_date || null });
       }
       setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
       setForm({ vendor_id: '', total_purchase_value: '' });
@@ -260,12 +236,28 @@ const Purchases = () => {
                       value={addForm.material_code}
                       onChange={(code)=>{
                         const mat = materials.find(m=> String(m.part_code) === String(code));
-                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                        // Heuristic map to product
+                        let pid = '';
+                        if (mat) {
+                          const norm = String(mat.metal_type||'').toLowerCase();
+                          const byName = products.find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                          if (byName) pid = String(byName.id);
+                        }
+                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
                       }}
                       placeholder={'Material Code - Type *'}
                       options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
                     />
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
+                  </div>
+                  <div className="input-group" style={{overflow:'visible'}}>
+                    <label>Product (override)</label>
+                    <Dropdown
+                      value={addForm.product_id||''}
+                      onChange={(v)=> setAddForm(prev=>({ ...prev, product_id: v }))}
+                      placeholder={'Optional: pick product if auto-map fails'}
+                      options={(products||[]).map(p=>({ value:String(p.id), label:`${p.name} (#${p.id})` }))}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:contents">
                     <div className="input-group">
@@ -314,9 +306,12 @@ const Purchases = () => {
                         if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
                         setAddFormErrors({});
                         const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
-                        setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
+                        const norm = (mat && mat.metal_type) ? String(mat.metal_type).toLowerCase() : '';
+                        const auto = (products||[]).find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                        const mappedId = addForm.product_id || (auto ? String(auto.id) : '');
+                        setRows(prev=>[...prev, { ...addForm, product_id: mappedId, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
                         // Sticky UOM and Price
-                        setAddForm(prev=>({ material_code:'', material_type:'', price_per_unit: prev.price_per_unit, uom: prev.uom||'Piece', mfg_date:'', shelf_life:'', quantity:'' }));
+                        setAddForm(prev=>({ material_code:'', product_id:'', material_type:'', price_per_unit: prev.price_per_unit, uom: prev.uom||'Piece', mfg_date:'', shelf_life:'', quantity:'' }));
                         setAddSuccess('Item added');
                         setTimeout(()=>setAddSuccess(''), 1500);
                       }
@@ -338,14 +333,17 @@ const Purchases = () => {
                       if (Object.keys(errs).length) { setAddFormErrors(errs); return; }
                       setAddFormErrors({});
                       const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
-                      setRows(prev=>[...prev, { ...addForm, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
-                      setAddForm({ material_code:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
+                      const norm = (mat && mat.metal_type) ? String(mat.metal_type).toLowerCase() : '';
+                      const auto = (products||[]).find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                      const mappedId = addForm.product_id || (auto ? String(auto.id) : '');
+                      setRows(prev=>[...prev, { ...addForm, product_id: mappedId, material_type: addForm.material_type || (mat ? mat.metal_type : '') }]);
+                      setAddForm({ material_code:'', product_id:'', material_type:'', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' });
                       setAddSuccess('Item added');
                       setTimeout(()=>setAddSuccess(''), 1500);
                     }}>+ Add Item</button>
                     <button type="button" className="btn secondary w-full sm:w-auto" onClick={()=> setRows(prev=> {
                       const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
-                      return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
+                      return [...prev, { material_code: first ? String(first.part_code) : '', product_id:'', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
                     })}>+ Add Row</button>
                   </div>
                 </div>
