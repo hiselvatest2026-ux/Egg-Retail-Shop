@@ -97,7 +97,26 @@ const Purchases = () => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (!form.vendor_id) { setError('Please select a vendor.'); return; }
-    if (!rows.length) { setError('Please add at least one row.'); return; }
+    // Quick-purchase fallback: if no rows, but addForm is valid, include it
+    let rowsToUse = rows;
+    const canUseAdd = addForm.material_code && Number(addForm.quantity||0) > 0 && Number(addForm.price_per_unit||0) > 0;
+    if (!rows.length && canUseAdd) {
+      // Ensure product mapping
+      let pid = addForm.product_id;
+      if (!pid) {
+        const mat = materials.find(m=> String(m.part_code)===String(addForm.material_code));
+        if (mat) {
+          const label = String(mat.metal_type||'').toLowerCase();
+          let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
+            || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
+          if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+          if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+          if (prod) pid = String(prod.id);
+        }
+      }
+      rowsToUse = [{ ...addForm, product_id: pid }];
+    }
+    if (!rowsToUse.length) { setError('Please add at least one row.'); return; }
     // Validate manual total equals computed items total
     const manualTotalNum = Number(form.total_purchase_value);
     if (!isFinite(manualTotalNum)) { setError('Please enter a valid Total Purchase Value.'); return; }
@@ -109,7 +128,7 @@ const Purchases = () => {
     }
     try {
       // Guard: ensure each row has product mapping
-      const bad = (rows||[]).find(r=> !r.product_id);
+      const bad = (rowsToUse||[]).find(r=> !r.product_id);
       if (bad) {
         setError(`Cannot map Material ${bad.material_code || bad.material_type || ''} to a Product. Please pick 'Product (override)' for this row.`);
         return;
@@ -121,7 +140,7 @@ const Purchases = () => {
         const res = await createPurchase(header);
         purchaseId = res.data?.id || res.id;
       }
-      for (const r of rows) {
+      for (const r of rowsToUse) {
         const price = Number(r.price_per_unit || 0);
         const qty = Number(r.quantity || 0);
         if (!(qty>0)) continue;
