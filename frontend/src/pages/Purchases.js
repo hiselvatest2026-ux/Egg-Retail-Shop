@@ -212,33 +212,39 @@ const Purchases = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
         <form onSubmit={handleSubmit} className="form-row">
-          <div className="input-group" style={{overflow:'visible'}}>
-            <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
-            <Dropdown
-              value={form.vendor_id}
-              onChange={v=>setForm({...form, vendor_id: v})}
-              placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
-              options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
-            />
-            {!form.vendor_id && error && <div className="form-help">Vendor is required</div>}
-          </div>
-          {form.vendor_id && (()=>{
-            const v = vendors.find(x=> String(x.id) === String(form.vendor_id));
-            if (!v) return null;
-            return (
-              <div className="input-group" style={{gridColumn:'1/-1'}}>
-                <label>Address</label>
-                <input className="input" value={v.address || ''} readOnly />
+          <div className="card" style={{gridColumn:'1/-1'}}>
+            <div className="card-body">
+              <div className="form-row">
+                <div className="input-group" style={{overflow:'visible'}}>
+                  <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
+                  <Dropdown
+                    value={form.vendor_id}
+                    onChange={v=>setForm({...form, vendor_id: v})}
+                    placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
+                    options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
+                  />
+                  {!form.vendor_id && error && <div className="form-help">Vendor is required</div>}
+                </div>
+                {form.vendor_id && (()=>{
+                  const v = vendors.find(x=> String(x.id) === String(form.vendor_id));
+                  if (!v) return null;
+                  return (
+                    <div className="input-group" style={{gridColumn:'1/-1'}}>
+                      <label>Address</label>
+                      <input className="input" value={v.address || ''} readOnly />
+                    </div>
+                  );
+                })()}
+                {/* New spec: manual total (optional) */}
+                <div className="input-group" style={{gridColumn:'1/-1'}}>
+                  <label>Total Purchase Value (manual)</label>
+                  <input className="input" type="number" step="0.01" value={form.total_purchase_value} inputMode="decimal" onChange={e=>setForm({...form, total_purchase_value: e.target.value})} />
+                  {(rows.length>0 && String(form.total_purchase_value||'').length>0) && (Math.round(Number(form.total_purchase_value||0)*100) !== Math.round(itemsGrandTotal*100)) && (
+                    <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
+                  )}
+                </div>
               </div>
-            );
-          })()}
-          {/* New spec: manual total (optional) */}
-          <div className="input-group" style={{gridColumn:'1/-1'}}>
-            <label>Total Purchase Value (manual)</label>
-            <input className="input" type="number" step="0.01" value={form.total_purchase_value} inputMode="decimal" onChange={e=>setForm({...form, total_purchase_value: e.target.value})} />
-            {(rows.length>0 && String(form.total_purchase_value||'').length>0) && (Math.round(Number(form.total_purchase_value||0)*100) !== Math.round(itemsGrandTotal*100)) && (
-              <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
-            )}
+            </div>
           </div>
 
           {/* Editable Purchases Table */}
@@ -337,7 +343,7 @@ const Purchases = () => {
                       setAddSuccess('Item added');
                       setTimeout(()=>setAddSuccess(''), 1500);
                     }}>+ Add Item</button>
-                    <button type="button" className="btn secondary w-full sm:hidden" onClick={()=> setRows(prev=> {
+                    <button type="button" className="btn secondary w-full sm:w-auto" onClick={()=> setRows(prev=> {
                       const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
                       return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
                     })}>+ Add Row</button>
@@ -347,12 +353,7 @@ const Purchases = () => {
               </div>
             </div>
             {/* Desktop toolbar above table */}
-            <div className="hidden sm:flex" style={{justifyContent:'flex-end', gap:8, marginTop:8}}>
-              <button type="button" className="btn secondary" onClick={()=> setRows(prev=> {
-                const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
-                return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
-              })}>+ Add Row</button>
-            </div>
+            {/* Toolbar removed to avoid duplicate "+ Add Row" */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="table table-hover table-zebra mt-2" style={{display:'table', tableLayout:'fixed', width:'100%'}}>
                 <colgroup>
@@ -452,12 +453,7 @@ const Purchases = () => {
                 </div>
               )}
             </div>
-            <div style={{display:'flex', justifyContent:'flex-end', marginTop:8, gap:12}}>
-              <button type="button" className="btn btn-mobile-full" onClick={()=> setRows(prev=> {
-                const first = (sortedMaterials && sortedMaterials[0]) ? sortedMaterials[0] : null;
-                return [...prev, { material_code: first ? String(first.part_code) : '', material_type: first ? first.metal_type : '', price_per_unit:'', uom:'Piece', mfg_date:'', shelf_life:'', quantity:'' }];
-              })}>+ Add Row</button>
-            </div>
+            {/* Removed duplicate bottom Add Row */}
           </div>
           {/* New editable purchases table goes below */}
           <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
