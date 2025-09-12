@@ -262,7 +262,7 @@ const Purchases = () => {
                           const byName = products.find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
                           // No override state; only keep material details in form
                         }
-                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '' }));
+                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
                       }}
                       placeholder={'Material Code - Type *'}
                       options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
@@ -470,7 +470,8 @@ const Purchases = () => {
                   <Dropdown value={editForm.material_code||''} onChange={(code)=>{
                     const mat = materials.find(m=> String(m.part_code) === String(code));
                     const type = mat ? mat.metal_type : '';
-                    setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
+                    const sl = mat ? (mat.shelf_life || '') : '';
+                    setEditForm(prev=>({ ...prev, material_code: code, material_type: type, shelf_life: sl }));
                   }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))} />
                 </div>
                 
