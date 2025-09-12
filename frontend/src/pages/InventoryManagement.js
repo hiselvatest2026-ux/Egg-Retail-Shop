@@ -78,7 +78,7 @@ const InventoryManagement = () => {
       <>
       <Card title="Stock Overview">
         <div className="actions-row" style={{marginBottom:12, overflow:'visible'}}>
-          <button className="btn secondary" onClick={async()=>{ try { await runSeed(); await load(locationId); } catch(e){ console.error('seed failed', e);} }}>Seed Demo Data</button>
+          
         </div>
         <div className="stat-grid">
           <div className="stat"><div className="stat-label">Total SKUs</div><div className="stat-value">{totalSkus}</div></div>
