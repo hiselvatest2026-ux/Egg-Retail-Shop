@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendors, getMetals, getProducts, createPurchaseItem } from '../api/api';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import ShopChip from '../components/ShopChip';
+// Shop chip removed (global stock)
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -206,7 +206,7 @@ const Purchases = () => {
           <h1 className="page-title">Purchases</h1>
           <p className="page-subtitle">Create and manage supplier purchases</p>
         </div>
-        <ShopChip />
+        {/* Shop chip removed */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

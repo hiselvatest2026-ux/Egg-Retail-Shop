@@ -15,17 +15,8 @@ if (!API_URL) {
 }
 console.log('API_URL resolved to:', API_URL);
 
-// Attach current shop header to every request
-axios.interceptors.request.use((config) => {
-  try {
-    const shopId = (typeof window !== 'undefined') ? window.localStorage.getItem('currentShopId') : null;
-    if (shopId) {
-      config.headers = config.headers || {};
-      config.headers['X-Shop-Id'] = shopId;
-    }
-  } catch (_) {}
-  return config;
-});
+// Removed shop header scoping; all requests are now global
+axios.interceptors.request.use((config) => config);
 
 // Set a sane global timeout to avoid hanging spinners (e.g., cold starts)
 axios.defaults.timeout = 10000; // 10 seconds
