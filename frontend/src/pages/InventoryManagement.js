@@ -34,24 +34,9 @@ const InventoryManagement = () => {
         axios.get(`${baseUrl}/products/stock`)
       ]);
       setOpening(p.data||[]);
-      // Compute opening + purchases at material level
-      const productsStock = Array.isArray(ps.data) ? ps.data : [];
-      const purchasedByMaterial = {};
-      for (const row of productsStock) {
-        const name = String(row.name||'').toLowerCase();
-        let code = '';
-        if (name.includes('egg')) code = 'M00001';
-        else if (name.includes('paneer') || name.includes('panner')) code = 'M00002';
-        if (!code) continue;
-        purchasedByMaterial[code] = (purchasedByMaterial[code]||0) + Number(row.purchased_qty||0);
-      }
+      // Opening materials should reflect only configured opening, not purchases
       const mat = Array.isArray(m.data) ? m.data : [];
-      const merged = mat.map(r => {
-        const base = Number(r.quantity||0);
-        const add = Number(purchasedByMaterial[r.material_code]||0);
-        return { ...r, quantity: String(base + add) };
-      });
-      setOpeningMaterials(merged);
+      setOpeningMaterials(mat);
     } catch(e){ console.error('load opening failed', e);} }
   const loadClosing = async () => {
     try { 
@@ -81,7 +66,7 @@ const InventoryManagement = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Inventory Management</h1>
-          <p className="page-subtitle">Live stock by product</p>
+          <p className="page-subtitle">Live stock by product (Opening + Purchases - Sales - Losses)</p>
         </div>
         <ShopChip />
       </div>

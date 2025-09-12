@@ -3,7 +3,7 @@ import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendor
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
 import ShopChip from '../components/ShopChip';
-import axios from 'axios';
+ 
 
 const Purchases = () => {
   const [purchases, setPurchases] = useState([]);
@@ -145,33 +145,13 @@ const Purchases = () => {
         if (!(qty>0)) continue;
         await createPurchaseItem(purchaseId, { product_id: Number(r.product_id), quantity: qty, price, mfg_date: r.mfg_date || null });
       }
-      // Update opening stocks (products) so Opening tab reflects increment immediately
-      try {
-        // Aggregate purchased qty by product_id
-        const deltaByProduct = {};
-        for (const r of rowsToUse) {
-          const pid = Number(r.product_id);
-          const qty = Number(r.quantity||0);
-          if (!(pid>0) || !(qty>0)) continue;
-          deltaByProduct[pid] = (deltaByProduct[pid]||0) + qty;
-        }
-        const pids = Object.keys(deltaByProduct);
-        if (pids.length) {
-          const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
-          // Fetch current opening (products)
-          const current = await axios.get(`${baseUrl}/inventory/opening-stocks`);
-          const openMap = {};
-          (current.data||[]).forEach(row => { openMap[Number(row.product_id)] = Number(row.quantity||0); });
-          const items = pids.map(idNum => ({ product_id: Number(idNum), quantity: (openMap[Number(idNum)]||0) + deltaByProduct[idNum] }));
-          await axios.put(`${baseUrl}/inventory/opening-stocks`, { items });
-        }
-      } catch(_) { /* ignore */ }
+      // Do not update opening stocks when purchases are added (per new policy)
       setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
       setForm({ vendor_id: '', total_purchase_value: '' });
       setRows([]);
       setEditing(null);
       await fetchPurchases();
-      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { type: 'opening' } })); } catch(_) {}
+      try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { type: 'closing' } })); } catch(_) {}
     } catch (err) {
       console.error('Failed to submit purchase', err);
       setError('Failed to save purchase. Please try again.');

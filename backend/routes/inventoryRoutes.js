@@ -78,6 +78,22 @@ router.get('/closing-stocks/materials', async (req, res) => {
       GROUP BY gp.part_code
     `);
     const openingMap = new Map(openingRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
+    const purchasesRes = await pool.query(`
+      WITH gp AS (
+        SELECT id AS product_id,
+               CASE
+                 WHEN LOWER(name) LIKE 'egg%' THEN 'M00001'
+                 WHEN LOWER(name) LIKE 'paneer%' OR LOWER(name) LIKE 'panner%' THEN 'M00002'
+                 ELSE NULL
+               END AS part_code
+        FROM products
+      )
+      SELECT gp.part_code AS material_code, COALESCE(SUM(pi.quantity),0) AS qty
+      FROM purchase_items pi
+      JOIN gp ON gp.product_id = pi.product_id
+      GROUP BY gp.part_code
+    `);
+    const purchaseMap = new Map(purchasesRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
     const salesRes = await pool.query(`
       WITH gp AS (
         SELECT id AS product_id,
@@ -117,10 +133,11 @@ router.get('/closing-stocks/materials', async (req, res) => {
     const result = materials.map(m => {
       const code = m.material_code;
       const opening = openingMap.get(code) || 0;
+      const purchased = purchaseMap.get(code) || 0;
       const sold = salesMap.get(code) || 0;
       const neg = negMap.get(code) || 0;
       const pos = posMap.get(code) || 0;
-      const qty = opening - sold - neg + pos;
+      const qty = opening + purchased - sold - neg + pos;
       return { material_code: code, material_type: m.material_type, quantity: String(Math.max(0, Math.round(qty))) };
     });
     res.json(result);
@@ -133,14 +150,17 @@ router.get('/closing-stocks', async (req, res) => {
     const locHeader = req.headers['x-shop-id'];
     const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
     const opening = await pool.query(`SELECT product_id, COALESCE(quantity,0) AS qty FROM opening_stocks`);
+    const purchases = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM purchase_items GROUP BY product_id`);
     const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
     const openMap = new Map(opening.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
+    const purchaseMap = new Map(purchases.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const salesMap = new Map(sales.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const prodRes = await pool.query(`SELECT id, name FROM products ORDER BY id ASC`);
     const rows = prodRes.rows.map(p=>{
       const open = openMap.get(p.id) || 0;
+      const purchased = purchaseMap.get(p.id) || 0;
       const sold = salesMap.get(p.id) || 0;
-      const closing = Math.max(0, Math.round(open - sold));
+      const closing = Math.max(0, Math.round(open + purchased - sold));
       return { product_id: p.id, name: p.name, quantity: String(closing) };
     });
     res.json(rows);
@@ -168,6 +188,9 @@ router.get('/stock-breakdown', async (req, res) => {
       WITH sales_qty AS (
         SELECT product_id, SUM(quantity) AS qty FROM sale_items si ${locSI} GROUP BY product_id
       ),
+      purchase_qty AS (
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items GROUP BY product_id
+      ),
       adjustments AS (
         SELECT product_id,
                SUM(CASE WHEN adjustment_type IN ('Missing','Wastage','Breakage') THEN quantity ELSE 0 END) AS deducted
@@ -179,17 +202,19 @@ router.get('/stock-breakdown', async (req, res) => {
       all_ids AS (
         SELECT id AS product_id FROM products
         UNION SELECT product_id FROM sale_items
+        UNION SELECT product_id FROM purchase_items
       )
       SELECT a.product_id,
              COALESCE(p.name, 'Product #' || a.product_id) AS name,
              COALESCE(op.quantity,0) AS opening,
              COALESCE(sq.qty,0) AS sold,
              COALESCE(adj.deducted,0) AS adjustments,
-             COALESCE(op.quantity,0) - COALESCE(sq.qty,0) - COALESCE(adj.deducted,0) AS closing
+             COALESCE(op.quantity,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.deducted,0) AS closing
       FROM all_ids a
       LEFT JOIN products p ON p.id = a.product_id
       LEFT JOIN opening op ON op.product_id = a.product_id
       LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
+      LEFT JOIN purchase_qty pq ON pq.product_id = a.product_id
       LEFT JOIN adjustments adj ON adj.product_id = a.product_id
       ORDER BY name ASC
       `, params);
