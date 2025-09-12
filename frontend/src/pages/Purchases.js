@@ -147,19 +147,25 @@ const Purchases = () => {
         if (!(qty>0)) continue;
         await createPurchaseItem(purchaseId, { product_id: Number(r.product_id), quantity: qty, price, mfg_date: r.mfg_date || null });
       }
-      // Update opening stocks (materials) so Opening tab reflects increment immediately
+      // Update opening stocks (products) so Opening tab reflects increment immediately
       try {
-        const aggregate = {};
+        // Aggregate purchased qty by product_id
+        const deltaByProduct = {};
         for (const r of rowsToUse) {
-          const code = String(r.material_code||'').trim();
+          const pid = Number(r.product_id);
           const qty = Number(r.quantity||0);
-          if (!code || !(qty>0)) continue;
-          aggregate[code] = (aggregate[code]||0) + qty;
+          if (!(pid>0) || !(qty>0)) continue;
+          deltaByProduct[pid] = (deltaByProduct[pid]||0) + qty;
         }
-        const items = Object.entries(aggregate).map(([material_code, quantity])=>({ material_code, quantity }));
-        if (items.length) {
+        const pids = Object.keys(deltaByProduct);
+        if (pids.length) {
           const baseUrl = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? (window.origin.replace('frontend','backend')) : 'http://localhost:5000');
-          await axios.put(`${baseUrl}/inventory/opening-stocks/materials`, { items });
+          // Fetch current opening (products)
+          const current = await axios.get(`${baseUrl}/inventory/opening-stocks`);
+          const openMap = {};
+          (current.data||[]).forEach(row => { openMap[Number(row.product_id)] = Number(row.quantity||0); });
+          const items = pids.map(idNum => ({ product_id: Number(idNum), quantity: (openMap[Number(idNum)]||0) + deltaByProduct[idNum] }));
+          await axios.put(`${baseUrl}/inventory/opening-stocks`, { items });
         }
       } catch(_) { /* ignore */ }
       setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
