@@ -9,6 +9,28 @@ async function recalcPurchaseTotal(purchaseId) {
   await pool.query('UPDATE purchases SET total=$1 WHERE id=$2', [total, purchaseId]);
 }
 
+async function incrementOpeningStock(productId, deltaQty) {
+  if (!productId || !Number.isFinite(Number(deltaQty)) || Number(deltaQty) === 0) return;
+  const qty = Number(deltaQty);
+  if (qty > 0) {
+    await pool.query(
+      `INSERT INTO opening_stocks (product_id, quantity)
+       VALUES ($1, $2)
+       ON CONFLICT (product_id)
+       DO UPDATE SET quantity = opening_stocks.quantity + EXCLUDED.quantity`,
+      [productId, qty]
+    );
+  } else {
+    // Decrement, clamp to 0
+    await pool.query(
+      `UPDATE opening_stocks
+       SET quantity = GREATEST(0, quantity + $2)
+       WHERE product_id = $1`,
+      [productId, qty]
+    );
+  }
+}
+
 exports.listItems = async (req, res) => {
   try {
     const { id } = req.params; // purchase id
@@ -35,6 +57,8 @@ exports.createItem = async (req, res) => {
       [id, product_id, quantity, price, req.body.mfg_date || null, locationId]
     );
     await recalcPurchaseTotal(id);
+    // Opening stocks increment by purchased quantity
+    await incrementOpeningStock(Number(product_id), Number(quantity));
     res.status(201).json(result.rows[0]);
   } catch (err) {
     res.status(500).send(err.message);
@@ -45,11 +69,27 @@ exports.updateItem = async (req, res) => {
   try {
     const { purchaseId, itemId } = req.params;
     const { product_id, quantity, price } = req.body;
+    // Load existing to compute deltas for opening stock
+    const existingRes = await pool.query('SELECT product_id, quantity FROM purchase_items WHERE id=$1 AND purchase_id=$2', [itemId, purchaseId]);
+    const existing = existingRes.rows[0];
     const result = await pool.query(
       'UPDATE purchase_items SET product_id=COALESCE($1, product_id), quantity=COALESCE($2, quantity), price=COALESCE($3, price) WHERE id=$4 AND purchase_id=$5 RETURNING *',
       [product_id ?? null, quantity ?? null, price ?? null, itemId, purchaseId]
     );
     await recalcPurchaseTotal(purchaseId);
+    // Adjust opening stock for delta
+    if (existing) {
+      const newProdId = result.rows[0]?.product_id ?? existing.product_id;
+      const newQty = result.rows[0]?.quantity ?? existing.quantity;
+      if (newProdId === existing.product_id) {
+        const delta = Number(newQty) - Number(existing.quantity);
+        if (delta !== 0) await incrementOpeningStock(Number(newProdId), delta);
+      } else {
+        // Move quantity from old product to new product
+        await incrementOpeningStock(Number(existing.product_id), -Number(existing.quantity));
+        await incrementOpeningStock(Number(newProdId), Number(newQty));
+      }
+    }
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).send(err.message);
@@ -59,8 +99,14 @@ exports.updateItem = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   try {
     const { purchaseId, itemId } = req.params;
+    // Load existing to decrement opening
+    const existingRes = await pool.query('SELECT product_id, quantity FROM purchase_items WHERE id=$1 AND purchase_id=$2', [itemId, purchaseId]);
     await pool.query('DELETE FROM purchase_items WHERE id=$1 AND purchase_id=$2', [itemId, purchaseId]);
     await recalcPurchaseTotal(purchaseId);
+    const existing = existingRes.rows[0];
+    if (existing) {
+      await incrementOpeningStock(Number(existing.product_id), -Number(existing.quantity));
+    }
     res.json({ message: 'Purchase item deleted' });
   } catch (err) {
     res.status(500).send(err.message);

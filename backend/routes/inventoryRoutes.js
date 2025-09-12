@@ -78,24 +78,6 @@ router.get('/closing-stocks/materials', async (req, res) => {
       GROUP BY gp.part_code
     `);
     const openingMap = new Map(openingRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
-    // Guess mapping from product to material_code
-    const purchRes = await pool.query(`
-      WITH gp AS (
-        SELECT id AS product_id,
-               CASE
-                 WHEN LOWER(name) LIKE 'egg%' THEN 'M00001'
-                 WHEN LOWER(name) LIKE 'paneer%' OR LOWER(name) LIKE 'panner%' THEN 'M00002'
-                 ELSE NULL
-               END AS part_code
-        FROM products
-      )
-      SELECT gp.part_code AS material_code, COALESCE(SUM(pi.quantity),0) AS qty
-      FROM purchase_items pi
-      JOIN gp ON gp.product_id = pi.product_id
-      WHERE ($1::int IS NULL OR pi.location_id = $1)
-      GROUP BY gp.part_code
-    `, [locId]);
-    const purchMap = new Map(purchRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
     const salesRes = await pool.query(`
       WITH gp AS (
         SELECT id AS product_id,
@@ -135,11 +117,10 @@ router.get('/closing-stocks/materials', async (req, res) => {
     const result = materials.map(m => {
       const code = m.material_code;
       const opening = openingMap.get(code) || 0;
-      const purch = purchMap.get(code) || 0;
       const sold = salesMap.get(code) || 0;
       const neg = negMap.get(code) || 0;
       const pos = posMap.get(code) || 0;
-      const qty = opening + purch - sold - neg + pos;
+      const qty = opening - sold - neg + pos;
       return { material_code: code, material_type: m.material_type, quantity: String(Math.max(0, Math.round(qty))) };
     });
     res.json(result);
@@ -151,14 +132,16 @@ router.get('/closing-stocks', async (req, res) => {
   try {
     const locHeader = req.headers['x-shop-id'];
     const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
-    const purch = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM purchase_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
-    const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
-    const purchMap = new Map(purch.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
+    const opening = await pool.query(`SELECT product_id, COALESCE(quantity,0) AS qty FROM opening_stocks`);
+    const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
+    const openMap = new Map(opening.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const salesMap = new Map(sales.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const prodRes = await pool.query(`SELECT id, name FROM products ORDER BY id ASC`);
     const rows = prodRes.rows.map(p=>{
-      const closing = (purchMap.get(p.id)||0) - (salesMap.get(p.id)||0);
-      return { product_id: p.id, name: p.name, quantity: String(Math.max(0, Math.round(closing))) };
+      const open = openMap.get(p.id) || 0;
+      const sold = salesMap.get(p.id) || 0;
+      const closing = Math.max(0, Math.round(open - sold));
+      return { product_id: p.id, name: p.name, quantity: String(closing) };
     });
     res.json(rows);
   } catch (e) { res.status(500).send(e.message); }
@@ -174,19 +157,15 @@ router.put('/closing-stocks/materials', async (req, res) => {
   } catch (e) { res.status(500).send(e.message); }
 });
 
-// Detailed stock breakdown per product: opening, purchased, sold, adjustments, closing
+// Detailed stock breakdown per product: opening, sold, adjustments, closing (purchases roll into opening)
 router.get('/stock-breakdown', async (req, res) => {
   try {
     const locHeader = req.headers['x-shop-id'];
     const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
-    const locPI = locId ? 'WHERE pi.location_id = $1' : '';
     const locSI = locId ? 'WHERE si.location_id = $1' : '';
     const params = locId ? [locId] : [];
     const q = await pool.query(`
-      WITH purchase_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi ${locPI} GROUP BY product_id
-      ),
-      sales_qty AS (
+      WITH sales_qty AS (
         SELECT product_id, SUM(quantity) AS qty FROM sale_items si ${locSI} GROUP BY product_id
       ),
       adjustments AS (
@@ -199,35 +178,31 @@ router.get('/stock-breakdown', async (req, res) => {
       ),
       all_ids AS (
         SELECT id AS product_id FROM products
-        UNION SELECT product_id FROM purchase_items
         UNION SELECT product_id FROM sale_items
       )
       SELECT a.product_id,
              COALESCE(p.name, 'Product #' || a.product_id) AS name,
              COALESCE(op.quantity,0) AS opening,
-             COALESCE(pq.qty,0) AS purchased,
              COALESCE(sq.qty,0) AS sold,
              COALESCE(adj.deducted,0) AS adjustments,
-             COALESCE(op.quantity,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.deducted,0) AS closing
+             COALESCE(op.quantity,0) - COALESCE(sq.qty,0) - COALESCE(adj.deducted,0) AS closing
       FROM all_ids a
       LEFT JOIN products p ON p.id = a.product_id
       LEFT JOIN opening op ON op.product_id = a.product_id
-      LEFT JOIN purchase_qty pq ON pq.product_id = a.product_id
       LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
       LEFT JOIN adjustments adj ON adj.product_id = a.product_id
       ORDER BY name ASC
-    `, params);
-    res.json(q.rows.map(r => ({
-      product_id: Number(r.product_id),
-      name: r.name,
-      opening: Number(r.opening||0),
-      purchased: Number(r.purchased||0),
-      sold: Number(r.sold||0),
-      adjustments: Number(r.adjustments||0),
-      closing: Number(r.closing||0)
-    })));
-  } catch (e) { res.status(500).send(e.message); }
-});
+      `, params);
+      res.json(q.rows.map(r => ({
+        product_id: Number(r.product_id),
+        name: r.name,
+        opening: Number(r.opening||0),
+        sold: Number(r.sold||0),
+        adjustments: Number(r.adjustments||0),
+        closing: Number(r.closing||0)
+      })));
+    } catch (e) { res.status(500).send(e.message); }
+  });
 
 module.exports = router;
 
