@@ -122,22 +122,19 @@ router.get('/closing-stocks/materials', async (req, res) => {
         FROM products
       )
       SELECT gp.part_code AS material_code,
-             COALESCE(SUM(CASE WHEN sa.adjustment_type IN ('Wastage','Breakage','Missing') THEN sa.quantity ELSE 0 END),0) AS neg_qty,
-             COALESCE(SUM(CASE WHEN sa.adjustment_type NOT IN ('Wastage','Breakage','Missing') THEN sa.quantity ELSE 0 END),0) AS pos_qty
+             COALESCE(SUM(CASE WHEN sa.adjustment_type IN ('Wastage','Breakage','Missing') THEN sa.quantity ELSE 0 END),0) AS neg_qty
       FROM stock_adjustments sa
       JOIN gp ON gp.product_id = sa.product_id
       GROUP BY gp.part_code
     `);
     const negMap = new Map(adjRes.rows.map(r=>[r.material_code, Number(r.neg_qty||0)]));
-    const posMap = new Map(adjRes.rows.map(r=>[r.material_code, Number(r.pos_qty||0)]));
     const result = materials.map(m => {
       const code = m.material_code;
       const opening = openingMap.get(code) || 0;
       const purchased = purchaseMap.get(code) || 0;
       const sold = salesMap.get(code) || 0;
       const neg = negMap.get(code) || 0;
-      const pos = posMap.get(code) || 0;
-      const qty = opening + purchased - sold - neg + pos;
+      const qty = opening + purchased - sold - neg;
       return { material_code: code, material_type: m.material_type, quantity: String(Math.max(0, Math.round(qty))) };
     });
     res.json(result);
