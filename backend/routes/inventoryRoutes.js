@@ -149,15 +149,23 @@ router.get('/closing-stocks', async (req, res) => {
     const opening = await pool.query(`SELECT product_id, COALESCE(quantity,0) AS qty FROM opening_stocks`);
     const purchases = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM purchase_items GROUP BY product_id`);
     const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
+    const adjustments = await pool.query(`
+      SELECT product_id, COALESCE(SUM(quantity),0) AS deducted
+      FROM stock_adjustments
+      WHERE adjustment_type IN ('Missing','Wastage','Breakage')
+      GROUP BY product_id
+    `);
     const openMap = new Map(opening.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const purchaseMap = new Map(purchases.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const salesMap = new Map(sales.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
+    const adjMap = new Map(adjustments.rows.map(r=>[Number(r.product_id), Number(r.deducted||0)]));
     const prodRes = await pool.query(`SELECT id, name FROM products ORDER BY id ASC`);
     const rows = prodRes.rows.map(p=>{
       const open = openMap.get(p.id) || 0;
       const purchased = purchaseMap.get(p.id) || 0;
       const sold = salesMap.get(p.id) || 0;
-      const closing = Math.max(0, Math.round(open + purchased - sold));
+      const deducted = adjMap.get(p.id) || 0;
+      const closing = Math.max(0, Math.round(open + purchased - sold - deducted));
       return { product_id: p.id, name: p.name, quantity: String(closing) };
     });
     res.json(rows);
