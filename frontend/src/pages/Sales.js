@@ -4,7 +4,6 @@ import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingF
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import ShopChip from '../components/ShopChip';
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
@@ -419,7 +418,7 @@ const Sales = () => {
           <h1 className="page-title">Sales</h1>
           <p className="page-subtitle">Record sales and access invoices</p>
         </div>
-        <ShopChip />
+        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">

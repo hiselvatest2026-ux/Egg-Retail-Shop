@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
-import ShopChip from '../components/ShopChip';
 import Dropdown from '../components/Dropdown';
 import { getCreditCollection, getRouteCollection, getWalkinCollection, getTotalCollection } from '../api/api';
 
@@ -34,7 +33,7 @@ const CollectionSettlement = () => {
           <h1 className="page-title">Collection</h1>
           <p className="page-subtitle">Daily collections by Credit, Route, and Walk-in</p>
         </div>
-        <ShopChip />
+        
       </div>
 
       <Card title="Filters">
@@ -64,7 +63,7 @@ const CollectionSettlement = () => {
       <Card title="Credit Collection">
         <div className="stat-grid">
           <div className="stat warn"><div className="stat-label">Outstanding</div><div className="stat-value">₹ {Number(credit.kpis.total_outstanding||0).toLocaleString()}</div></div>
-          <div className="stat danger"><div className="stat-label">Overdue > 30d</div><div className="stat-value">₹ {Number(credit.kpis.overdue_30||0).toLocaleString()}</div></div>
+          <div className="stat danger"><div className="stat-label">Overdue &gt; 30d</div><div className="stat-value">₹ {Number(credit.kpis.overdue_30||0).toLocaleString()}</div></div>
         </div>
         <table className="table table-hover mt-2">
           <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th></tr></thead>

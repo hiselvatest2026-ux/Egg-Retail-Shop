@@ -54,10 +54,8 @@ router.put('/opening-stocks/materials', async (req, res) => {
 });
 
 // Auto-derived closing stocks by material (normalized to pieces)
-router.get('/closing-stocks/materials', async (req, res) => {
+router.get('/closing-stocks/materials', async (_req, res) => {
   try {
-    const locHeader = req.headers['x-shop-id'];
-    const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
     // Materials
     const matsRes = await pool.query(`SELECT part_code AS material_code, metal_type AS material_type FROM metal_master ORDER BY part_code ASC`);
     const materials = matsRes.rows;
@@ -92,9 +90,8 @@ router.get('/closing-stocks/materials', async (req, res) => {
       SELECT gp.part_code AS material_code, COALESCE(SUM(pi.quantity),0) AS qty
       FROM purchase_items pi
       JOIN gp ON gp.product_id = pi.product_id
-      WHERE ($1::int IS NULL OR pi.location_id = $1)
       GROUP BY gp.part_code
-    `, [locId]);
+    `);
     const purchMap = new Map(purchRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
     const salesRes = await pool.query(`
       WITH gp AS (
@@ -109,9 +106,8 @@ router.get('/closing-stocks/materials', async (req, res) => {
       SELECT gp.part_code AS material_code, COALESCE(SUM(si.quantity),0) AS qty
       FROM sale_items si
       JOIN gp ON gp.product_id = si.product_id
-      WHERE ($1::int IS NULL OR si.location_id = $1)
       GROUP BY gp.part_code
-    `, [locId]);
+    `);
     const salesMap = new Map(salesRes.rows.map(r=>[r.material_code, Number(r.qty||0)]));
     const adjRes = await pool.query(`
       WITH gp AS (
@@ -147,12 +143,10 @@ router.get('/closing-stocks/materials', async (req, res) => {
 });
 
 // Product-level closing stocks (optional, derived)
-router.get('/closing-stocks', async (req, res) => {
+router.get('/closing-stocks', async (_req, res) => {
   try {
-    const locHeader = req.headers['x-shop-id'];
-    const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
-    const purch = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM purchase_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
-    const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
+    const purch = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM purchase_items GROUP BY product_id`);
+    const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) qty FROM sale_items GROUP BY product_id`);
     const purchMap = new Map(purch.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const salesMap = new Map(sales.rows.map(r=>[Number(r.product_id), Number(r.qty||0)]));
     const prodRes = await pool.query(`SELECT id, name FROM products ORDER BY id ASC`);
@@ -175,19 +169,14 @@ router.put('/closing-stocks/materials', async (req, res) => {
 });
 
 // Detailed stock breakdown per product: opening, purchased, sold, adjustments, closing
-router.get('/stock-breakdown', async (req, res) => {
+router.get('/stock-breakdown', async (_req, res) => {
   try {
-    const locHeader = req.headers['x-shop-id'];
-    const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
-    const locPI = locId ? 'WHERE pi.location_id = $1' : '';
-    const locSI = locId ? 'WHERE si.location_id = $1' : '';
-    const params = locId ? [locId] : [];
     const q = await pool.query(`
       WITH purchase_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi ${locPI} GROUP BY product_id
+        SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi GROUP BY product_id
       ),
       sales_qty AS (
-        SELECT product_id, SUM(quantity) AS qty FROM sale_items si ${locSI} GROUP BY product_id
+        SELECT product_id, SUM(quantity) AS qty FROM sale_items si GROUP BY product_id
       ),
       adjustments AS (
         SELECT product_id,
@@ -216,7 +205,7 @@ router.get('/stock-breakdown', async (req, res) => {
       LEFT JOIN sales_qty sq ON sq.product_id = a.product_id
       LEFT JOIN adjustments adj ON adj.product_id = a.product_id
       ORDER BY name ASC
-    `, params);
+    `);
     res.json(q.rows.map(r => ({
       product_id: Number(r.product_id),
       name: r.name,

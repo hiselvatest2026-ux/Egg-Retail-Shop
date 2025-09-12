@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
-import ShopChip from '../components/ShopChip';
 import axios from 'axios';
 
 const parseCsv = (text) => {
@@ -55,7 +54,7 @@ const MISReports = () => {
   const [allShops, setAllShops] = useState(false);
 
   const download = (path) => {
-    const url = `${API_URL}/reports/${path}${allShops ? '?all_shops=1' : ''}`;
+    const url = `${API_URL}/reports/${path}`;
     const a = document.createElement('a');
     a.href = url;
     a.download = '';
@@ -67,8 +66,7 @@ const MISReports = () => {
   const loadReport = async (key, path) => {
     try {
       setLoading(prev=>({ ...prev, [key]: true }));
-      const params = allShops ? { all_shops: 1 } : undefined;
-      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text', params });
+      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text' });
       const text = res.data;
       const rows = parseCsv(text);
       setReportRows(prev=>({ ...prev, [key]: rows }));
@@ -82,7 +80,6 @@ const MISReports = () => {
 
   // Auto-load purchases on mount and when All shops toggles
   React.useEffect(()=>{ loadReport('purchases','purchases.csv'); }, []);
-  React.useEffect(()=>{ loadReport('purchases','purchases.csv'); }, [allShops]);
 
   return (
     <div className="page">
@@ -91,14 +88,10 @@ const MISReports = () => {
           <h1 className="page-title">MIS Reports</h1>
           <p className="page-subtitle">Analyze performance across purchases, sales, collection, and stock</p>
         </div>
-        <ShopChip />
+        
       </div>
 
-      <div className="actions-row" style={{marginBottom:12}}>
-        <label style={{display:'flex', alignItems:'center', gap:8}}>
-          <input type="checkbox" checked={allShops} onChange={e=>setAllShops(e.target.checked)} /> All shops (HO)
-        </label>
-      </div>
+      
 
       <div className="grid grid-cols-1 gap-4">
         <Card title="Purchase Report">

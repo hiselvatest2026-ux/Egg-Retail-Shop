@@ -48,15 +48,13 @@ exports.createItem = async (req, res) => {
   try {
     const { id } = req.params; // sale id
     const { product_id, quantity, price } = req.body;
-    const locHeader = req.headers['x-shop-id'];
-    const locationId = locHeader ? Number(locHeader) : null;
     const available = await getAvailableStock(product_id);
     if (Number(quantity) > available) {
       return res.status(400).json({ message: 'Insufficient quantity' });
     }
     const result = await pool.query(
-      'INSERT INTO sale_items (sale_id, product_id, quantity, price, location_id) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [id, product_id, quantity, price, locationId]
+      'INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ($1,$2,$3,$4) RETURNING *',
+      [id, product_id, quantity, price]
     );
     await recalcSaleTotal(id);
     res.status(201).json(result.rows[0]);
