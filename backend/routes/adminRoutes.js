@@ -16,8 +16,8 @@ router.post('/seed', async (_req, res) => {
 
 module.exports = router;
 
-// Purge and reseed data for Ratinam shop only (by location name)
-router.post('/seed/ratinam', async (_req, res) => {
+// Purge and reseed data for a specific location (removed)
+/* router.post('/seed/ratinam', async (_req, res) => {
   try {
     await ensureSchema();
     // Find Ratinam location
@@ -42,7 +42,7 @@ router.post('/seed/ratinam', async (_req, res) => {
     try { await pool.query('ROLLBACK'); } catch(_){}
     res.status(500).json({ message: e.message });
   }
-});
+}); */
 
 // Clear all transactional data (sales/purchases) and related items/payments
 router.post('/clear-transactions', async (_req, res) => {
