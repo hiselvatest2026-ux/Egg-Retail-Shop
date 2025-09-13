@@ -59,9 +59,13 @@ const Invoice = () => {
       </div>
       <div className="print-receipt">
       <Card title={`Invoice #${sale.id}`}>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8}}>
-          <div />
-          <div>
+        {/* Brand header */}
+        <div style={{display:'grid', gridTemplateColumns:'1fr auto', alignItems:'center', gap:12, marginBottom:12}}>
+          <div style={{display:'flex', alignItems:'center', gap:10}}>
+            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/zingupdated.png" alt="ZingPayPOS" width="46" height="46" style={{borderRadius:8, border:'1px solid #1f2937', objectFit:'cover'}} />
+            <div style={{fontWeight:900, fontSize:20}}>ZingPayPOS</div>
+          </div>
+          <div style={{textAlign:'right'}}>
             <div><strong>Invoice No:</strong> #{sale.id}</div>
             <div><strong>Date:</strong> {new Date(sale.sale_date).toLocaleString()}</div>
             <div><strong>Payment Mode:</strong> {sale.payment_method || '-'}</div>
