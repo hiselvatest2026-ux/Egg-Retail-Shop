@@ -44,10 +44,12 @@ const Dropdown = ({ value, onChange, options, placeholder = 'Select', renderLabe
                   'focus:outline-none'
                 )}
               >
-                {isMobile && searchable && (
+                {isMobile && (
                   <div style={{display:'flex', flexDirection:'column', gap:8, padding:4}}>
                     <div style={{width:36, height:4, borderRadius:4, background:'#3A3A4C', alignSelf:'center', marginBottom:6}} />
-                    <input className="input" placeholder="Search..." value={query} onChange={e=>setQuery(e.target.value)} />
+                    {searchable && (
+                      <input className="input" placeholder="Search..." value={query} onChange={e=>setQuery(e.target.value)} />
+                    )}
                   </div>
                 )}
                 {filtered.length === 0 && (

@@ -215,6 +215,7 @@ const Purchases = () => {
                   <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
                   <Dropdown
                     value={form.vendor_id}
+                    searchable
                     onChange={v=>setForm({...form, vendor_id: v})}
                     placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
                     options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
@@ -254,6 +255,7 @@ const Purchases = () => {
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
                     <Dropdown
                       value={addForm.material_code}
+                      searchable
                       onChange={(code)=>{
                         const mat = materials.find(m=> String(m.part_code) === String(code));
                         // Heuristic map to product
