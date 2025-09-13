@@ -3,6 +3,15 @@ import { Listbox, Transition } from '@headlessui/react';
 
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
+const ScrollOnOpen = ({ active, btnRef }) => {
+  useEffect(() => {
+    if (active) {
+      try { btnRef.current?.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){ }
+    }
+  }, [active, btnRef]);
+  return null;
+};
+
 const Dropdown = ({ value, onChange, options, placeholder = 'Select', renderLabel, disabled = false, searchable = false }) => {
   const selected = options.find(opt => String(opt.value) === String(value));
   const label = selected ? (renderLabel ? renderLabel(selected) : selected.label) : placeholder;
@@ -62,7 +71,7 @@ const Dropdown = ({ value, onChange, options, placeholder = 'Select', renderLabe
               </Listbox.Options>
             </div>
           </Transition>
-          {open && isMobile && useEffect(() => { try { btnRef.current?.scrollIntoView({ behavior:'smooth', block:'center' }); } catch(_){} }, [])}
+          <ScrollOnOpen active={open && isMobile} btnRef={btnRef} />
         </div>
       )}
     </Listbox>
