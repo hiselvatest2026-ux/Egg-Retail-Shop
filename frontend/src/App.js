@@ -36,22 +36,15 @@ function App() {
       <div className="layout">
         <div className="mobile-header">
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu">☰</button>
-          <div style={{display:'flex', alignItems:'center', gap:8}}>
-            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg" alt="Logo" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937', objectFit:'cover'}} />
-            <span style={{fontWeight:800}}>MyBharatMart POS</span>
-          </div>
           <div style={{marginLeft:12, flex:1, display:'flex', justifyContent:'flex-end'}}>
             <ShopSwitcher />
           </div>
         </div>
         {sidebarOpen && <div className="backdrop" onClick={()=>setSidebarOpen(false)} />}
         <aside className={"sidebar" + (sidebarOpen ? " open" : "") } style={{width:'78%', maxWidth:300}}>
-          <div className="brand">
-            <div style={{display:'flex', alignItems:'center', gap:8}}>
-              <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/Generated%20Image%20September%2001%2C%202025%20-%208_04PM.jpeg" alt="Company Logo" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937', objectFit:'cover'}} />
-              <span>MyBharatMart POS</span>
-            </div>
-            <div style={{marginTop:10}}>
+          <div className="brand" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+            <div style={{fontWeight:800}}>Menu</div>
+            <div style={{marginTop:0}}>
               <ShopSwitcher />
             </div>
           </div>
