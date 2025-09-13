@@ -17,6 +17,25 @@ const Purchases = () => {
   const [materials, setMaterials] = useState([]);
   const [products, setProducts] = useState([]);
   const [rows, setRows] = useState([]);
+  // Mobile detection (safe after mount)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    try {
+      const mq = window.matchMedia('(max-width: 640px)');
+      const apply = () => setIsMobile(!!mq.matches);
+      apply();
+      mq.addEventListener('change', apply);
+      return () => mq.removeEventListener('change', apply);
+    } catch (_) {
+      setIsMobile(false);
+    }
+  }, []);
+  // Full-screen picker state (mobile only)
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerType, setPickerType] = useState(''); // 'vendor' | 'material' | 'uom'
+  const [pickerSearch, setPickerSearch] = useState('');
+  const openPicker = (type) => { setPickerType(type); setPickerSearch(''); setPickerOpen(true); };
+  const closePicker = () => { setPickerOpen(false); setPickerType(''); setPickerSearch(''); };
   const sortedMaterials = useMemo(() => {
     const source = Array.isArray(materials) ? [...materials] : [];
     const parseCode = (code) => {
@@ -213,12 +232,18 @@ const Purchases = () => {
               <div className="form-row">
                 <div className="input-group" style={{overflow:'visible'}}>
                   <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
-                  <Dropdown
-                    value={form.vendor_id}
-                    onChange={v=>setForm({...form, vendor_id: v})}
-                    placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
-                    options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
-                  />
+                  {isMobile ? (
+                    <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('vendor')}>
+                      {form.vendor_id ? getVendorLabel(form.vendor_id) : (vendors.length ? 'Select vendor' : 'No vendors found - add one first')}
+                    </button>
+                  ) : (
+                    <Dropdown
+                      value={form.vendor_id}
+                      onChange={v=>setForm({...form, vendor_id: v})}
+                      placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
+                      options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
+                    />
+                  )}
                   {!form.vendor_id && error && <div className="form-help">Vendor is required</div>}
                 </div>
                 {form.vendor_id && (()=>{
@@ -252,21 +277,24 @@ const Purchases = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end">
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
-                    <Dropdown
-                      value={addForm.material_code}
-                      onChange={(code)=>{
-                        const mat = materials.find(m=> String(m.part_code) === String(code));
-                        // Heuristic map to product
-                        if (mat) {
-                          const norm = String(mat.metal_type||'').toLowerCase();
-                          const byName = products.find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
-                          // No override state; only keep material details in form
-                        }
-                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
-                      }}
-                      placeholder={'Material Code - Type *'}
-                      options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
-                    />
+                    {isMobile ? (
+                      <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('material')}>
+                        {addForm.material_code ? (()=>{
+                          const mat = materials.find(m=> String(m.part_code) === String(addForm.material_code));
+                          return mat ? `${mat.part_code} - ${mat.metal_type}` : String(addForm.material_code);
+                        })() : 'Material Code - Type *'}
+                      </button>
+                    ) : (
+                      <Dropdown
+                        value={addForm.material_code}
+                        onChange={(code)=>{
+                          const mat = materials.find(m=> String(m.part_code) === String(code));
+                          setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
+                        }}
+                        placeholder={'Material Code - Type *'}
+                        options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                      />
+                    )}
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
                   
@@ -278,7 +306,13 @@ const Purchases = () => {
                     </div>
                     <div className="input-group" style={{overflow:'visible'}}>
                       <label>UOM <span style={{color:'#fca5a5'}}>*</span></label>
-                      <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                      {isMobile ? (
+                        <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('uom')}>
+                          {addForm.uom || 'UOM *'}
+                        </button>
+                      ) : (
+                        <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                      )}
                       {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
                     </div>
                   </div>
@@ -457,6 +491,60 @@ const Purchases = () => {
           {error && <div className="form-help">{error}</div>}
           {success && <div className="toast">{success}</div>}
         </form>
+        {isMobile && pickerOpen && (
+          <div style={{position:'fixed', inset:0, background:'#0b0f14', zIndex:9999, display:'flex', flexDirection:'column'}}>
+            <div style={{padding:'12px', borderBottom:'1px solid #1f2937', display:'flex', alignItems:'center', gap:8}}>
+              <button type="button" className="btn secondary btn-sm" onClick={closePicker}>Back</button>
+              <div style={{fontWeight:800}}>{pickerType==='vendor'?'Select Vendor':pickerType==='material'?'Select Material':'Select UOM'}</div>
+            </div>
+            <div style={{padding:'10px'}}>
+              {pickerType !== 'uom' && (
+                <input className="input" placeholder="Search..." value={pickerSearch} onChange={e=>setPickerSearch(e.target.value)} />
+              )}
+            </div>
+            <div style={{flex:1, overflowY:'auto', padding:'10px'}}>
+              {pickerType==='vendor' && (
+                <div className="card" style={{padding:0}}>
+                  <div className="card-body" style={{padding:0}}>
+                    {(vendors||[])
+                      .filter(v=>{
+                        const q = pickerSearch.toLowerCase();
+                        if (!q) return true;
+                        return String(v.name||'').toLowerCase().includes(q) || String(v.vendor_code||'').toLowerCase().includes(q);
+                      })
+                      .map(v=> (
+                        <button key={v.id} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setForm(prev=>({...prev, vendor_id: String(v.id)})); closePicker(); }}>{v.vendor_code} - {v.name}</button>
+                      ))}
+                  </div>
+                </div>
+              )}
+              {pickerType==='material' && (
+                <div className="card" style={{padding:0}}>
+                  <div className="card-body" style={{padding:0}}>
+                    {(sortedMaterials||[])
+                      .filter(m=>{
+                        const q = pickerSearch.toLowerCase();
+                        if (!q) return true;
+                        return String(m.part_code||'').toLowerCase().includes(q) || String(m.metal_type||'').toLowerCase().includes(q);
+                      })
+                      .map(m=> (
+                        <button key={m.part_code} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ const mat = m; setAddForm(prev=>({ ...prev, material_code: String(mat.part_code), material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' })); closePicker(); }}>{m.part_code} - {m.metal_type}</button>
+                      ))}
+                  </div>
+                </div>
+              )}
+              {pickerType==='uom' && (
+                <div className="card" style={{padding:0}}>
+                  <div className="card-body" style={{padding:0}}>
+                    {['Piece','Tray'].map(u=> (
+                      <button key={u} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setAddForm(prev=>({...prev, uom: u})); closePicker(); }}>{u}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </Card>
       {/* Edit Modal */}
       {showEdit && editForm && (
