@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ShopProvider } from './components/ShopContext';
 import ShopSwitcher from './components/ShopSwitcher';
 import { HashRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
-import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard, FiMoreHorizontal } from 'react-icons/fi';
+import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard } from 'react-icons/fi';
 import Purchases from './pages/Purchases';
 import Sales from './pages/Sales';
 import Products from './pages/Products';
@@ -68,8 +68,8 @@ function App() {
             <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
             <NavLink to="/inventory/adjustments" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Stock Adjustments</NavLink>
             
-            <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiCreditCard style={{marginRight:8}} /> Collection</NavLink>
-            <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Reports</NavLink>
+            <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
+            <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
             <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
             <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
             <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
@@ -77,7 +77,7 @@ function App() {
             
           </nav>
         </aside>
-        <main className="content" style={{marginLeft: sidebarOpen ? '78%' : 0, transition:'margin 0.2s ease'}}>
+        <main className="content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/purchases" element={<Purchases />} />
@@ -107,8 +107,8 @@ function App() {
           <NavLink to="/sales" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
           <NavLink to="/purchases" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
           <NavLink to="/inventory" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
-          <NavLink to="/mis" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />Reports</NavLink>
-          <button className="btn secondary" onClick={()=>setSidebarOpen(true)} style={{display:'flex', alignItems:'center'}}><FiMoreHorizontal style={{marginRight:6}} />More</button>
+          <NavLink to="/pricing-master" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Pricing</NavLink>
+          <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
       </ShopProvider>
