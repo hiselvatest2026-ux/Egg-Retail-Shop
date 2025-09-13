@@ -36,6 +36,10 @@ function App() {
       <div className="layout">
         <div className="mobile-header">
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu">☰</button>
+          <div style={{display:'flex', alignItems:'center', gap:8, marginLeft:10}}>
+            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/zingupdated.png" alt="ZingPayPOS" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937', objectFit:'cover'}} />
+            <span style={{fontWeight:800}}>ZingPayPOS</span>
+          </div>
           <div style={{marginLeft:12, flex:1, display:'flex', justifyContent:'flex-end'}}>
             <ShopSwitcher />
           </div>
@@ -43,7 +47,10 @@ function App() {
         {sidebarOpen && <div className="backdrop" onClick={()=>setSidebarOpen(false)} />}
         <aside className={"sidebar" + (sidebarOpen ? " open" : "") } style={{width:'78%', maxWidth:300}}>
           <div className="brand" style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-            <div style={{fontWeight:800}}>Menu</div>
+            <div style={{display:'flex', alignItems:'center', gap:10}}>
+              <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/zingupdated.png" alt="ZingPayPOS" width="40" height="40" style={{borderRadius:8, border:'1px solid #1f2937', objectFit:'cover'}} />
+              <span style={{fontWeight:800}}>ZingPayPOS</span>
+            </div>
             <div style={{marginTop:0}}>
               <ShopSwitcher />
             </div>
