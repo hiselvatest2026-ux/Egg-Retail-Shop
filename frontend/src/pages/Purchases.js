@@ -497,37 +497,6 @@ const Purchases = () => {
             }}
             showSearch={false}
           />
-          <MobilePicker
-            open={showUomPicker}
-            onClose={()=>setShowUomPicker(false)}
-            title="Select UOM"
-            options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
-            value={addForm.uom}
-            onChange={(v)=> setAddForm(prev=>({ ...prev, uom: v }))}
-            showSearch={false}
-          />
-          <MobilePicker
-            open={showEditMaterialPicker}
-            onClose={()=>setShowEditMaterialPicker(false)}
-            title="Select Material"
-            options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
-            value={editForm?.material_code||''}
-            onChange={(code)=>{
-              const mat = materials.find(m=> String(m.part_code) === String(code));
-              const type = mat ? mat.metal_type : '';
-              setEditForm(prev=>({ ...prev, material_code: code, material_type: type }));
-            }}
-            showSearch={false}
-          />
-          <MobilePicker
-            open={showEditUomPicker}
-            onClose={()=>setShowEditUomPicker(false)}
-            title="Select UOM"
-            options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]}
-            value={editForm?.uom||'Piece'}
-            onChange={(v)=> setEditForm(prev=>({ ...prev, uom: v }))}
-            showSearch={false}
-          />
         </>
       )}
       {/* Edit Modal */}
@@ -539,18 +508,12 @@ const Purchases = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div style={{overflow:'visible'}}>
                   <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>Product (Material)</label>
-                  {isMobile ? (
-                    <button type="button" className="input" onClick={()=>setShowEditMaterialPicker(true)} style={{textAlign:'left'}}>
-                      {editForm?.material_code ? (sortedMaterials.find(m=> String(m.part_code)===String(editForm.material_code))?.metal_type || editForm.material_code) : 'Select material'}
-                    </button>
-                  ) : (
-                    <Dropdown value={editForm.material_code||''} onChange={(code)=>{
-                      const mat = materials.find(m=> String(m.part_code) === String(code));
-                      const type = mat ? mat.metal_type : '';
-                      const sl = mat ? (mat.shelf_life || '') : '';
-                      setEditForm(prev=>({ ...prev, material_code: code, material_type: type, shelf_life: sl }));
-                    }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))} />
-                  )}
+                  <Dropdown value={editForm.material_code||''} onChange={(code)=>{
+                    const mat = materials.find(m=> String(m.part_code) === String(code));
+                    const type = mat ? mat.metal_type : '';
+                    const sl = mat ? (mat.shelf_life || '') : '';
+                    setEditForm(prev=>({ ...prev, material_code: code, material_type: type, shelf_life: sl }));
+                  }} options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))} />
                 </div>
                 
                 <div>
@@ -559,13 +522,7 @@ const Purchases = () => {
                 </div>
                 <div style={{overflow:'visible'}}>
                   <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>UOM</label>
-                  {isMobile ? (
-                    <button type="button" className="input" onClick={()=>setShowEditUomPicker(true)} style={{textAlign:'left'}}>
-                      {editForm?.uom || 'Piece'}
-                    </button>
-                  ) : (
-                    <Dropdown value={editForm.uom||'Piece'} onChange={(v)=>setEditForm({...editForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
-                  )}
+                  <Dropdown value={editForm.uom||'Piece'} onChange={(v)=>setEditForm({...editForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
                 </div>
                 <div>
                   <label className="block" style={{fontSize:12, color:'#b6beca', marginBottom:4}}>DOM</label>
