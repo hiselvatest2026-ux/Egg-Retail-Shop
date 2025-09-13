@@ -110,7 +110,7 @@ const Purchases = () => {
         let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
           || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
         if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-        if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+        
         if (prod) pid = String(prod.id);
       }
       rowsToUse = [{ ...addForm, product_id: pid }];
@@ -134,6 +134,7 @@ const Purchases = () => {
       }
       // Create minimal header, then items based on rows
       let purchaseId = editing;
+      if (!editing) {
       if (!editing) {
         const header = { vendor_id: Number(form.vendor_id) };
         const res = await createPurchase(header);

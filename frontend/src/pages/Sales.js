@@ -232,7 +232,7 @@ const Sales = () => {
               let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
                 || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
               if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-              if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+              
               if (prod) pid = Number(prod.id);
             }
           }
@@ -241,7 +241,7 @@ const Sales = () => {
             let prod2 = products.find(p=> String(p.name||'').toLowerCase() === label)
               || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
             if (!prod2 && /egg/.test(label)) prod2 = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-            if (!prod2 && /paneer|panner/.test(label)) prod2 = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+            
             if (prod2) pid = Number(prod2.id);
           }
           if (!pid) return null;
@@ -307,7 +307,7 @@ const Sales = () => {
           let prod = products.find(p=> String(p.name||'').toLowerCase() === label)
             || products.find(p=> String(p.name||'').toLowerCase().includes(label) || label.includes(String(p.name||'').toLowerCase()));
           if (!prod && /egg/.test(label)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-          if (!prod && /paneer|panner/.test(label)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+          
           if (prod) productId = Number(prod.id);
         }
         if (!productId) { setError('Cannot map selected item to a product. Please verify Material Master and Products.'); return; }
@@ -523,7 +523,7 @@ const Sales = () => {
                         let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
                           || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
                         if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-                        if (!prod && /paneer|panner/.test(norm)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+                        
                         if (prod) pid = String(prod.id);
                       }
                       setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
@@ -642,7 +642,7 @@ const Sales = () => {
                     let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
                       || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
                     if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-                    if (!prod && /paneer|panner/.test(norm)) prod = products.find(p=> /paneer|panner/.test(String(p.name||'').toLowerCase()));
+                    
                     if (prod) pid = String(prod.id);
                   }
                   if (!pid) { setError('Cannot map item to a product. Please verify Material and Products master.'); return; }
