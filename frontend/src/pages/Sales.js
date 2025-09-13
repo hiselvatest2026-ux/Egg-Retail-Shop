@@ -1035,7 +1035,9 @@ const Sales = () => {
                         }
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
                         try {
-                          const r = await getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category });
+                          const cust = customers.find(c=> String(c.id)===String(form.customer_id));
+                          const categoryForPricing = form.category || (cust && cust.category) || '';
+                          const r = await getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing });
                           const base = Number(r?.data?.base_price || 0);
                           if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
                         } catch(_) {}
