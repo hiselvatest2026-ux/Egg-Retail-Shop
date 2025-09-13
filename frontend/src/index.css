@@ -205,6 +205,24 @@ label + select.input { cursor:pointer; }
   .btn-group { gap:6px; }
 }
 
+/* Mobile-only: prevent zoom/shrink on Add Purchase form dropdowns/inputs */
+@media (max-width: 640px) {
+  .purchase-add-form .input,
+  .purchase-add-form select,
+  .purchase-add-form .ui-dropdown,
+  .purchase-add-form .ui-dropdown * {
+    font-size: 16px !important;
+  }
+  .purchase-add-form .ui-dropdown,
+  .purchase-add-form .ui-dropdown > *,
+  .purchase-add-form select,
+  .purchase-add-form .input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+  }
+}
+
 /* Off-canvas mobile header and sidebar */
 .mobile-header { display:none; align-items:center; justify-content:space-between; padding:10px 12px; background:#0f172a; border-bottom:1px solid #1f2937; position:sticky; top:0; z-index:40; }
 .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:35; }
