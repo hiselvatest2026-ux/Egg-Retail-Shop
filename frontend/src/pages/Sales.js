@@ -58,6 +58,14 @@ const Sales = () => {
       navigate({ search: params.toString() }, { replace: true });
     }
   }, [activeTab]);
+  // Auto-set sale category from selected customer (Customer Master)
+  useEffect(() => {
+    if (!form.customer_id) return;
+    const cust = customers.find(c => String(c.id) === String(form.customer_id));
+    if (cust && cust.category && String(form.category) !== String(cust.category)) {
+      setForm(prev => ({ ...prev, category: cust.category }));
+    }
+  }, [form.customer_id, customers]);
   const [paymentsList, setPaymentsList] = useState([]);
   const [paymentsFilter, setPaymentsFilter] = useState({ customer_id: '', invoice_id: '', showPaid: false });
   const [recordPaymentNow, setRecordPaymentNow] = useState(false);
