@@ -188,9 +188,6 @@ label + select.input { cursor:pointer; }
   .form-grid { grid-template-columns: 1fr; }
   .stat-grid { grid-template-columns: 1fr; }
   .btn-group { gap: 6px; }
-  /* Prevent iOS zoom and layout shift when dropdowns open */
-  input, select, textarea, .input, .ui-dropdown .input { font-size: 16px; }
-  .card, .page { min-width: 0; }
 }
 
 /* Responsive adjustments */
