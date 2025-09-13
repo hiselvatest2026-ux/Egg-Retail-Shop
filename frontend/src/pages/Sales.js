@@ -312,10 +312,12 @@ const Sales = () => {
           return createSaleItem(newSale.id, { product_id: pid, quantity: effQty, price });
         });
         await Promise.all(tasks);
-        const willRecordPayment = Number(paymentAtCreate.amount||0) > 0;
+        // On mobile, auto-record full payment for Cash sales even if amount left blank
+        const willRecordPayment = (isMobile && String(form.sale_type)==='Cash') || (Number(paymentAtCreate.amount||0) > 0);
         if (willRecordPayment) {
           const sum = lineItems.reduce((s,li)=> s + (Number(li.price_per_piece||0) * (li.qty_unit==='Tray' ? Number(li.trays||0)*30 : Number(li.qty_pieces||0))), 0);
-          const amt = Number(paymentAtCreate.amount || sum || 0);
+          const defaultAmt = sum; // items total for this invoice path
+          const amt = Number(paymentAtCreate.amount || defaultAmt || 0);
           const mode = paymentAtCreate.mode || 'Cash';
           if (amt > 0) {
             await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
@@ -346,8 +348,11 @@ const Sales = () => {
           const res = await createSale(payload);
           const newSale = res.data;
           await createSaleItem(newSale.id, { product_id: productId, quantity: qty, price: pricePerPiece });
-          if (willRecordPayment) {
-            const amt = Number(paymentAtCreate.amount || form.total || 0);
+          // Re-evaluate for quick single-row: mobile Cash auto-record when amount blank
+          const willRecordPaymentQuick = (isMobile && String(form.sale_type)==='Cash') || (Number(paymentAtCreate.amount||0) > 0);
+          if (willRecordPaymentQuick) {
+            const defaultAmt2 = Number(form.total || 0);
+            const amt = Number(paymentAtCreate.amount || defaultAmt2 || 0);
             const mode = paymentAtCreate.mode || 'Cash';
             if (amt > 0) {
               await createPayment({ customer_id: Number(form.customer_id), invoice_id: Number(newSale.id), amount: amt, payment_mode: mode });
