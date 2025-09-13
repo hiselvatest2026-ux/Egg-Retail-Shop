@@ -49,7 +49,13 @@ exports.createItem = async (req, res) => {
     const { id } = req.params; // sale id
     const { product_id, quantity, price } = req.body;
     const locHeader = req.headers['x-shop-id'];
-    const locationId = locHeader ? Number(locHeader) : null;
+    let locationId = locHeader ? Number(locHeader) : null;
+    if (locationId) {
+      try {
+        const lr = await pool.query('SELECT 1 FROM locations WHERE id=$1', [locationId]);
+        if (lr.rowCount === 0) locationId = null;
+      } catch (_) { locationId = null; }
+    }
     const available = await getAvailableStock(product_id);
     if (Number(quantity) > available) {
       return res.status(400).json({ message: 'Insufficient quantity' });

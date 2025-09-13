@@ -29,7 +29,13 @@ exports.createItem = async (req, res) => {
     const { id } = req.params; // purchase id
     const { product_id, quantity, price } = req.body;
     const locHeader = req.headers['x-shop-id'];
-    const locationId = locHeader ? Number(locHeader) : null;
+    let locationId = locHeader ? Number(locHeader) : null;
+    if (locationId) {
+      try {
+        const lr = await pool.query('SELECT 1 FROM locations WHERE id=$1', [locationId]);
+        if (lr.rowCount === 0) locationId = null;
+      } catch (_) { locationId = null; }
+    }
     const result = await pool.query(
       'INSERT INTO purchase_items (purchase_id, product_id, quantity, price, mfg_date, location_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
       [id, product_id, quantity, price, req.body.mfg_date || null, locationId]
