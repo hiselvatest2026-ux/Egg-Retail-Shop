@@ -280,7 +280,11 @@ const Purchases = () => {
                     </div>
                     <div className="input-group" style={{overflow:'visible'}}>
                       <label>UOM <span style={{color:'#fca5a5'}}>*</span></label>
-                      <Dropdown value={addForm.uom} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                      <div style={{display:'flex', gap:8}}>
+                        {['Piece','Tray'].map(u => (
+                          <button key={u} type="button" className={"btn btn-sm " + (String(addForm.uom||'Piece')===u? '' : 'secondary')} onClick={()=>setAddForm(prev=>({...prev, uom:u}))}>{u}</button>
+                        ))}
+                      </div>
                       {addFormErrors.uom && <div className="form-help">{addFormErrors.uom}</div>}
                     </div>
                   </div>
