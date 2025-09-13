@@ -135,7 +135,6 @@ const Purchases = () => {
       // Create minimal header, then items based on rows
       let purchaseId = editing;
       if (!editing) {
-      if (!editing) {
         const header = { vendor_id: Number(form.vendor_id) };
         const res = await createPurchase(header);
         purchaseId = res.data?.id || res.id;
