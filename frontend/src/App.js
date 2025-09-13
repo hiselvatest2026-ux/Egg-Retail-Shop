@@ -24,11 +24,22 @@ import Vendors from './pages/Vendors';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   // Auto-close sidebar on route change (mobile)
   useEffect(() => {
     const closeOnNav = () => setSidebarOpen(false);
     window.addEventListener('popstate', closeOnNav);
     return () => window.removeEventListener('popstate', closeOnNav);
+  }, []);
+  // Detect mobile (match CSS breakpoint for bottom-tabs/sidebar behaviors)
+  useEffect(() => {
+    try {
+      const mq = window.matchMedia('(max-width: 1024px)');
+      const apply = () => setIsMobile(!!mq.matches);
+      apply();
+      mq.addEventListener('change', apply);
+      return () => mq.removeEventListener('change', apply);
+    } catch (_) { setIsMobile(false); }
   }, []);
   return (
     <Router>
@@ -61,20 +72,29 @@ function App() {
               setSidebarOpen(false);
             }
           }}>
-            <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
-            <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
-            
-            <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
-            <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
-            <NavLink to="/inventory/adjustments" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Stock Adjustments</NavLink>
-            
-            <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
-            <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
-            <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
-            <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
-            <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
-            <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
-            
+            {/* Mobile: show only Purchases, Sales, Inventory, MIS */}
+            {isMobile ? (
+              <>
+                <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
+                <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
+                <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
+                <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
+                <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
+                <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
+                <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
+                <NavLink to="/inventory/adjustments" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Stock Adjustments</NavLink>
+                <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
+                <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
+                <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
+                <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
+                <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
+                <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
+              </>
+            )}
           </nav>
         </aside>
         <main className="content">
@@ -107,7 +127,6 @@ function App() {
           <NavLink to="/sales" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
           <NavLink to="/purchases" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
           <NavLink to="/inventory" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
-          <NavLink to="/pricing-master" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Pricing</NavLink>
           <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
