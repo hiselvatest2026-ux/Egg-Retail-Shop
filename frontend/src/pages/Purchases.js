@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getPurchases, createPurchase, updatePurchase, deletePurchase, getVendors, getMetals, getProducts, createPurchaseItem } from '../api/api';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import MobilePicker from '../components/MobilePicker';
 import ShopChip from '../components/ShopChip';
  
 
@@ -41,8 +40,6 @@ const Purchases = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const isMobile = (typeof window !== 'undefined') ? window.matchMedia('(max-width: 640px)').matches : false;
-  const [showVendorPicker, setShowVendorPicker] = useState(false);
-  const [showMaterialPicker, setShowMaterialPicker] = useState(false);
   const fetchPurchases = async () => {
     try {
       const res = await getPurchases();
@@ -218,9 +215,12 @@ const Purchases = () => {
                 <div className="input-group" style={{overflow:'visible'}}>
                   <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
                   {isMobile ? (
-                    <button type="button" className="input" onClick={()=>setShowVendorPicker(true)} style={{textAlign:'left'}}>
-                      {form.vendor_id ? (vendors.find(v=> String(v.id)===String(form.vendor_id))?.name || 'Select vendor') : (vendors.length ? 'Select vendor' : 'No vendors found - add one first')}
-                    </button>
+                    <select className="input" value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
+                      <option value="">{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
+                      {vendors.map(v=> (
+                        <option key={v.id} value={String(v.id)}>{`${v.vendor_code} - ${v.name}`}</option>
+                      ))}
+                    </select>
                   ) : (
                     <Dropdown
                       value={form.vendor_id}
@@ -263,9 +263,16 @@ const Purchases = () => {
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
                     {isMobile ? (
-                      <button type="button" className="input" onClick={()=>setShowMaterialPicker(true)} style={{textAlign:'left'}}>
-                        {addForm.material_code ? (sortedMaterials.find(m=> String(m.part_code)===String(addForm.material_code))?.metal_type || addForm.material_code) : 'Material Code - Type *'}
-                      </button>
+                      <select className="input" value={addForm.material_code} onChange={e=>{
+                        const code = e.target.value;
+                        const mat = materials.find(m=> String(m.part_code) === String(code));
+                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
+                      }}>
+                        <option value="">Material Code - Type *</option>
+                        {(sortedMaterials||[]).map(m=> (
+                          <option key={m.part_code} value={String(m.part_code)}>{`${m.part_code} - ${m.metal_type}`}</option>
+                        ))}
+                      </select>
                     ) : (
                       <Dropdown
                         value={addForm.material_code}
@@ -474,31 +481,6 @@ const Purchases = () => {
           {success && <div className="toast">{success}</div>}
         </form>
       </Card>
-      {isMobile && (
-        <>
-          <MobilePicker
-            open={showVendorPicker}
-            onClose={()=>setShowVendorPicker(false)}
-            title="Select Vendor"
-            options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
-            value={form.vendor_id}
-            onChange={(val)=> setForm(prev=>({ ...prev, vendor_id: val }))}
-            showSearch={false}
-          />
-          <MobilePicker
-            open={showMaterialPicker}
-            onClose={()=>setShowMaterialPicker(false)}
-            title="Select Material"
-            options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
-            value={addForm.material_code}
-            onChange={(code)=>{
-              const mat = materials.find(m=> String(m.part_code) === String(code));
-              setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
-            }}
-            showSearch={false}
-          />
-        </>
-      )}
       {/* Edit Modal */}
       {showEdit && editForm && (
         <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000}} onClick={()=>setShowEdit(false)}>
