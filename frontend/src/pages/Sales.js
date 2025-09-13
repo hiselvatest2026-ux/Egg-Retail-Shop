@@ -66,6 +66,23 @@ const Sales = () => {
   const [payingSale, setPayingSale] = useState(null);
   const [payForm, setPayForm] = useState({ amount: '', mode: 'Cash' });
 
+  // Mobile detection and full-screen picker state
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    try {
+      const mq = window.matchMedia('(max-width: 640px)');
+      const apply = () => setIsMobile(!!mq.matches);
+      apply();
+      mq.addEventListener('change', apply);
+      return () => mq.removeEventListener('change', apply);
+    } catch(_) { setIsMobile(false); }
+  }, []);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerType, setPickerType] = useState(''); // 'customer' | 'sale_type' | 'sale_category' | 'material' | 'uom' | 'pay_mode' | 'pay_mode_modal'
+  const [pickerSearch, setPickerSearch] = useState('');
+  const openPicker = (type) => { setPickerType(type); setPickerSearch(''); setPickerOpen(true); };
+  const closePicker = () => { setPickerOpen(false); setPickerType(''); setPickerSearch(''); };
+
   // Ensure base categories always include Walk-in alongside Retail/Wholesale
   const saleCategories = useMemo(() => {
     const base = ['Retail','Wholesale','Walk-in'];
@@ -466,29 +483,47 @@ const Sales = () => {
           <div className="form-row" style={{marginBottom:12}}>
             <div className="input-group" style={{overflow:'visible'}}>
               <label>Customer</label>
-              <Dropdown
-                value={form.customer_id}
-                onChange={(v)=>setForm(prev=>({ ...prev, customer_id: v }))}
-                placeholder={'Select Customer'}
-                options={(customers||[]).map(c=>({ value:String(c.id), label:c.name }))}
-              />
+              {isMobile ? (
+                <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('customer')}>
+                  {form.customer_id ? ((customers.find(c=>String(c.id)===String(form.customer_id))||{}).name || `#${form.customer_id}`) : 'Select Customer'}
+                </button>
+              ) : (
+                <Dropdown
+                  value={form.customer_id}
+                  onChange={(v)=>setForm(prev=>({ ...prev, customer_id: v }))}
+                  placeholder={'Select Customer'}
+                  options={(customers||[]).map(c=>({ value:String(c.id), label:c.name }))}
+                />
+              )}
             </div>
             <div className="input-group" style={{overflow:'visible'}}>
               <label>Sale Type</label>
-              <Dropdown
-                value={form.sale_type}
-                onChange={(v)=>setForm(prev=>({ ...prev, sale_type: v }))}
-                options={[{value:'Cash',label:'Cash'},{value:'Credit',label:'Credit'}]}
-              />
+              {isMobile ? (
+                <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('sale_type')}>
+                  {form.sale_type || 'Sale Type'}
+                </button>
+              ) : (
+                <Dropdown
+                  value={form.sale_type}
+                  onChange={(v)=>setForm(prev=>({ ...prev, sale_type: v }))}
+                  options={[{value:'Cash',label:'Cash'},{value:'Credit',label:'Credit'}]}
+                />
+              )}
             </div>
             <div className="input-group" style={{overflow:'visible'}}>
               <label>Sale Category</label>
-              <Dropdown
-                value={form.category}
-                onChange={(v)=>setForm(prev=>({ ...prev, category: v }))}
-                placeholder={'Select category'}
-                options={saleCategories.map(c=>({ value:c, label:c }))}
-              />
+              {isMobile ? (
+                <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('sale_category')}>
+                  {form.category || 'Select category'}
+                </button>
+              ) : (
+                <Dropdown
+                  value={form.category}
+                  onChange={(v)=>setForm(prev=>({ ...prev, category: v }))}
+                  placeholder={'Select category'}
+                  options={saleCategories.map(c=>({ value:c, label:c }))}
+                />
+              )}
             </div>
             
             <div className="input-group">
@@ -512,85 +547,84 @@ const Sales = () => {
             <div className="card-body">
               <div className="form-row">
                 <div style={{overflow:'visible'}}>
-                  <Dropdown
-                    value={addForm.material_code}
-                    onChange={(code)=>{
-                      const mat = sortedMaterials.find(m=> String(m.part_code)===String(code));
-                      // Heuristic map to product
-                      let pid = '';
-                      if (mat) {
-                        const norm = String(mat.metal_type||'').toLowerCase();
-                        let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
-                          || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
-                        if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
-                        
-                        if (prod) pid = String(prod.id);
-                      }
-                      setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
-                      // Auto-fill price from Pricing Master base price for this material & category
-                      if (code) {
-                        getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
-                          .then(r=>{
-                            const base = Number(r?.data?.base_price || 0);
-                            if (base > 0) {
-                              setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
-                            } else {
-                              // Fallback: try last purchase price
+                  {isMobile ? (
+                    <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('material')}>
+                      {addForm.material_code ? (()=>{ const m=sortedMaterials.find(x=>String(x.part_code)===String(addForm.material_code)); return m?`${m.part_code} - ${m.metal_type}`:String(addForm.material_code); })() : 'Material Code *'}
+                    </button>
+                  ) : (
+                    <Dropdown
+                      value={addForm.material_code}
+                      onChange={(code)=>{
+                        const mat = sortedMaterials.find(m=> String(m.part_code)===String(code));
+                        // Heuristic map to product
+                        let pid = '';
+                        if (mat) {
+                          const norm = String(mat.metal_type||'').toLowerCase();
+                          let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
+                            || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                          if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+                          if (prod) pid = String(prod.id);
+                        }
+                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
+                        if (code) {
+                          getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
+                            .then(r=>{
+                              const base = Number(r?.data?.base_price || 0);
+                              if (base > 0) {
+                                setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+                              } else {
+                                return getLastPurchasePrice({ material_code: code }).then(rr=>{
+                                  const price = Number(rr?.data?.price || 0);
+                                  const dom = rr?.data?.dom || '';
+                                  if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+                                  if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                                }).catch(()=>{});
+                              }
                               return getLastPurchasePrice({ material_code: code }).then(rr=>{
+                                const dom = rr?.data?.dom || '';
+                                if (dom) {
+                                  setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                                } else {
+                                  const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
+                                  const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
+                                  if (numDays > 0) {
+                                    const d = new Date();
+                                    d.setDate(d.getDate() - numDays);
+                                    const dd = String(d.getDate()).padStart(2,'0');
+                                    const mm = String(d.getMonth()+1).padStart(2,'0');
+                                    const yy = d.getFullYear();
+                                    setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
+                                  }
+                                }
+                              }).catch(()=>{});
+                            })
+                            .catch(()=>{
+                              getLastPurchasePrice({ material_code: code }).then(rr=>{
                                 const price = Number(rr?.data?.price || 0);
                                 const dom = rr?.data?.dom || '';
                                 if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
-                                if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                                if (dom) {
+                                  setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                                } else {
+                                  const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
+                                  const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
+                                  if (numDays > 0) {
+                                    const d = new Date();
+                                    d.setDate(d.getDate() - numDays);
+                                    const dd = String(d.getDate()).padStart(2,'0');
+                                    const mm = String(d.getMonth()+1).padStart(2,'0');
+                                    const yy = d.getFullYear();
+                                    setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
+                                  }
+                                }
                               }).catch(()=>{});
-                            }
-                            // Also fill DOM from latest purchase mfg_date if available
-                            return getLastPurchasePrice({ material_code: code }).then(rr=>{
-                              const dom = rr?.data?.dom || '';
-                              if (dom) {
-                                setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
-                              } else {
-                                // Fallback: compute DOM from Material Master shelf_life (e.g., "12 days")
-                                const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
-                                const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
-                                if (numDays > 0) {
-                                  const d = new Date();
-                                  d.setDate(d.getDate() - numDays);
-                                  const dd = String(d.getDate()).padStart(2,'0');
-                                  const mm = String(d.getMonth()+1).padStart(2,'0');
-                                  const yy = d.getFullYear();
-                                  setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
-                                }
-                              }
-                            }).catch(()=>{});
-                          })
-                          .catch(()=>{
-                            // Fallback on failure: last purchase price
-                            getLastPurchasePrice({ material_code: code }).then(rr=>{
-                              const price = Number(rr?.data?.price || 0);
-                              const dom = rr?.data?.dom || '';
-                              if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
-                              if (dom) {
-                                setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
-                              } else {
-                                // Fallback: compute DOM from shelf_life
-                                const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
-                                const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
-                                if (numDays > 0) {
-                                  const d = new Date();
-                                  d.setDate(d.getDate() - numDays);
-                                  const dd = String(d.getDate()).padStart(2,'0');
-                                  const mm = String(d.getMonth()+1).padStart(2,'0');
-                                  const yy = d.getFullYear();
-                                  setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
-                                }
-                              }
-                            }).catch(()=>{});
-                          });
-                      }
-                    }}
-                    placeholder={'Material Code *'}
-                    options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
-                  />
+                            });
+                        }
+                      }}
+                      placeholder={'Material Code *'}
+                      options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
+                    />
+                  )}
                 </div>
                 
                 
@@ -604,7 +638,13 @@ const Sales = () => {
                   </div>
                 </div>
                 <div style={{overflow:'visible'}}>
-                  <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                  {isMobile ? (
+                    <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('uom')}>
+                      {addForm.uom || 'UOM'}
+                    </button>
+                  ) : (
+                    <Dropdown value={addForm.uom||'Piece'} onChange={(v)=>setAddForm({...addForm, uom:v})} options={[{value:'Piece',label:'Piece'},{value:'Tray',label:'Tray (30 pcs)'}]} />
+                  )}
                 </div>
                 <input className="input" placeholder="DOM (dd-mm-yyyy)" value={addForm.dom||''} readOnly />
                 <div className="input-group">
@@ -773,7 +813,13 @@ const Sales = () => {
                   </div>
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Mode</label>
-                    <Dropdown value={paymentAtCreate.mode} onChange={(v)=>setPaymentAtCreate(prev=>({ ...prev, mode:v }))} options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]} />
+                    {isMobile ? (
+                      <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('pay_mode')}>
+                        {paymentAtCreate.mode || 'Payment Mode'}
+                      </button>
+                    ) : (
+                      <Dropdown value={paymentAtCreate.mode} onChange={(v)=>setPaymentAtCreate(prev=>({ ...prev, mode:v }))} options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]} />
+                    )}
                   </div>
                 </div>
                 <div className="form-help">Tip: Leave amount blank to auto-use invoice total.</div>
@@ -884,12 +930,18 @@ const Sales = () => {
               </div>
               <div className="input-group" style={{overflow:'visible'}}>
                 <label>Mode</label>
-                <Dropdown
-                  value={payForm.mode}
-                  onChange={(v)=>setPayForm({...payForm, mode: v})}
-                  placeholder={'Payment Mode'}
-                  options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]}
-                />
+                {isMobile ? (
+                  <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('pay_mode_modal')}>
+                    {payForm.mode || 'Payment Mode'}
+                  </button>
+                ) : (
+                  <Dropdown
+                    value={payForm.mode}
+                    onChange={(v)=>setPayForm({...payForm, mode: v})}
+                    placeholder={'Payment Mode'}
+                    options={[{value:'Cash',label:'Cash'},{value:'Gpay',label:'Gpay'},{value:'Card',label:'Card'}]}
+                  />
+                )}
               </div>
             </div>
             <div className="actions-row" style={{marginTop:12}}>
@@ -905,6 +957,141 @@ const Sales = () => {
               }}>Save Payment</button>
               <button className="btn secondary" onClick={()=>setPayingSale(null)}>Cancel</button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Mobile full-screen picker */}
+      {isMobile && pickerOpen && (
+        <div style={{position:'fixed', inset:0, background:'#0b0f14', zIndex:9999, display:'flex', flexDirection:'column'}}>
+          <div style={{padding:'12px', borderBottom:'1px solid #1f2937', display:'flex', alignItems:'center', gap:8}}>
+            <button type="button" className="btn secondary btn-sm" onClick={closePicker}>Back</button>
+            <div style={{fontWeight:800}}>{
+              pickerType==='customer' ? 'Select Customer' :
+              pickerType==='sale_type' ? 'Select Sale Type' :
+              pickerType==='sale_category' ? 'Select Sale Category' :
+              pickerType==='material' ? 'Select Material' :
+              pickerType==='uom' ? 'Select UOM' :
+              pickerType==='pay_mode' ? 'Select Payment Mode' :
+              pickerType==='pay_mode_modal' ? 'Select Payment Mode' :
+              'Select Option'
+            }</div>
+          </div>
+          <div style={{padding:'10px'}}>
+            {['customer','material'].includes(pickerType) && (
+              <input className="input" placeholder="Search..." value={pickerSearch} onChange={e=>setPickerSearch(e.target.value)} />
+            )}
+          </div>
+          <div style={{flex:1, overflowY:'auto', padding:'10px'}}>
+            {pickerType==='customer' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {(customers||[])
+                    .filter(c=>{
+                      const q = pickerSearch.toLowerCase();
+                      if (!q) return true;
+                      return String(c.name||'').toLowerCase().includes(q);
+                    })
+                    .map(c=> (
+                      <button key={c.id} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setForm(prev=>({...prev, customer_id: String(c.id)})); closePicker(); }}>{c.name}</button>
+                    ))}
+                </div>
+              </div>
+            )}
+            {pickerType==='sale_type' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {['Cash','Credit'].map(t=> (
+                    <button key={t} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setForm(prev=>({...prev, sale_type: t})); closePicker(); }}>{t}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {pickerType==='sale_category' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {saleCategories.map(c=> (
+                    <button key={c} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setForm(prev=>({...prev, category: c})); closePicker(); }}>{c}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {pickerType==='material' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {(sortedMaterials||[])
+                    .filter(m=>{
+                      const q = pickerSearch.toLowerCase();
+                      if (!q) return true;
+                      return String(m.part_code||'').toLowerCase().includes(q) || String(m.metal_type||'').toLowerCase().includes(q);
+                    })
+                    .map(m=> (
+                      <button key={m.part_code} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={async()=>{
+                        const code = String(m.part_code);
+                        const mat = m;
+                        // Map product
+                        let pid = '';
+                        if (mat) {
+                          const norm = String(mat.metal_type||'').toLowerCase();
+                          let prod = products.find(p=> String(p.name||'').toLowerCase() === norm)
+                            || products.find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                          if (!prod && /egg/.test(norm)) prod = products.find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+                          if (prod) pid = String(prod.id);
+                        }
+                        setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
+                        try {
+                          const r = await getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category });
+                          const base = Number(r?.data?.base_price || 0);
+                          if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+                        } catch(_) {}
+                        try {
+                          const rr = await getLastPurchasePrice({ material_code: code });
+                          const dom = rr?.data?.dom || '';
+                          if (dom) setAddForm(prev=>({ ...prev, dom: toDDMMYYYY(dom) }));
+                          else {
+                            const shelf = mat?.shelf_life ? String(mat.shelf_life) : '';
+                            const numDays = Number((shelf.match(/\d+/)||[])[0]||0);
+                            if (numDays > 0) {
+                              const d = new Date(); d.setDate(d.getDate() - numDays);
+                              const dd = String(d.getDate()).padStart(2,'0');
+                              const mm = String(d.getMonth()+1).padStart(2,'0');
+                              const yy = d.getFullYear();
+                              setAddForm(prev=>({ ...prev, dom: `${dd}-${mm}-${yy}` }));
+                            }
+                          }
+                        } catch(_) {}
+                        closePicker();
+                      }}>{m.part_code} - {m.metal_type}</button>
+                    ))}
+                </div>
+              </div>
+            )}
+            {pickerType==='uom' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {['Piece','Tray'].map(u=> (
+                    <button key={u} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setAddForm(prev=>({...prev, uom: u})); closePicker(); }}>{u}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {pickerType==='pay_mode' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {['Cash','Gpay','Card'].map(m=> (
+                    <button key={m} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setPaymentAtCreate(prev=>({ ...prev, mode: m })); closePicker(); }}>{m}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {pickerType==='pay_mode_modal' && (
+              <div className="card" style={{padding:0}}>
+                <div className="card-body" style={{padding:0}}>
+                  {['Cash','Gpay','Card'].map(m=> (
+                    <button key={m} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setPayForm(prev=>({ ...prev, mode: m })); closePicker(); }}>{m}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
