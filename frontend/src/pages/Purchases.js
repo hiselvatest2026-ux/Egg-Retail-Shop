@@ -39,7 +39,6 @@ const Purchases = () => {
   const [addSuccess, setAddSuccess] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const isMobile = (typeof window !== 'undefined') ? window.matchMedia('(max-width: 640px)').matches : false;
   const fetchPurchases = async () => {
     try {
       const res = await getPurchases();
@@ -214,21 +213,12 @@ const Purchases = () => {
               <div className="form-row">
                 <div className="input-group" style={{overflow:'visible'}}>
                   <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
-                  {isMobile ? (
-                    <select className="input" value={form.vendor_id} onChange={e=>setForm({...form, vendor_id: e.target.value})}>
-                      <option value="">{vendors.length ? 'Select vendor' : 'No vendors found - add one first'}</option>
-                      {vendors.map(v=> (
-                        <option key={v.id} value={String(v.id)}>{`${v.vendor_code} - ${v.name}`}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <Dropdown
-                      value={form.vendor_id}
-                      onChange={v=>setForm({...form, vendor_id: v})}
-                      placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
-                      options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
-                    />
-                  )}
+                  <Dropdown
+                    value={form.vendor_id}
+                    onChange={v=>setForm({...form, vendor_id: v})}
+                    placeholder={vendors.length ? 'Select vendor' : 'No vendors found - add one first'}
+                    options={vendors.map(v=>({ value: String(v.id), label: `${v.vendor_code} - ${v.name}` }))}
+                  />
                   {!form.vendor_id && error && <div className="form-help">Vendor is required</div>}
                 </div>
                 {form.vendor_id && (()=>{
@@ -262,34 +252,21 @@ const Purchases = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end">
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Material <span style={{color:'#fca5a5'}}>*</span></label>
-                    {isMobile ? (
-                      <select className="input" value={addForm.material_code} onChange={e=>{
-                        const code = e.target.value;
+                    <Dropdown
+                      value={addForm.material_code}
+                      onChange={(code)=>{
                         const mat = materials.find(m=> String(m.part_code) === String(code));
+                        // Heuristic map to product
+                        if (mat) {
+                          const norm = String(mat.metal_type||'').toLowerCase();
+                          const byName = products.find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                          // No override state; only keep material details in form
+                        }
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
-                      }}>
-                        <option value="">Material Code - Type *</option>
-                        {(sortedMaterials||[]).map(m=> (
-                          <option key={m.part_code} value={String(m.part_code)}>{`${m.part_code} - ${m.metal_type}`}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <Dropdown
-                        value={addForm.material_code}
-                        onChange={(code)=>{
-                          const mat = materials.find(m=> String(m.part_code) === String(code));
-                          // Heuristic map to product
-                          if (mat) {
-                            const norm = String(mat.metal_type||'').toLowerCase();
-                            const byName = products.find(p=> String(p.name||'').toLowerCase() === norm || String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
-                            // No override state; only keep material details in form
-                          }
-                          setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', shelf_life: mat ? (mat.shelf_life || '') : '' }));
-                        }}
-                        placeholder={'Material Code - Type *'}
-                        options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
-                      />
-                    )}
+                      }}
+                      placeholder={'Material Code - Type *'}
+                      options={(sortedMaterials||[]).map(m=>({ value: String(m.part_code), label: `${m.part_code} - ${m.metal_type}` }))}
+                    />
                     {addFormErrors.material_code && <div className="form-help">{addFormErrors.material_code}</div>}
                   </div>
                   
