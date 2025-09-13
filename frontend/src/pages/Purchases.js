@@ -40,20 +40,7 @@ const Purchases = () => {
   const [addSuccess, setAddSuccess] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    try {
-      const mq = window.matchMedia('(max-width: 640px)');
-      const apply = () => setIsMobile(!!mq.matches);
-      apply();
-      if (mq.addEventListener) mq.addEventListener('change', apply);
-      else if (mq.addListener) mq.addListener(apply);
-      return () => {
-        if (mq.removeEventListener) mq.removeEventListener('change', apply);
-        else if (mq.removeListener) mq.removeListener(apply);
-      };
-    } catch(_) { setIsMobile(false); }
-  }, []);
+  const isMobile = (typeof window !== 'undefined') ? window.matchMedia('(max-width: 640px)').matches : false;
   const [showVendorPicker, setShowVendorPicker] = useState(false);
   const [showMaterialPicker, setShowMaterialPicker] = useState(false);
   const fetchPurchases = async () => {
