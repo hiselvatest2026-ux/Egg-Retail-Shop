@@ -221,6 +221,21 @@ label + select.input { cursor:pointer; }
     max-width: 100% !important;
     min-width: 0;
   }
+  /* Lock grid and card widths to prevent shrink on focus */
+  .purchase-add-form .card,
+  .purchase-add-form .card-body,
+  .purchase-add-form .form-row,
+  .purchase-add-form .input-group {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  /* Ensure popovers align to field width */
+  .purchase-add-form .ui-dropdown [role="listbox"] {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 
 /* Off-canvas mobile header and sidebar */
