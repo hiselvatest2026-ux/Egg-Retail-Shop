@@ -33,7 +33,7 @@ const DataTable = ({ rows }) => {
   if (!rows || rows.length === 0) return null;
   const [head, ...body] = rows;
   return (
-    <div className="hidden sm:block overflow-x-auto">
+    <div className="overflow-x-auto">
       <table className="table table-hover table-zebra mt-2">
         <thead>
           <tr>{head.map((h, i) => (<th key={i}>{h}</th>))}</tr>
