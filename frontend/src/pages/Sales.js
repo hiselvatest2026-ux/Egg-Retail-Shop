@@ -419,13 +419,29 @@ const Sales = () => {
     const code = addForm.material_code;
     if (!code) return;
     const customer = customers.find(c => String(c.id) === String(form.customer_id));
-    const categoryForPricing = form.category || (customer && customer.category) || '';
+    const rawCategory = form.category || (customer && customer.category) || '';
+    const normalized = String(rawCategory).toLowerCase();
+    const categoryForPricing = normalized === 'walk-in' || normalized === 'walkin' ? 'Retail' : (rawCategory || '');
     getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing })
-      .then(r=>{
+      .then(async r=>{
         const base = Number(r?.data?.base_price || 0);
-        if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+        if (base > 0) {
+          setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+        } else {
+          try {
+            const rr = await getLastPurchasePrice({ material_code: code });
+            const price = Number(rr?.data?.price || 0);
+            if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+          } catch(_) {}
+        }
       })
-      .catch(()=>{});
+      .catch(async ()=>{
+        try {
+          const rr = await getLastPurchasePrice({ material_code: code });
+          const price = Number(rr?.data?.price || 0);
+          if (price > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(price) }));
+        } catch(_) {}
+      });
   }, [form.customer_id, form.category, addForm.material_code, customers]);
 
   // Auto-set product_name when material_code changes
