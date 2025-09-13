@@ -269,3 +269,14 @@ details.accordion .accordion-body { padding:12px; }
   .print-receipt th, .print-receipt td { border: 0; padding: 2px 0; text-align: left; }
   .no-print { display: none !important; }
 }
+
+/* Mobile: keep selects and dropdowns full-width inside Add Purchase form only */
+@media (max-width: 640px) {
+  .purchase-add-form select,
+  .purchase-add-form .input,
+  .purchase-add-form .ui-dropdown {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+  }
+}

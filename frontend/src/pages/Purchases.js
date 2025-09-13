@@ -207,7 +207,7 @@ const Purchases = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
-        <form onSubmit={handleSubmit} className="form-row">
+        <form onSubmit={handleSubmit} className="form-row purchase-add-form">
           <div className="card" style={{gridColumn:'1/-1'}}>
             <div className="card-body">
               <div className="form-row">
