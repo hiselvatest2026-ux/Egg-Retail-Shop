@@ -39,8 +39,6 @@ const Purchases = () => {
   const [addSuccess, setAddSuccess] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const isMobile = (typeof window !== 'undefined') ? window.matchMedia('(max-width: 640px)').matches : false;
-  const [currentStep, setCurrentStep] = useState(1); // 1: Vendor, 2: Items, 3: Review
   const fetchPurchases = async () => {
     try {
       const res = await getPurchases();
@@ -159,9 +157,6 @@ const Purchases = () => {
       setError('Failed to save purchase. Please try again.');
     }
   };
-  const itemsCount = useMemo(()=> (rows||[]).length, [rows]);
-  const canContinueToItems = Boolean(form.vendor_id);
-  const canContinueToReview = itemsCount > 0;
   const filteredPurchases = useMemo(() => {
     // Deduplicate by id to avoid duplicate rows from backend merges or double fetches
     const seen = new Set();
@@ -210,24 +205,12 @@ const Purchases = () => {
         <ShopChip />
       </div>
 
-      {isMobile && (
-        <div className="card" style={{marginBottom:12}}>
-          <div className="card-body" style={{display:'flex', gap:8}}>
-            <button type="button" className={"btn btn-sm "+(currentStep===1? '':'secondary')} onClick={()=>setCurrentStep(1)}>1. Vendor</button>
-            <button type="button" className={"btn btn-sm "+(currentStep===2? '':'secondary')} onClick={()=> canContinueToItems && setCurrentStep(2)} disabled={!canContinueToItems}>2. Items</button>
-            <button type="button" className={"btn btn-sm "+(currentStep===3? '':'secondary')} onClick={()=> canContinueToReview && setCurrentStep(3)} disabled={!canContinueToReview}>3. Review</button>
-            <div style={{marginLeft:'auto', fontWeight:800}}>Items: {itemsCount} • ₹ {itemsGrandTotal.toFixed(2)}</div>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card title={editing ? 'Edit Purchase' : 'Add Purchase'}>
         <form onSubmit={handleSubmit} className="form-row">
           <div className="card" style={{gridColumn:'1/-1'}}>
             <div className="card-body">
               <div className="form-row">
-                {(!isMobile || currentStep===1) && (
                 <div className="input-group" style={{overflow:'visible'}}>
                   <label>Vendor <span style={{color:'#fca5a5'}}>*</span></label>
                   <Dropdown
@@ -238,7 +221,6 @@ const Purchases = () => {
                   />
                   {!form.vendor_id && error && <div className="form-help">Vendor is required</div>}
                 </div>
-                )}
                 {form.vendor_id && (()=>{
                   const v = vendors.find(x=> String(x.id) === String(form.vendor_id));
                   if (!v) return null;
@@ -250,21 +232,18 @@ const Purchases = () => {
                   );
                 })()}
                 {/* New spec: manual total (optional) */}
-                {(!isMobile || currentStep!==2) && (
-                  <div className="input-group" style={{gridColumn:'1/-1'}}>
-                    <label>Total Purchase Value (manual)</label>
-                    <input className="input" type="number" step="0.01" value={form.total_purchase_value} inputMode="decimal" onChange={e=>setForm({...form, total_purchase_value: e.target.value})} />
-                    {(rows.length>0 && String(form.total_purchase_value||'').length>0) && (Math.round(Number(form.total_purchase_value||0)*100) !== Math.round(itemsGrandTotal*100)) && (
-                      <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
-                    )}
-                  </div>
-                )}
+                <div className="input-group" style={{gridColumn:'1/-1'}}>
+                  <label>Total Purchase Value (manual)</label>
+                  <input className="input" type="number" step="0.01" value={form.total_purchase_value} inputMode="decimal" onChange={e=>setForm({...form, total_purchase_value: e.target.value})} />
+                  {(rows.length>0 && String(form.total_purchase_value||'').length>0) && (Math.round(Number(form.total_purchase_value||0)*100) !== Math.round(itemsGrandTotal*100)) && (
+                    <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Editable Purchases Table */}
-          {(!isMobile || currentStep===2) && (
           <div className="input-group" style={{gridColumn:'1/-1'}}>
             <label>Purchase Entry</label>
             {/* Add Item compact form */}
@@ -466,31 +445,19 @@ const Purchases = () => {
             </div>
             {/* Removed duplicate bottom Add Row */}
           </div>
-          )}
           {/* New editable purchases table goes below */}
-          {(!isMobile || currentStep===3) && (
-            <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
-              <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Save Purchase'}</button>
-              {editing && (
-                <button
-                  type="button"
-                  className="btn secondary w-full sm:w-auto"
-                  onClick={() => { setEditing(null); setForm({ supplier_id: '', total: '', egg_type: '' }); }}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          )}
-          {isMobile && (
-            <div style={{position:'fixed', right:16, bottom:80, zIndex:60}}>
-              <button type="button" className="btn primary" aria-label="Add item" onClick={()=>{
-                // Focus material field
-                try { document.querySelector('[aria-label="DOM"]')?.blur(); } catch(_){ }
-                setCurrentStep(2);
-              }}>+ Add Item</button>
-            </div>
-          )}
+          <div className="actions-row sticky-actions" style={{justifyContent:'flex-end', gridColumn:'1/-1'}}>
+            <button className="btn primary w-full sm:w-auto" type="submit">{editing ? 'Update Purchase' : 'Add Purchase'}</button>
+            {editing && (
+              <button
+                type="button"
+                className="btn secondary w-full sm:w-auto"
+                onClick={() => { setEditing(null); setForm({ supplier_id: '', total: '', egg_type: '' }); }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
           {error && <div className="form-help">{error}</div>}
           {success && <div className="toast">{success}</div>}
         </form>
