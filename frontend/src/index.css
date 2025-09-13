@@ -90,6 +90,7 @@ img { max-width: 100%; height: auto; }
 .input-group { display:flex; flex-direction:column; gap:6px; }
 .input-group label { font-size:12px; color:#c4d0dc; font-weight:700; letter-spacing: .02em; }
 .input { height:46px; padding:12px 14px; border-radius:14px; border:1px solid #4a556f; background:#434b5f; color:#e8eef4; outline:none; transition:border-color .12s ease, box-shadow .12s ease; width:100%; box-sizing:border-box; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.input.closing-qty { text-overflow:clip; white-space:normal; overflow:visible; }
 .input.date { background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22 viewBox=%220 0 24 24%22 fill=%22%23cbd5e1%22><path d=%22M7 10h5v5H7z%22/><path d=%22M19 4h-1V2h-2v2H8V2H6v2H5c-1.103 0-2 .897-2 2v13c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2zm0 15H5V9h14v10z%22/></svg>'); background-repeat:no-repeat; background-position: right 12px center; padding-right: 38px; }
 .input:focus { border-color:#60a5fa; box-shadow:0 0 0 4px rgba(59,130,246,.28); }
 .actions-row { display:flex; gap:10px; }
@@ -312,4 +313,9 @@ details.accordion .accordion-body { padding:12px; }
     max-width: 100% !important;
     min-width: 0;
   }
+}
+
+/* Mobile: ensure closing stock quantity fully visible */
+@media (max-width: 640px) {
+  .input.closing-qty { font-size: 16px; white-space: nowrap; overflow: visible; text-overflow: clip; }
 }

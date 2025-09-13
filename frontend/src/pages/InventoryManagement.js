@@ -198,7 +198,7 @@ const InventoryManagement = () => {
                 <td>{row.material_code}</td>
                 <td>{row.material_type}</td>
                 <td>
-                  <input className="input" value={row.quantity} readOnly />
+                  <input className="input closing-qty" value={row.quantity} readOnly title={row.quantity} />
                 </td>
               </tr>
             ))}
