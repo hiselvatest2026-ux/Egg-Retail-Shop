@@ -520,18 +520,7 @@ const Sales = () => {
             </div>
             <div className="input-group" style={{overflow:'visible'}}>
               <label>Sale Category</label>
-              {isMobile ? (
-                <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('sale_category')}>
-                  {form.category || 'Select category'}
-                </button>
-              ) : (
-                <Dropdown
-                  value={form.category}
-                  onChange={(v)=>setForm(prev=>({ ...prev, category: v }))}
-                  placeholder={'Select category'}
-                  options={saleCategories.map(c=>({ value:c, label:c }))}
-                />
-              )}
+              <input className="input" value={form.category || ''} readOnly title={form.category || ''} />
             </div>
             
             <div className="input-group">
@@ -640,9 +629,6 @@ const Sales = () => {
                   <label>Price / unit *</label>
                   <div style={{display:'flex', gap:8}}>
                     <input className="input" placeholder="Price / unit" value={addForm.price_per_piece||''} onChange={e=>setAddForm({...addForm, price_per_piece:e.target.value})} inputMode="decimal" />
-                    <button type="button" className="btn secondary btn-sm" title="Override price" onClick={()=>{/* price already editable; this button acts as hint chip */}}>
-                      {pricingInfo?.final_price ? `Pricing Master${pricingInfo?.is_taxable===false?' (Non-taxable)':''}` : 'Manual'}
-                    </button>
                   </div>
                 </div>
                 <div style={{overflow:'visible'}}>
