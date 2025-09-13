@@ -418,13 +418,15 @@ const Sales = () => {
   useEffect(() => {
     const code = addForm.material_code;
     if (!code) return;
-    getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
+    const customer = customers.find(c => String(c.id) === String(form.customer_id));
+    const categoryForPricing = form.category || (customer && customer.category) || '';
+    getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing })
       .then(r=>{
         const base = Number(r?.data?.base_price || 0);
         if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
       })
       .catch(()=>{});
-  }, [form.customer_id, form.category]);
+  }, [form.customer_id, form.category, addForm.material_code, customers]);
 
   // Auto-set product_name when material_code changes
   useEffect(() => {
