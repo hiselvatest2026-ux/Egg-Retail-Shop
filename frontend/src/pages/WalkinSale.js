@@ -48,19 +48,31 @@ const WalkinSale = () => {
   }, []);
 
   useEffect(() => {
-    // Auto-get price for Walk-in category when ready and qty/material known
+    // Auto-get price for Walk-in; fallback to Retail; then fallback to last purchase price
     (async()=>{
       try {
         if (!walkinCustomer || !defaultMaterial) return;
-        const cat = String(walkinCustomer.category||'Walk-in');
-        const norm = cat.toLowerCase();
-        const category = (norm === 'walk-in' || norm === 'walkin') ? 'Retail' : cat;
-        const r = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: defaultMaterial.part_code, category });
-        const base = Number(r?.data?.base_price || 0);
+        const materialCode = defaultMaterial.part_code;
+        // 1) Try Walk-in
+        let base = 0;
+        try {
+          const r1 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Walk-in' });
+          base = Number(r1?.data?.base_price || 0);
+        } catch(_) { /* ignore */ }
+        // 2) Fallback Retail
+        if (!(base > 0)) {
+          try {
+            const r2 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Retail' });
+            base = Number(r2?.data?.base_price || 0);
+          } catch(_) { /* ignore */ }
+        }
         if (base > 0) { setPricePerUnit(String(base)); return; }
-        const rr = await getLastPurchasePrice({ material_code: defaultMaterial.part_code });
-        const price = Number(rr?.data?.price || 0);
-        if (price > 0) setPricePerUnit(String(price));
+        // 3) Fallback last purchase unit price
+        try {
+          const rr = await getLastPurchasePrice({ material_code: materialCode });
+          const price = Number(rr?.data?.price || 0);
+          if (price > 0) setPricePerUnit(String(price));
+        } catch(_) { /* ignore */ }
       } catch(_){ /* ignore */ }
     })();
   }, [walkinCustomer, defaultMaterial]);
