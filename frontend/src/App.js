@@ -21,6 +21,7 @@ import MISReports from './pages/MISReports';
 import MetalMaster from './pages/MetalMaster';
 import PricingMaster from './pages/PricingMaster';
 import Vendors from './pages/Vendors';
+import WalkinSale from './pages/WalkinSale';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -77,6 +78,7 @@ function App() {
               <>
                 <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
                 <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
+                <NavLink to="/walkin" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Walk‑in Sale</NavLink>
                 <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
                 <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
               </>
@@ -84,6 +86,7 @@ function App() {
               <>
                 <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
                 <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
+                <NavLink to="/walkin" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Walk‑in Sale</NavLink>
                 <NavLink to="/credit" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Credit Management</NavLink>
                 <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
                 <NavLink to="/inventory/adjustments" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Stock Adjustments</NavLink>
@@ -102,6 +105,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/purchases" element={<Purchases />} />
             <Route path="/sales" element={<Sales />} />
+            <Route path="/walkin" element={<WalkinSale />} />
             <Route path="/payments" element={<Navigate to="/sales?tab=payments" replace />} />
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />
