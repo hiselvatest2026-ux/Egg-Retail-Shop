@@ -14,6 +14,31 @@ router.post('/seed', async (_req, res) => {
   }
 });
 
+// Bulk update sale item price for a list of sale IDs
+router.post('/sales/bulk-update-price', async (req, res) => {
+  try {
+    const { sale_ids, price } = req.body || {};
+    if (!Array.isArray(sale_ids) || !(Number(price) > 0)) {
+      return res.status(400).json({ message: 'sale_ids array and positive price required' });
+    }
+    const ids = sale_ids.map(Number).filter(n => Number.isFinite(n));
+    if (ids.length === 0) return res.json({ updated_items: 0, affected_sales: 0, sale_ids: [] });
+    await pool.query('BEGIN');
+    const placeholders = ids.map((_,i)=>`$${i+1}`).join(',');
+    const params = [...ids, Number(price)];
+    const upd = await pool.query(`UPDATE sale_items SET price = $${ids.length+1} WHERE sale_id IN (${placeholders}) RETURNING sale_id, id`, params);
+    const uniqSales = Array.from(new Set(upd.rows.map(r=>r.sale_id)));
+    for (const sid of uniqSales) {
+      await pool.query('UPDATE sales SET total = (SELECT COALESCE(SUM(quantity*price),0) FROM sale_items WHERE sale_id=$1) WHERE id=$1', [sid]);
+    }
+    await pool.query('COMMIT');
+    res.json({ updated_items: upd.rowCount, affected_sales: uniqSales.length, sale_ids: uniqSales });
+  } catch (e) {
+    try { await pool.query('ROLLBACK'); } catch(_) {}
+    res.status(500).json({ message: e.message });
+  }
+});
+
 module.exports = router;
 
 // Purge and reseed data for a specific location (removed)
