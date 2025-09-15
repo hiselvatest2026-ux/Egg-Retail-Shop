@@ -595,15 +595,18 @@ const Sales = () => {
                         }
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
                         if (code) {
-                          // Prefer Pricing Master row directly
+                          // Prefer Pricing Master row directly; if found, skip API overwrite
+                          let base0 = 0;
                           try {
                             const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
                               && String(r.category||'').toLowerCase()===String((form.category||'').toLowerCase())
                               && String(r.customer_id||'')===String(form.customer_id||''));
-                            const base0 = pm ? Number(pm.base_price||0) : 0;
-                            if (base0 > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base0) }));
+                            base0 = pm ? Number(pm.base_price||0) : 0;
+                            if (base0 > 0) {
+                              setAddForm(prev=>({ ...prev, price_per_piece: String(base0) }));
+                            }
                           } catch(_) {}
-                          getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
+                          if (!(base0 > 0)) getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
                             .then(r=>{
                               const base = Number(r?.data?.base_price || 0);
                               if (base > 0) {
@@ -1071,13 +1074,24 @@ const Sales = () => {
                           if (prod) pid = String(prod.id);
                         }
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
+                        // Prefer Pricing Master row directly; if found, skip API overwrite
+                        let pmBase = 0;
                         try {
-                          const cust = customers.find(c=> String(c.id)===String(form.customer_id));
-                          const categoryForPricing = form.category || (cust && cust.category) || '';
-                          const r = await getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing });
-                          const base = Number(r?.data?.base_price || 0);
-                          if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+                          const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+                            && String(r.category||'').toLowerCase()===String((form.category||'').toLowerCase())
+                            && String(r.customer_id||'')===String(form.customer_id||''));
+                          pmBase = pm ? Number(pm.base_price||0) : 0;
+                          if (pmBase > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(pmBase) }));
                         } catch(_) {}
+                        if (!(pmBase > 0)) {
+                          try {
+                            const cust = customers.find(c=> String(c.id)===String(form.customer_id));
+                            const categoryForPricing = form.category || (cust && cust.category) || '';
+                            const r = await getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing });
+                            const base = Number(r?.data?.base_price || 0);
+                            if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
+                          } catch(_) {}
+                        }
                         try {
                           const rr = await getLastPurchasePrice({ material_code: code });
                           const dom = rr?.data?.dom || '';
