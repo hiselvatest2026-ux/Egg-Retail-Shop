@@ -424,9 +424,7 @@ const Sales = () => {
     const code = addForm.material_code;
     if (!code) return;
     const customer = customers.find(c => String(c.id) === String(form.customer_id));
-    const rawCategory = form.category || (customer && customer.category) || '';
-    const normalized = String(rawCategory).toLowerCase();
-    const categoryForPricing = normalized === 'walk-in' || normalized === 'walkin' ? 'Retail' : (rawCategory || '');
+    const categoryForPricing = form.category || (customer && customer.category) || '';
     getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing })
       .then(async r=>{
         const base = Number(r?.data?.base_price || 0);
