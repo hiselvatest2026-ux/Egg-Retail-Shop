@@ -95,6 +95,13 @@ exports.salesCsv = async (req, res) => {
          JOIN products p ON p.id = si.product_id
          GROUP BY si.sale_id
        ),
+       item_stats AS (
+         SELECT si.sale_id,
+                SUM(si.quantity) AS quantity,
+                CASE WHEN COUNT(*) = 1 THEN MAX(si.price) ELSE NULL END AS price_per_unit
+         FROM sale_items si
+         GROUP BY si.sale_id
+       ),
        computed AS (
          SELECT sale_id, SUM(quantity * price) AS computed_total
          FROM sale_items
@@ -108,6 +115,8 @@ exports.salesCsv = async (req, res) => {
               COALESCE(s.category, 'Retail') AS category,
               COALESCE(s.sale_type, 'Cash') AS sale_type,
               s.payment_method,
+              COALESCE(isum.quantity, NULL) AS quantity,
+              COALESCE(isum.price_per_unit, NULL) AS price_per_unit,
               /* Prefer computed total from items; else sale.total; else paid to avoid negative balance */
               COALESCE(ct.computed_total, NULLIF(s.total, 0), COALESCE(p.paid,0), 0) AS total,
               COALESCE(p.paid,0) AS paid,
@@ -116,10 +125,11 @@ exports.salesCsv = async (req, res) => {
        LEFT JOIN customers c ON c.id = s.customer_id
        LEFT JOIN paid p ON p.invoice_id = s.id
        LEFT JOIN items i ON i.sale_id = s.id
+       LEFT JOIN item_stats isum ON isum.sale_id = s.id
        LEFT JOIN computed ct ON ct.sale_id = s.id
        ORDER BY s.sale_date DESC, s.id DESC`
     );
-    const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','total','paid','balance'];
+    const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','quantity','price_per_unit','total','paid','balance'];
     sendCsv(res, 'sales.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
