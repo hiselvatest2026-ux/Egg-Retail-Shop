@@ -88,7 +88,7 @@ const WalkinSale = () => {
         }
         // 4) Enforce current business rate for Egg Walk-in
         const isEgg = String(defaultMaterial.metal_type||'').toLowerCase().includes('egg');
-        if (isEgg) selected = 5.80;
+        if (isEgg) selected = 5.90;
         if (selected > 0) setPricePerUnit(String(selected.toFixed ? selected.toFixed(2) : selected));
       } catch(_){ /* ignore */ }
     })();

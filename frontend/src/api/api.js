@@ -2,12 +2,15 @@ import axios from 'axios';
 
 let API_URL = process.env.REACT_APP_API_URL;
 if (!API_URL && typeof window !== 'undefined') {
-  const { origin, hostname, protocol } = window.location;
+  const { hostname, protocol } = window.location;
   if (/onrender\.com$/.test(hostname)) {
-    const guessed = origin.replace('frontend', 'backend');
-    API_URL = guessed;
+    // Render deployment: switch subdomain from frontend -> backend
+    API_URL = `${protocol}//${hostname.replace('frontend', 'backend')}`;
   } else {
-    API_URL = 'http://localhost:5000';
+    // Local/LAN: use the same hostname as the frontend, port 5000 for backend
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const apiHost = isLocalHost ? 'localhost' : hostname;
+    API_URL = `${protocol}//${apiHost}:5000`;
   }
 }
 if (!API_URL) {
@@ -160,3 +163,6 @@ export const getPurchaseItems = (purchaseId) => axios.get(`${API_URL}/purchases/
 export const createPurchaseItem = (purchaseId, data) => axios.post(`${API_URL}/purchases/${purchaseId}/items`, data);
 export const updatePurchaseItem = (purchaseId, itemId, data) => axios.put(`${API_URL}/purchases/${purchaseId}/items/${itemId}`, data);
 export const deletePurchaseItem = (purchaseId, itemId) => axios.delete(`${API_URL}/purchases/${purchaseId}/items/${itemId}`);
+
+// Export resolved base URL for reuse in views needing raw CSV access
+export const API_BASE_URL = API_URL;
