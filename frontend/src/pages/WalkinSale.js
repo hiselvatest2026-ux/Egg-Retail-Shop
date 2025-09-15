@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { getMetals, getProducts, getAvailable, getPricingForSale, getLastPurchasePrice, createSale, createSaleItem, createPayment, getCustomers } from '../api/api';
+import { getMetals, getProducts, getAvailable, getPricingForSale, getLastPurchasePrice, createSale, createSaleItem, createPayment, getCustomers, getPricing } from '../api/api';
 
 const WalkinSale = () => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ const WalkinSale = () => {
   const [available, setAvailable] = useState(null);
   const [total, setTotal] = useState(0);
   const [showSheet, setShowSheet] = useState(false);
+  const [pricingRows, setPricingRows] = useState([]);
 
   const defaultMaterial = useMemo(() => {
     // Prefer Egg
@@ -50,10 +51,11 @@ const WalkinSale = () => {
   useEffect(() => {
     (async()=>{
       try {
-        const [m, p, c] = await Promise.all([getMetals(), getProducts(), getCustomers()]);
+        const [m, p, c, pr] = await Promise.all([getMetals(), getProducts(), getCustomers(), getPricing()]);
         setMaterials(m.data||[]);
         setProducts(p.data||[]);
         setCustomers(c.data||[]);
+        setPricingRows(pr.data||[]);
       } catch(e){ setError('Failed to load data'); }
       finally { setLoading(false); }
     })();
@@ -66,8 +68,13 @@ const WalkinSale = () => {
         if (!walkinCustomer || !defaultMaterial) return;
         const materialCode = defaultMaterial.part_code;
         let selected = 0;
-        // 1) Try Walk-in
+        // 0) Prefer Pricing Master row by category Walk-in for this material
         try {
+          const pm = (pricingRows||[]).find(r => String(r.material_code)===String(materialCode) && String(r.category||'').toLowerCase()==='walk-in');
+          if (pm) selected = Number(pm.base_price||0);
+        } catch(_) {}
+        // 1) Try Walk-in
+        if (!(selected > 0)) try {
           const r1 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Walk-in' });
           selected = Number(r1?.data?.base_price || 0);
         } catch(_) { /* ignore */ }
