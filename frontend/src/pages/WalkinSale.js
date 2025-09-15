@@ -65,30 +65,31 @@ const WalkinSale = () => {
       try {
         if (!walkinCustomer || !defaultMaterial) return;
         const materialCode = defaultMaterial.part_code;
+        let selected = 0;
         // 1) Try Walk-in
-        let base = 0;
         try {
           const r1 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Walk-in' });
-          base = Number(r1?.data?.base_price || 0);
+          selected = Number(r1?.data?.base_price || 0);
         } catch(_) { /* ignore */ }
         // 2) Fallback Retail
-        if (!(base > 0)) {
+        if (!(selected > 0)) {
           try {
             const r2 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Retail' });
-            base = Number(r2?.data?.base_price || 0);
+            selected = Number(r2?.data?.base_price || 0);
           } catch(_) { /* ignore */ }
         }
-        if (base > 0) { setPricePerUnit(String(base)); return; }
         // 3) Fallback last purchase unit price
-        try {
-          const rr = await getLastPurchasePrice({ material_code: materialCode });
-          const price = Number(rr?.data?.price || 0);
-          if (price > 0) { setPricePerUnit(String(price)); return; }
-        } catch(_) { /* ignore */ }
-        // 4) Final override for Egg Walk-in requested rate
-        if (String(defaultMaterial.metal_type||'').toLowerCase().includes('egg')) {
-          setPricePerUnit('5.80');
+        if (!(selected > 0)) {
+          try {
+            const rr = await getLastPurchasePrice({ material_code: materialCode });
+            const price = Number(rr?.data?.price || 0);
+            if (price > 0) selected = price;
+          } catch(_) { /* ignore */ }
         }
+        // 4) Enforce current business rate for Egg Walk-in
+        const isEgg = String(defaultMaterial.metal_type||'').toLowerCase().includes('egg');
+        if (isEgg) selected = 5.80;
+        if (selected > 0) setPricePerUnit(String(selected.toFixed ? selected.toFixed(2) : selected));
       } catch(_){ /* ignore */ }
     })();
   }, [walkinCustomer, defaultMaterial]);
