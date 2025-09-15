@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getProducts, createSaleItem, getLastPurchasePrice, clearTransactions } from '../api/api';
+import { getSales, createSale, updateSale, deleteSale, getCustomers, getPricingForSale, getMetals, getPayments, createPayment, getAvailable, getProducts, createSaleItem, getLastPurchasePrice, clearTransactions, getPricing } from '../api/api';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
@@ -40,6 +40,7 @@ const Sales = () => {
     return src;
   }, [materials]);
   const [pricingInfo, setPricingInfo] = useState(null);
+  const [pricingRows, setPricingRows] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(null);
@@ -166,6 +167,7 @@ const Sales = () => {
         setMaterials(m.data);
         const pr = await getProducts();
         setProducts(pr.data || []);
+        try { const pm = await getPricing(); setPricingRows(pm.data || []); } catch(_) {}
         const pays = await getPayments();
         const map = {};
         (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
@@ -425,6 +427,14 @@ const Sales = () => {
     if (!code) return;
     const customer = customers.find(c => String(c.id) === String(form.customer_id));
     const categoryForPricing = form.category || (customer && customer.category) || '';
+    // Prefer Pricing Master row directly
+    try {
+      const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+        && String(r.category||'').toLowerCase()===String(categoryForPricing||'').toLowerCase()
+        && String(r.customer_id||'')===String(form.customer_id||''));
+      const base = pm ? Number(pm.base_price||0) : 0;
+      if (base > 0) { setAddForm(prev=>({ ...prev, price_per_piece: String(base) })); return; }
+    } catch(_) {}
     getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing })
       .then(async r=>{
         const base = Number(r?.data?.base_price || 0);
@@ -585,6 +595,14 @@ const Sales = () => {
                         }
                         setAddForm(prev=>({ ...prev, material_code: code, material_type: mat ? mat.metal_type : '', product_id: pid }));
                         if (code) {
+                          // Prefer Pricing Master row directly
+                          try {
+                            const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+                              && String(r.category||'').toLowerCase()===String((form.category||'').toLowerCase())
+                              && String(r.customer_id||'')===String(form.customer_id||''));
+                            const base0 = pm ? Number(pm.base_price||0) : 0;
+                            if (base0 > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base0) }));
+                          } catch(_) {}
                           getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
                             .then(r=>{
                               const base = Number(r?.data?.base_price || 0);
