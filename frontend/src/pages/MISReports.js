@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from '../components/Card';
 // Removed ShopChip
 import axios from 'axios';
+import { API_BASE_URL } from '../api/api';
 
 const parseCsv = (text) => {
   const rows = [];
@@ -49,7 +50,7 @@ const DataTable = ({ rows }) => {
 };
 
 const MISReports = () => {
-  const API_URL = process.env.REACT_APP_API_URL || (typeof window !== 'undefined' ? window.location.origin.replace('frontend','backend') : '');
+  const API_URL = API_BASE_URL;
   const [reportRows, setReportRows] = useState({ purchases: null, sales: null, collections: null, stock: null });
   const [loading, setLoading] = useState({});
   // Removed All shops toggle
