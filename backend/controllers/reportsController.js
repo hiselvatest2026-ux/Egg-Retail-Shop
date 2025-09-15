@@ -112,7 +112,7 @@ exports.salesCsv = async (req, res) => {
               s.customer_id,
               c.name AS customer_name,
               COALESCE(i.items_text, s.product_name, s.egg_type, CASE WHEN ct.computed_total IS NULL AND COALESCE(p.paid,0) > 0 THEN 'Payment Only' ELSE '-' END) AS product_name,
-              COALESCE(s.category, 'Retail') AS category,
+              COALESCE(s.category, c.category, 'Retail') AS category,
               COALESCE(s.sale_type, 'Cash') AS sale_type,
               s.payment_method,
               COALESCE(isum.quantity, NULL) AS quantity,
