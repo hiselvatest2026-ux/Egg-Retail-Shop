@@ -83,8 +83,12 @@ const WalkinSale = () => {
         try {
           const rr = await getLastPurchasePrice({ material_code: materialCode });
           const price = Number(rr?.data?.price || 0);
-          if (price > 0) setPricePerUnit(String(price));
+          if (price > 0) { setPricePerUnit(String(price)); return; }
         } catch(_) { /* ignore */ }
+        // 4) Final override for Egg Walk-in requested rate
+        if (String(defaultMaterial.metal_type||'').toLowerCase().includes('egg')) {
+          setPricePerUnit('5.80');
+        }
       } catch(_){ /* ignore */ }
     })();
   }, [walkinCustomer, defaultMaterial]);
