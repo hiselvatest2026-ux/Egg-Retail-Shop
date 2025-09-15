@@ -457,6 +457,23 @@ const Sales = () => {
       });
   }, [form.customer_id, form.category, addForm.material_code, customers]);
 
+  // When Pricing Master rows load/refresh, prefer them to set price (prevents later fallback overwriting)
+  useEffect(() => {
+    const code = addForm.material_code;
+    if (!code) return;
+    const customer = customers.find(c => String(c.id) === String(form.customer_id));
+    const categoryForPricing = form.category || (customer && customer.category) || '';
+    try {
+      const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+        && String(r.category||'').toLowerCase()===String(categoryForPricing||'').toLowerCase()
+        && String(r.customer_id||'')===String(form.customer_id||''));
+      const base = pm ? Number(pm.base_price||0) : 0;
+      if (base > 0) {
+        setAddForm(prev=> ({ ...prev, price_per_piece: String(base) }));
+      }
+    } catch(_) {}
+  }, [pricingRows, form.customer_id, form.category, addForm.material_code, customers]);
+
   // Auto-set product_name when material_code changes
   useEffect(() => {
     if (!materials || !materials.length) return;
