@@ -173,7 +173,7 @@ const WalkinSale = () => {
         </div>
       </Card>
 
-      {isMobile && showSheet && (
+      {showSheet && (
         <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:1000}} onClick={()=>setShowSheet(false)}>
           <div style={{position:'absolute', left:0, right:0, bottom:0, background:'#1a1f2b', borderTopLeftRadius:16, borderTopRightRadius:16, padding:16, boxShadow:'0 -10px 30px rgba(0,0,0,.5)'}} onClick={e=>e.stopPropagation()}>
             <div style={{height:4, width:48, background:'#334155', borderRadius:9999, margin:'0 auto 12px auto'}} />
