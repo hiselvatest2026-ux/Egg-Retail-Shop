@@ -41,6 +41,27 @@ router.post('/sales/bulk-update-price', async (req, res) => {
 
 module.exports = router;
 
+// Bulk reassign sales to a different customer_id
+router.post('/sales/bulk-reassign-customer', async (req, res) => {
+  try {
+    const { sale_ids, customer_id } = req.body || {};
+    if (!Array.isArray(sale_ids) || !Number.isFinite(Number(customer_id))) {
+      return res.status(400).json({ message: 'sale_ids array and customer_id required' });
+    }
+    const ids = sale_ids.map(Number).filter(n => Number.isFinite(n));
+    if (ids.length === 0) return res.json({ updated: 0 });
+    await pool.query('BEGIN');
+    const placeholders = ids.map((_,i)=>`$${i+1}`).join(',');
+    const params = [...ids, Number(customer_id)];
+    const upd = await pool.query(`UPDATE sales SET customer_id=$${ids.length+1} WHERE id IN (${placeholders}) RETURNING id`, params);
+    await pool.query('COMMIT');
+    return res.json({ updated: upd.rowCount, sale_ids: upd.rows.map(r=>r.id) });
+  } catch (e) {
+    try { await pool.query('ROLLBACK'); } catch(_) {}
+    return res.status(500).json({ message: e.message });
+  }
+});
+
 // Purge and reseed data for a specific location (removed)
 /* router.post('/seed/ratinam', async (_req, res) => {
   try {
