@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import Card from '../components/Card';
 import Dropdown from '../components/Dropdown';
-import { getProducts, getAdjustments, createAdjustment, deleteAdjustmentApi } from '../api/api';
+import { getProducts, getMetals, getAdjustments, createAdjustment, deleteAdjustmentApi } from '../api/api';
 
 const StockAdjustments = () => {
   const [products, setProducts] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [adjustments, setAdjustments] = useState([]);
-  const [form, setForm] = useState({ product_id: '', adjustment_type: '', quantity: '', note: '' });
+  const [form, setForm] = useState({ product_id: '', material_code: '', adjustment_type: '', quantity: '', note: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const load = async () => {
     try {
-      const [p, a] = await Promise.all([getProducts(), getAdjustments()]);
+      const [p, m, a] = await Promise.all([getProducts(), getMetals(), getAdjustments()]);
       setProducts(p.data || []);
+      setMaterials(m.data || []);
       setAdjustments(a.data || []);
     } catch (e) { console.error('load adjustments failed', e); }
   };
@@ -22,7 +24,7 @@ const StockAdjustments = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); setSuccess('');
-    if (!form.product_id) { setError('Please select a product.'); return; }
+    if (!form.product_id) { setError('Please select a material.'); return; }
     if (!form.adjustment_type) { setError('Please select a type.'); return; }
     if (!form.quantity || Number.isNaN(Number(form.quantity))) { setError('Enter a valid quantity.'); return; }
     try {
@@ -45,12 +47,24 @@ const StockAdjustments = () => {
       <Card title="Add Adjustment">
         <form onSubmit={handleSubmit} className="form-grid" style={{gridTemplateColumns:'repeat(5, minmax(0,1fr))'}}>
           <div className="input-group" style={{overflow:'visible'}}>
-            <label>Product</label>
+            <label>Material (Code - Type)</label>
             <Dropdown
-              value={form.product_id}
-              onChange={(v)=>setForm({...form, product_id: v})}
-              placeholder={products.length ? 'Select product' : 'No products found'}
-              options={products.map(p=>({ value:String(p.id), label:`${p.name} (#${p.id})` }))}
+              value={form.material_code}
+              onChange={(code)=>{
+                // Map selected material to product id using name heuristics
+                const mat = (materials||[]).find(m=> String(m.part_code)===String(code));
+                let pid = '';
+                if (mat) {
+                  const norm = String(mat.metal_type||'').toLowerCase();
+                  let prod = (products||[]).find(p=> String(p.name||'').toLowerCase() === norm)
+                    || (products||[]).find(p=> String(p.name||'').toLowerCase().includes(norm) || norm.includes(String(p.name||'').toLowerCase()));
+                  if (!prod && /egg/.test(norm)) prod = (products||[]).find(p=> /egg/.test(String(p.name||'').toLowerCase()));
+                  if (prod) pid = String(prod.id);
+                }
+                setForm(prev=>({ ...prev, material_code: code, product_id: pid }));
+              }}
+              placeholder={materials.length ? 'Select material' : 'No materials found'}
+              options={(materials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
             />
           </div>
           <div className="input-group" style={{overflow:'visible'}}>
