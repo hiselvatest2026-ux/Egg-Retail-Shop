@@ -198,8 +198,8 @@ exports.getSummary = async (req, res) => {
       const parts = [];
       const p = [];
       if (locId) { parts.push(`${tableAlias}.location_id = $${p.length+1}`); p.push(locId); }
-      if (start) { parts.push(`s.sale_date::date >= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(start); }
-      if (end) { parts.push(`s.sale_date::date <= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(end); }
+      if (start) { parts.push(`(s.sale_date AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(start); }
+      if (end) { parts.push(`(s.sale_date AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(end); }
       return { where: parts.length ? `WHERE ${parts.join(' AND ')}` : '', params: p };
     };
     const qtyTrendWhere = buildWhere('si');

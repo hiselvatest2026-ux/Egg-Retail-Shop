@@ -29,13 +29,13 @@ exports.purchasesCsv = async (req, res) => {
     const locFilterPU = allShops ? '' : (locId ? 'AND EXISTS (SELECT 1 FROM purchase_items x WHERE x.purchase_id = pu.id AND x.location_id = $1)' : '');
     const params = allShops ? [] : (locId ? [locId] : []);
     const dateRangePI = [];
-    if (start) { dateRangePI.push(`p.purchase_date::date >= TO_DATE($${params.length+dateRangePI.length+1}, 'YYYY-MM-DD')`); params.push(start); }
-    if (end) { dateRangePI.push(`p.purchase_date::date <= TO_DATE($${params.length+dateRangePI.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    if (start) { dateRangePI.push(`(p.purchase_date AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${params.length+dateRangePI.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { dateRangePI.push(`(p.purchase_date AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${params.length+dateRangePI.length+1}, 'YYYY-MM-DD')`); params.push(end); }
     const dateFilterPI = dateRangePI.length ? ` AND ${dateRangePI.join(' AND ')}` : '';
     const dateRangePU = [];
     const params2 = [...(allShops ? [] : (locId ? [locId] : []))];
-    if (start) { dateRangePU.push(`pu.purchase_date::date >= TO_DATE($${params2.length+dateRangePU.length+1}, 'YYYY-MM-DD')`); params2.push(start); }
-    if (end) { dateRangePU.push(`pu.purchase_date::date <= TO_DATE($${params2.length+dateRangePU.length+1}, 'YYYY-MM-DD')`); params2.push(end); }
+    if (start) { dateRangePU.push(`(pu.purchase_date AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${params2.length+dateRangePU.length+1}, 'YYYY-MM-DD')`); params2.push(start); }
+    if (end) { dateRangePU.push(`(pu.purchase_date AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${params2.length+dateRangePU.length+1}, 'YYYY-MM-DD')`); params2.push(end); }
     const dateFilterPU = dateRangePU.length ? ` AND ${dateRangePU.join(' AND ')}` : '';
     // Prefer item-level details; include fallback rows for header-only purchases with no items
     const result = await pool.query(
@@ -99,8 +99,8 @@ exports.salesCsv = async (req, res) => {
     const { start, end } = req.query;
     const where = [];
     const params = [];
-    if (start) { where.push(`s.sale_date::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
-    if (end) { where.push(`s.sale_date::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    if (start) { where.push(`(s.sale_date AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { where.push(`(s.sale_date AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await pool.query(
       `WITH paid AS (
@@ -161,8 +161,8 @@ exports.collectionsCsv = async (req, res) => {
     const { start, end } = req.query;
     const where = [];
     const params = [];
-    if (start) { where.push(`p.payment_date::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
-    if (end) { where.push(`p.payment_date::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    if (start) { where.push(`(p.payment_date AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { where.push(`(p.payment_date AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await pool.query(
       `SELECT p.id,

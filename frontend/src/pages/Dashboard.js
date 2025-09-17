@@ -47,7 +47,7 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => { load(); }, [start, end]);
+  useEffect(() => { load(); }, []);
 
   const salesTrendChart = useMemo(() => {
     const labels = data?.sales_trend?.map(d => d.day) ?? [];
