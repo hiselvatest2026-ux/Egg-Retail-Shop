@@ -220,8 +220,8 @@ exports.getSummary = async (req, res) => {
          JOIN sales s ON s.id=si.sale_id
          LEFT JOIN customers c ON c.id = s.customer_id
          ${catWhere.where}
-         GROUP BY s.sale_date::date, category
-         ORDER BY day, category`,
+         GROUP BY s.sale_date::date, COALESCE(s.category, c.category, 'Retail')
+         ORDER BY 1, 2`,
         catWhere.params
       ),
       pool.query(
@@ -231,8 +231,8 @@ exports.getSummary = async (req, res) => {
          JOIN sales s ON s.id=si.sale_id
          LEFT JOIN customers c ON c.id = s.customer_id
          ${catWhere.where}
-         GROUP BY s.sale_date::date, category
-         ORDER BY day, category`,
+         GROUP BY s.sale_date::date, COALESCE(s.category, c.category, 'Retail')
+         ORDER BY 1, 2`,
         catWhere.params
       )
     ]);
