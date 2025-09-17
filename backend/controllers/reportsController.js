@@ -20,6 +20,7 @@ function sendCsv(res, filename, headers, rows) {
 
 exports.purchasesCsv = async (req, res) => {
   try {
+    const { start, end } = req.query;
     const locHeader = req.headers['x-shop-id'];
     const locId = locHeader ? Number(locHeader) : null;
     const allShops = String(req.query.all_shops||'') === '1';
@@ -27,6 +28,15 @@ exports.purchasesCsv = async (req, res) => {
     // Append to existing WHERE clause in header_only; must start with AND when present
     const locFilterPU = allShops ? '' : (locId ? 'AND EXISTS (SELECT 1 FROM purchase_items x WHERE x.purchase_id = pu.id AND x.location_id = $1)' : '');
     const params = allShops ? [] : (locId ? [locId] : []);
+    const dateRangePI = [];
+    if (start) { dateRangePI.push(`p.purchase_date::date >= TO_DATE($${params.length+dateRangePI.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { dateRangePI.push(`p.purchase_date::date <= TO_DATE($${params.length+dateRangePI.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    const dateFilterPI = dateRangePI.length ? ` AND ${dateRangePI.join(' AND ')}` : '';
+    const dateRangePU = [];
+    const params2 = [...(allShops ? [] : (locId ? [locId] : []))];
+    if (start) { dateRangePU.push(`pu.purchase_date::date >= TO_DATE($${params2.length+dateRangePU.length+1}, 'YYYY-MM-DD')`); params2.push(start); }
+    if (end) { dateRangePU.push(`pu.purchase_date::date <= TO_DATE($${params2.length+dateRangePU.length+1}, 'YYYY-MM-DD')`); params2.push(end); }
+    const dateFilterPU = dateRangePU.length ? ` AND ${dateRangePU.join(' AND ')}` : '';
     // Prefer item-level details; include fallback rows for header-only purchases with no items
     const result = await pool.query(
       `WITH mm_guess AS (
@@ -51,11 +61,12 @@ exports.purchasesCsv = async (req, res) => {
                 ROUND(pi.price * pi.quantity * (1 + (COALESCE(mm.gst_percent,0)/100.0)), 2) AS total
          FROM purchase_items pi
          JOIN purchases pu ON pu.id = pi.purchase_id
+         JOIN purchases p ON p.id = pi.purchase_id
          LEFT JOIN vendors v ON v.id = pu.vendor_id
          LEFT JOIN products pr ON pr.id = pi.product_id
          LEFT JOIN mm_guess g ON g.product_id = pi.product_id
          LEFT JOIN metal_master mm ON mm.part_code = g.part_code
-         ${locFilterPI}
+         ${locFilterPI}${dateFilterPI}
        ),
        header_only AS (
          SELECT pu.id AS id,
@@ -71,7 +82,7 @@ exports.purchasesCsv = async (req, res) => {
          FROM purchases pu
          LEFT JOIN vendors v ON v.id = pu.vendor_id
          WHERE NOT EXISTS (SELECT 1 FROM purchase_items pi WHERE pi.purchase_id = pu.id)
-         ${locFilterPU}
+         ${locFilterPU}${dateFilterPU}
        )
        SELECT * FROM item_rows
        UNION ALL
@@ -85,6 +96,12 @@ exports.purchasesCsv = async (req, res) => {
 
 exports.salesCsv = async (req, res) => {
   try {
+    const { start, end } = req.query;
+    const where = [];
+    const params = [];
+    if (start) { where.push(`s.sale_date::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { where.push(`s.sale_date::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await pool.query(
       `WITH paid AS (
          SELECT invoice_id, SUM(amount) AS paid
@@ -130,7 +147,9 @@ exports.salesCsv = async (req, res) => {
        LEFT JOIN items i ON i.sale_id = s.id
        LEFT JOIN item_stats isum ON isum.sale_id = s.id
        LEFT JOIN computed ct ON ct.sale_id = s.id
-       ORDER BY s.sale_date DESC, s.id DESC`
+       ${whereSql}
+       ORDER BY s.sale_date DESC, s.id DESC`,
+       params
     );
     const headers = ['id','sale_date','customer_id','customer_name','product_name','category','sale_type','payment_method','quantity','price_per_unit','total','paid','balance'];
     sendCsv(res, 'sales.csv', headers, result.rows);
@@ -139,6 +158,12 @@ exports.salesCsv = async (req, res) => {
 
 exports.collectionsCsv = async (req, res) => {
   try {
+    const { start, end } = req.query;
+    const where = [];
+    const params = [];
+    if (start) { where.push(`p.payment_date::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { where.push(`p.payment_date::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await pool.query(
       `SELECT p.id,
               to_char((p.payment_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS payment_date,
@@ -151,7 +176,9 @@ exports.collectionsCsv = async (req, res) => {
        FROM payments p
        LEFT JOIN customers c ON c.id = p.customer_id
        LEFT JOIN sales s ON s.id = p.invoice_id
-       ORDER BY p.payment_date DESC, p.id DESC`
+       ${whereSql}
+       ORDER BY p.payment_date DESC, p.id DESC`,
+      params
     );
     const headers = ['id','payment_date','customer_id','customer_name','invoice_id','invoice_total','amount','payment_mode'];
     sendCsv(res, 'collections.csv', headers, result.rows);

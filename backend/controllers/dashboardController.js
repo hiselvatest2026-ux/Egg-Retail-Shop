@@ -4,6 +4,7 @@ exports.getSummary = async (req, res) => {
   try {
     const locHeader = req.headers['x-shop-id'];
     const locId = locHeader ? Number(locHeader) : null;
+    const { start, end } = req.query || {};
     const condSalesItems = locId ? 'WHERE si.location_id = $1' : '';
     const condPurchItems = locId ? 'WHERE pi.location_id = $1' : '';
     const condSalesToday = locId ? 'AND si.location_id = $1' : '';
@@ -75,19 +76,43 @@ exports.getSummary = async (req, res) => {
          WHERE sale_type = 'Credit'`,
         []
       ),
-      // 7-day trend from items
-      pool.query(
-        `WITH items_by_day AS (
-           SELECT s.sale_date::date AS day, SUM(si.quantity*si.price) AS total
-           FROM sale_items si JOIN sales s ON s.id=si.sale_id
-           WHERE s.sale_date >= CURRENT_DATE - INTERVAL '6 days' ${condSalesToday}
-           GROUP BY s.sale_date::date
-         )
-         SELECT day, COALESCE(total,0) AS total
-         FROM items_by_day
-         ORDER BY day`,
-        params
-      ),
+      // Revenue trend (date-ranged if provided, else last 7 days)
+      (async ()=>{
+        const whereParts = [];
+        const p = [];
+        if (locId) { whereParts.push(`si.location_id = $${p.length+1}`); p.push(locId); }
+        if (start) { whereParts.push(`s.sale_date::date >= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(start); }
+        if (end) { whereParts.push(`s.sale_date::date <= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(end); }
+        let where = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+        if (!start && !end) {
+          // default last 7 days window
+          where = `WHERE s.sale_date >= CURRENT_DATE - INTERVAL '6 days' ${locId?`AND si.location_id = $1`:''}`;
+          return pool.query(
+            `WITH items_by_day AS (
+               SELECT s.sale_date::date AS day, SUM(si.quantity*si.price) AS total
+               FROM sale_items si JOIN sales s ON s.id=si.sale_id
+               ${where}
+               GROUP BY s.sale_date::date
+             )
+             SELECT day, COALESCE(total,0) AS total
+             FROM items_by_day
+             ORDER BY day`,
+            params
+          );
+        }
+        return pool.query(
+          `WITH items_by_day AS (
+             SELECT s.sale_date::date AS day, SUM(si.quantity*si.price) AS total
+             FROM sale_items si JOIN sales s ON s.id=si.sale_id
+             ${where}
+             GROUP BY s.sale_date::date
+           )
+           SELECT day, COALESCE(total,0) AS total
+           FROM items_by_day
+           ORDER BY day`,
+          p
+        );
+      })(),
       // Current stock per product (purchases - sales), scoped by location if provided
       pool.query(
         `WITH purchase_qty AS (
@@ -168,6 +193,50 @@ exports.getSummary = async (req, res) => {
     // Compute current stock level as total across products
     const currentStockTotal = stockPerProductRes.rows.reduce((sum, row) => sum + Number(row.stock || 0), 0);
 
+    // Build additional trends with date range
+    const buildWhere = (tableAlias) => {
+      const parts = [];
+      const p = [];
+      if (locId) { parts.push(`${tableAlias}.location_id = $${p.length+1}`); p.push(locId); }
+      if (start) { parts.push(`s.sale_date::date >= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(start); }
+      if (end) { parts.push(`s.sale_date::date <= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(end); }
+      return { where: parts.length ? `WHERE ${parts.join(' AND ')}` : '', params: p };
+    };
+    const qtyTrendWhere = buildWhere('si');
+    const catWhere = buildWhere('si');
+    const [qtyTrendRes, qtyByCatRes, revByCatRes] = await Promise.all([
+      pool.query(
+        `SELECT s.sale_date::date AS day, COALESCE(SUM(si.quantity),0) AS qty
+         FROM sale_items si JOIN sales s ON s.id=si.sale_id
+         ${qtyTrendWhere.where}
+         GROUP BY s.sale_date::date
+         ORDER BY day`,
+        qtyTrendWhere.params
+      ),
+      pool.query(
+        `SELECT s.sale_date::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
+                COALESCE(SUM(si.quantity),0) AS qty
+         FROM sale_items si
+         JOIN sales s ON s.id=si.sale_id
+         LEFT JOIN customers c ON c.id = s.customer_id
+         ${catWhere.where}
+         GROUP BY s.sale_date::date, category
+         ORDER BY day, category`,
+        catWhere.params
+      ),
+      pool.query(
+        `SELECT s.sale_date::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
+                COALESCE(SUM(si.quantity*si.price),0) AS total
+         FROM sale_items si
+         JOIN sales s ON s.id=si.sale_id
+         LEFT JOIN customers c ON c.id = s.customer_id
+         ${catWhere.where}
+         GROUP BY s.sale_date::date, category
+         ORDER BY day, category`,
+        catWhere.params
+      )
+    ]);
+
     res.json({
       metrics: {
         total_sales_today: Number(salesTodayRes.rows[0]?.total_sales_today || 0),
@@ -178,6 +247,9 @@ exports.getSummary = async (req, res) => {
         total_stock_value: Number(stockValueRes.rows[0]?.total_value || 0)
       },
       sales_trend: salesTrendRes.rows.map(r => ({ day: r.day, total: Number(r.total) })),
+      sales_qty_trend: qtyTrendRes.rows.map(r => ({ day: r.day, qty: Number(r.qty||0) })),
+      sales_qty_by_category: qtyByCatRes.rows.map(r => ({ day: r.day, category: r.category, qty: Number(r.qty||0) })),
+      sales_revenue_by_category: revByCatRes.rows.map(r => ({ day: r.day, category: r.category, total: Number(r.total||0) })),
       low_stock: stockPerProductRes.rows.map(r => ({ product_id: r.product_id, name: r.name, stock: Number(r.stock) })),
       recent_sales: recentSalesRes.rows.map(r => ({
         id: r.id,

@@ -28,12 +28,17 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
 
   const load = async () => {
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await getDashboard();
+      const params = {};
+      if (start) params.start = start;
+      if (end) params.end = end;
+      const res = await getDashboard(params);
       setData(res.data);
     } catch (e) {
       setErrorMsg('Failed to load dashboard. Please check the API and try again.');
@@ -42,7 +47,7 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [start, end]);
 
   const salesTrendChart = useMemo(() => {
     const labels = data?.sales_trend?.map(d => d.day) ?? [];
@@ -63,11 +68,46 @@ const Dashboard = () => {
     };
   }, [data]);
 
+  const qtyTrendChart = useMemo(() => {
+    const labels = data?.sales_qty_trend?.map(d => d.day) ?? [];
+    const values = data?.sales_qty_trend?.map(d => d.qty) ?? [];
+    return { labels, datasets: [{ label: 'Quantity', data: values, borderColor: 'rgb(34,197,94)', backgroundColor: 'rgba(34,197,94,.3)' }] };
+  }, [data]);
+
+  const groupByDay = (rows, valueKey) => {
+    const map = new Map();
+    (rows||[]).forEach(r => {
+      const day = r.day; const cat = r.category || 'Other'; const val = Number(r[valueKey]||0);
+      if (!map.has(day)) map.set(day, {});
+      const obj = map.get(day); obj[cat] = (obj[cat]||0) + val;
+    });
+    const days = Array.from(map.keys()).sort();
+    const cats = Array.from(new Set([].concat(...Array.from(map.values()).map(o=>Object.keys(o)))));
+    const datasets = cats.map((c,i)=>({ label: c, data: days.map(d => (map.get(d)?.[c]||0)), backgroundColor: `hsl(${(i*67)%360} 70% 50% / .6)` }));
+    return { labels: days, datasets };
+  };
+
+  const qtyByCategoryChart = useMemo(() => groupByDay(data?.sales_qty_by_category, 'qty'), [data]);
+  const revenueByCategoryChart = useMemo(() => groupByDay(data?.sales_revenue_by_category, 'total'), [data]);
+
   if (loading) return <div className="p-4">Loading dashboard...</div>;
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <div className="form-row" style={{marginBottom: 12}}>
+        <div className="input-group">
+          <label>Start Date</label>
+          <input className="input date" type="date" value={start} onChange={(e)=>setStart(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label>End Date</label>
+          <input className="input date" type="date" value={end} onChange={(e)=>setEnd(e.target.value)} />
+        </div>
+        <div className="input-group" style={{alignSelf:'end'}}>
+          <button className="btn" onClick={load}>Apply</button>
+        </div>
+      </div>
       {errorMsg && (
         <div className="toast" style={{marginBottom:12}}>
           {errorMsg}
@@ -96,12 +136,28 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Sales Trend">
+        <Card title="Sales Revenue Trend">
           <Line data={salesTrendChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
         </Card>
+        <Card title="Sales Quantity Trend">
+          <Line data={qtyTrendChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card title="Qty by Customer Type (Daily)">
+          <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+        </Card>
+        <Card title="Revenue by Customer Type (Daily)">
+          <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Low/Current Stock by Product">
           <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
         </Card>
+        <div />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

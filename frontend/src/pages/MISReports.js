@@ -53,10 +53,16 @@ const MISReports = () => {
   const API_URL = API_BASE_URL;
   const [reportRows, setReportRows] = useState({ purchases: null, sales: null, collections: null, stock: null });
   const [loading, setLoading] = useState({});
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
   // Removed All shops toggle
 
   const download = (path) => {
-    const url = `${API_URL}/reports/${path}?t=${Date.now()}`;
+    const q = new URLSearchParams();
+    if (start) q.set('start', start);
+    if (end) q.set('end', end);
+    q.set('t', String(Date.now()));
+    const url = `${API_URL}/reports/${path}?${q.toString()}`;
     const a = document.createElement('a');
     a.href = url;
     a.download = '';
@@ -68,7 +74,10 @@ const MISReports = () => {
   const loadReport = async (key, path) => {
     try {
       setLoading(prev=>({ ...prev, [key]: true }));
-      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text', headers: { 'Cache-Control': 'no-cache' }, params: { t: Date.now() } });
+      const params = { t: Date.now() };
+      if (start) params.start = start;
+      if (end) params.end = end;
+      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text', headers: { 'Cache-Control': 'no-cache' }, params });
       const text = res.data;
       const rows = parseCsv(text);
       setReportRows(prev=>({ ...prev, [key]: rows }));
@@ -90,7 +99,22 @@ const MISReports = () => {
           <h1 className="page-title">MIS Reports</h1>
           <p className="page-subtitle">Analyze performance across purchases, sales, collection, and stock</p>
         </div>
-        
+        <div className="form-row" style={{maxWidth:600}}>
+          <div className="input-group">
+            <label>Start Date</label>
+            <input className="input date" type="date" value={start} onChange={e=>setStart(e.target.value)} />
+          </div>
+          <div className="input-group">
+            <label>End Date</label>
+            <input className="input date" type="date" value={end} onChange={e=>setEnd(e.target.value)} />
+          </div>
+          <div className="input-group" style={{alignSelf:'end'}}>
+            <button className="btn" onClick={()=>{
+              // reload currently loaded tables to apply filters
+              Object.entries(reportRows).forEach(([k,v])=>{ if (v) setReportRows(prev=>({ ...prev, [k]: null })); });
+            }}>Apply</button>
+          </div>
+        </div>
       </div>
 
       

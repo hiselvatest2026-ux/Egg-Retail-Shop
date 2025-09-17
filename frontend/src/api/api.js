@@ -140,7 +140,7 @@ export const getPricingForSale = (params) => {
 export const getLastPurchasePrice = (params) => axios.get(`${API_URL}/sales/last-purchase-price`, { params });
 
 // Dashboard
-export const getDashboard = () => axios.get(`${API_URL}/dashboard`);
+export const getDashboard = (params) => axios.get(`${API_URL}/dashboard`, { params });
 // Collection APIs
 export const getCreditCollection = (params) => axios.get(`${API_URL}/collection-api/credit`, { params });
 export const getRouteCollection = (params) => axios.get(`${API_URL}/collection-api/routes`, { params });
