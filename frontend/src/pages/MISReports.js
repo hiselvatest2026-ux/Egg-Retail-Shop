@@ -56,7 +56,7 @@ const MISReports = () => {
   // Removed All shops toggle
 
   const download = (path) => {
-    const url = `${API_URL}/reports/${path}`;
+    const url = `${API_URL}/reports/${path}?t=${Date.now()}`;
     const a = document.createElement('a');
     a.href = url;
     a.download = '';
@@ -68,7 +68,7 @@ const MISReports = () => {
   const loadReport = async (key, path) => {
     try {
       setLoading(prev=>({ ...prev, [key]: true }));
-      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text' });
+      const res = await axios.get(`${API_URL}/reports/${path}`, { responseType: 'text', headers: { 'Cache-Control': 'no-cache' }, params: { t: Date.now() } });
       const text = res.data;
       const rows = parseCsv(text);
       setReportRows(prev=>({ ...prev, [key]: rows }));

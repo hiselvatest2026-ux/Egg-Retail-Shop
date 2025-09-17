@@ -3,6 +3,9 @@ const pool = require('../models/db');
 function sendCsv(res, filename, headers, rows) {
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  // Prevent CDN/browser caching so MIS "Load" always shows fresh data
+  res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
   const escape = (v) => {
     if (v == null) return '';
     const s = String(v);
