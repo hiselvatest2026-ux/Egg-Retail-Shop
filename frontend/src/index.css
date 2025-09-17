@@ -291,9 +291,9 @@ details.accordion .accordion-body { padding:12px; }
 
 /* Web-only KPI card theming: ensure contrast on desktop for Dashboard KPIs */
 @media (min-width: 1025px) {
-  .kpi-card { background: #f9fafb; color: #111827; border-color:#e5e7eb; }
+  .kpi-card { background: #ffffff; color: #0b1220; border-color:#e5e7eb; }
   .kpi-card .kpi-title { color: #4b5563; }
-  .kpi-card .kpi-value { color: #111827; }
+  .kpi-card .kpi-value { color: #0b1220; font-size: 32px; font-weight: 900; line-height: 1.2; }
 }
 
 /* Touch friendly large buttons on mobile */
