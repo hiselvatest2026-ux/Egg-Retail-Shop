@@ -289,6 +289,13 @@ details.accordion .accordion-body { padding:12px; }
 /* Ensure numeric values align right in pairs if desired */
 .data-pairs .pair[style*='text-align:right'] div { text-align:right; }
 
+/* Web-only KPI card theming: ensure contrast on desktop for Dashboard KPIs */
+@media (min-width: 1025px) {
+  .kpi-card { background: #f9fafb; color: #111827; border-color:#e5e7eb; }
+  .kpi-card .kpi-title { color: #4b5563; }
+  .kpi-card .kpi-value { color: #111827; }
+}
+
 /* Touch friendly large buttons on mobile */
 @media (max-width: 640px) {
   .btn { min-height: 48px; padding: 14px 18px; border-radius: 14px; }

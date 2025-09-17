@@ -18,9 +18,9 @@ import {
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 const Metric = ({ title, value }) => (
-  <div className="bg-white rounded shadow-sm border border-gray-200 p-4">
-    <div className="text-sm" style={{color:'#6b7280'}}>{title}</div>
-    <div className="text-2xl font-bold">{value}</div>
+  <div className="kpi-card rounded shadow-sm border border-gray-200 p-4">
+    <div className="kpi-title text-sm">{title}</div>
+    <div className="kpi-value text-2xl font-bold">{value}</div>
   </div>
 );
 
