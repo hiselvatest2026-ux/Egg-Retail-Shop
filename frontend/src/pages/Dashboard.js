@@ -12,11 +12,25 @@ import {
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  LineController,
+  BarController
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ChartDataLabels);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  LineController,
+  BarController,
+  ChartDataLabels
+);
 
 const Metric = ({ title, value }) => (
   <div className="kpi-card rounded shadow-sm border border-gray-200 p-4">
