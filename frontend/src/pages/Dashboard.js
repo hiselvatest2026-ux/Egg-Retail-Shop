@@ -241,11 +241,11 @@ const Dashboard = () => {
         },
         formatter: (v, ctx) => {
           const lbl = String(ctx?.dataset?.label||'').toLowerCase();
-          if (lbl.includes('quantity')) {
-            const n = Number(v||0);
-            return Math.round(n) === n ? String(n) : String(n.toFixed(0));
+          if (lbl.includes('quantity') || lbl === 'qty') {
+            return Number(v||0).toLocaleString(undefined, { maximumFractionDigits: 0 });
           }
-          return formatINRCompact(v);
+          const num = Number(v||0);
+          return `₹ ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
       },
       tooltip: {
@@ -253,8 +253,12 @@ const Dashboard = () => {
         callbacks: {
           title: (items) => (items && items[0] ? items[0].label : ''),
           label: (ctx) => {
-            const raw = Number(ctx.parsed?.y || ctx.raw || 0);
-            return `₹ ${formatINRCompact(raw)}`;
+            const lbl = String(ctx?.dataset?.label||'').toLowerCase();
+            const raw = Number(ctx.parsed?.y ?? ctx.raw ?? 0);
+            if (lbl.includes('quantity') || lbl === 'qty') {
+              return `${raw.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+            }
+            return `₹ ${raw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           }
         }
       }
@@ -331,11 +335,7 @@ const Dashboard = () => {
               responsive: true,
               plugins: {
                 legend: baseLegend,
-                datalabels: {
-                  ...datalabelBase,
-                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
-                  formatter: (v) => `₹ ${formatINRCompact(v)}`
-                }
+                datalabels: { ...datalabelBase, display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
               },
               scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
             }} />
@@ -347,13 +347,7 @@ const Dashboard = () => {
               responsive: true,
               plugins: {
                 legend: baseLegend,
-                datalabels: {
-                  ...datalabelBase,
-                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
-                  formatter: (v) => {
-                    const n = Number(v||0); return Math.round(n) === n ? String(n) : String(n.toFixed(0));
-                  }
-                }
+                datalabels: { ...datalabelBase, display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
               },
               scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
             }} />
@@ -361,45 +355,39 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Recent Sales">
-          <div className="divide-y">
-            {(data?.recent_sales || []).map((r)=> (
-              <div key={r.id} className="py-2 flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Invoice #{r.id} — {r.customer_name || '-'}
-                  </div>
-                  <div className="text-xs" style={{color:'#6b7280'}}>{formatDay(r.sale_date)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">₹ {Number(r.total||0).toFixed(2)}</div>
-                  <div className="text-xs" style={{color:'#6b7280'}}>Paid ₹ {Number(r.paid||0).toFixed(2)} | Bal ₹ {Number(r.balance||0).toFixed(2)}</div>
-                </div>
-                <Link to={`/invoice/${r.id}`} className="btn btn-sm" style={{marginLeft:12}}>View</Link>
-              </div>
-            ))}
-            {(!data?.recent_sales || data?.recent_sales.length === 0) && (
-              <div className="py-4 text-sm" style={{color:'#6b7280'}}>No recent sales</div>
-            )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card title="Low Stock Items">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={lowStockChart} options={{
+              responsive: true,
+              plugins: {
+                legend: baseLegend,
+                datalabels: {
+                  ...datalabelBase,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  formatter: (v) => `₹ ${formatINRCompact(v)}`
+                }
+              },
+              scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
+            }} />
           </div>
         </Card>
-        <Card title="Recent Purchases">
-          <div className="divide-y">
-            {(data?.recent_purchases || []).map((r)=> (
-              <div key={r.id} className="py-2 flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Purchase #{r.id} — {r.vendor_name || '-'}</div>
-                  <div className="text-xs" style={{color:'#6b7280'}}>{formatDay(r.purchase_date)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold">₹ {Number(r.total||0).toFixed(2)}</div>
-                </div>
-                <Link to={`/purchases/${r.id}/items`} className="btn btn-sm" style={{marginLeft:12}}>Open</Link>
-              </div>
-            ))}
-            {(!data?.recent_purchases || data?.recent_purchases.length === 0) && (
-              <div className="py-4 text-sm" style={{color:'#6b7280'}}>No recent purchases</div>
-            )}
+        <Card title="Revenue by Category">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={revenueByCategoryChart} options={valueLabelOptions} />
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card title="Quantity by Category">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={qtyByCategoryChart} options={valueLabelOptions} />
+          </div>
+        </Card>
+        <Card title="Sales by Day">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Line data={salesTrendBar} options={valueLabelOptions} />
           </div>
         </Card>
       </div>
@@ -408,4 +396,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
