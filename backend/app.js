@@ -26,6 +26,13 @@ const seedDefaults = require('./db/seedDefaults');
 app.use(cors());
 app.use(express.json());
 
+// Disable caching for API responses to avoid 304 issues returning stale/empty bodies
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  next();
+});
+
 ensureSchema()
   .then(()=>{
     if (process.env.SEED_ON_BOOT === 'true') {
