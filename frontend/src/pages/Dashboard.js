@@ -241,6 +241,9 @@ const Dashboard = () => {
                   backgroundColor: 'rgba(255,255,255,0.9)',
                   borderColor: 'rgba(17,24,39,0.1)',
                   borderWidth: 1,
+                  clip: false,
+                  clamp: true,
+                  font: { weight: '700', size: 9 },
                   padding: { top:1, bottom:1, left:3, right:3 },
                   display: (ctx) => {
                     const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
@@ -267,6 +270,9 @@ const Dashboard = () => {
                   backgroundColor: 'rgba(255,255,255,0.9)',
                   borderColor: 'rgba(17,24,39,0.1)',
                   borderWidth: 1,
+                  clip: false,
+                  clamp: true,
+                  font: { weight: '700', size: 9 },
                   padding: { top:1, bottom:1, left:3, right:3 },
                   display: (ctx) => {
                     const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
