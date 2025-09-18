@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: zeroegg-backend-v2
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: false
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: SEED_ON_BOOT
+        value: "false"
+    healthCheckPath: /
+    autoSuspend: true
+  - type: web
+    name: zeroegg-frontend-v2
+    env: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    autoDeploy: false
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false
