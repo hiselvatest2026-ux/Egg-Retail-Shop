@@ -87,7 +87,7 @@ const Dashboard = () => {
     const values = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
     return {
       labels,
-      datasets: [{ label: 'Sales (last 7 days)', data: values, backgroundColor: 'rgba(37, 99, 235, .7)' }]
+      datasets: [{ label: 'Sales', data: values, backgroundColor: 'rgba(37, 99, 235, .7)' }]
     };
   }, [data]);
 
@@ -130,7 +130,7 @@ const Dashboard = () => {
     // formatter is overridden per chart to apply compact INR or raw qty
   };
 
-  const baseLegend = { position: isDesktop ? 'right' : 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 10 } };
+  const baseLegend = { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 10 } };
 
   const valueLabelOptions = {
     responsive: true,
@@ -139,12 +139,17 @@ const Dashboard = () => {
       datalabels: {
         ...datalabelBase,
         display: (ctx) => {
-          const w = ctx?.chart?.width || 0;
-          if (w < 768) return false; // hide on small screens
           const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
           return val > 0;
         },
-        formatter: (v) => formatINRCompact(v)
+        formatter: (v, ctx) => {
+          const lbl = String(ctx?.dataset?.label||'').toLowerCase();
+          if (lbl.includes('quantity')) {
+            const n = Number(v||0);
+            return Math.round(n) === n ? String(n) : String(n.toFixed(0));
+          }
+          return formatINRCompact(v);
+        }
       },
       tooltip: {
         enabled: true,
