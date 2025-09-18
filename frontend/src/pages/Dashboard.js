@@ -97,16 +97,13 @@ const Dashboard = () => {
   }, []);
 
   const salesTrendBar = useMemo(() => {
-    const raw = data?.sales_trend ?? [];
-    const labels = raw.map(d => formatDay(d.day));
-    const revenueValues = raw.map(d => Number(d.total||0));
-    const qtyMap = new Map((data?.sales_qty_trend||[]).map(r => [formatDay(r.day), Number(r.qty||0)]));
-    const qtyValues = labels.map(day => qtyMap.get(day) || 0);
+    const rows = data?.sales_trend ?? [];
+    const labels = rows.map(d => formatDay(d.day));
+    const revenueValues = rows.map(d => Number(d.total||0));
     return {
       labels,
       datasets: [
-        { type: 'bar', label: 'Revenue', data: revenueValues, backgroundColor: 'rgba(37, 99, 235, .7)', yAxisID: 'y' },
-        { type: 'line', label: 'Qty', data: qtyValues, borderColor: 'rgb(34,197,94)', backgroundColor: 'rgba(34,197,94,0)', yAxisID: 'y1', borderWidth: 2, pointRadius: 3, tension: 0.25 }
+        { type: 'bar', label: 'Revenue', data: revenueValues, backgroundColor: 'rgba(37, 99, 235, .7)', yAxisID: 'y' }
       ]
     };
   }, [data]);
