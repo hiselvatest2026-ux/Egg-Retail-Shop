@@ -92,18 +92,32 @@ const Dashboard = () => {
   const qtyByCategoryChart = useMemo(() => groupByDay(data?.sales_qty_by_category, 'qty'), [data]);
   const revenueByCategoryChart = useMemo(() => groupByDay(data?.sales_revenue_by_category, 'total'), [data]);
 
+  const datalabelBase = {
+    anchor: 'end',
+    align: 'top',
+    offset: 6,
+    color: '#111827',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(17,24,39,0.1)',
+    padding: { top: 2, bottom: 2, left: 4, right: 4 },
+    clip: false,
+    font: { weight: '700' },
+    formatter: (v) => typeof v === 'number' ? (Math.round(v) === v ? v : v.toFixed(0)) : v,
+  };
+
   const valueLabelOptions = {
     responsive: true,
     plugins: {
       legend: { position: 'bottom' },
-      datalabels: {
-        anchor: 'end',
-        align: 'top',
-        color: '#111827',
-        formatter: (v) => typeof v === 'number' ? (Math.round(v) === v ? v : v.toFixed(0)) : v,
-        font: { weight: '700' }
-      },
-      tooltip: { enabled: true }
+      datalabels: datalabelBase,
+      tooltip: {
+        enabled: true,
+        callbacks: {
+          title: (items) => (items && items[0] ? items[0].label : '').replace(/^(\d{4}-\d{2}-\d{2}).*$/, '$1'),
+        }
+      }
     },
     scales: { x: { ticks: { autoSkip: false } }, y: { beginAtZero: true } }
   };
@@ -169,12 +183,66 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Daily Sales Revenue by Customer">
           <div style={{background:'#fff', padding:8, borderRadius:8}}>
-            <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'bottom' }, datalabels: { anchor:'end', align:'top', color:'#111827', formatter:(v)=> typeof v === 'number' ? (Math.round(v)===v ? v : v.toFixed(0)) : v, font:{weight:'700'} } }, scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } } }} />
+            <Bar data={revenueByCategoryChart} options={{
+              responsive: true,
+              plugins: {
+                legend: { position: 'bottom' },
+                datalabels: {
+                  ...datalabelBase,
+                  formatter: (value, ctx) => {
+                    const di = ctx.dataIndex;
+                    const chart = ctx.chart;
+                    const datasets = chart.data.datasets || [];
+                    let lastVisible = datasets.length - 1;
+                    for (let i = datasets.length - 1; i >= 0; i--) {
+                      const meta = chart.getDatasetMeta(i);
+                      if (!meta.hidden) { lastVisible = i; break; }
+                    }
+                    if (ctx.datasetIndex !== lastVisible) return null;
+                    const total = datasets.reduce((sum, ds, i) => {
+                      const meta = chart.getDatasetMeta(i);
+                      if (meta.hidden) return sum;
+                      const v = Number(ds.data?.[di] || 0);
+                      return sum + (Number.isFinite(v) ? v : 0);
+                    }, 0);
+                    return total > 0 ? (Math.round(total) === total ? total : total.toFixed(0)) : null;
+                  }
+                }
+              },
+              scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } }
+            }} />
           </div>
         </Card>
         <Card title="Daily Sales Quantity by Customer">
           <div style={{background:'#fff', padding:8, borderRadius:8}}>
-            <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'bottom' }, datalabels: { anchor:'end', align:'top', color:'#111827', formatter:(v)=> typeof v === 'number' ? (Math.round(v)===v ? v : v.toFixed(0)) : v, font:{weight:'700'} } }, scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } } }} />
+            <Bar data={qtyByCategoryChart} options={{
+              responsive: true,
+              plugins: {
+                legend: { position: 'bottom' },
+                datalabels: {
+                  ...datalabelBase,
+                  formatter: (value, ctx) => {
+                    const di = ctx.dataIndex;
+                    const chart = ctx.chart;
+                    const datasets = chart.data.datasets || [];
+                    let lastVisible = datasets.length - 1;
+                    for (let i = datasets.length - 1; i >= 0; i--) {
+                      const meta = chart.getDatasetMeta(i);
+                      if (!meta.hidden) { lastVisible = i; break; }
+                    }
+                    if (ctx.datasetIndex !== lastVisible) return null;
+                    const total = datasets.reduce((sum, ds, i) => {
+                      const meta = chart.getDatasetMeta(i);
+                      if (meta.hidden) return sum;
+                      const v = Number(ds.data?.[di] || 0);
+                      return sum + (Number.isFinite(v) ? v : 0);
+                    }, 0);
+                    return total > 0 ? (Math.round(total) === total ? total : total.toFixed(0)) : null;
+                  }
+                }
+              },
+              scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } }
+            }} />
           </div>
         </Card>
       </div>
