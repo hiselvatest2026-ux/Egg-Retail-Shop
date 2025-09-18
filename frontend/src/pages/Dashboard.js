@@ -97,9 +97,10 @@ const Dashboard = () => {
   }, []);
 
   const salesTrendBar = useMemo(() => {
-    const labels = data?.sales_trend?.map(d => d.day) ?? [];
-    const revenueValues = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
-    const qtyMap = new Map((data?.sales_qty_trend||[]).map(r => [r.day, Number(r.qty||0)]));
+    const raw = data?.sales_trend ?? [];
+    const labels = raw.map(d => formatDay(d.day));
+    const revenueValues = raw.map(d => Number(d.total||0));
+    const qtyMap = new Map((data?.sales_qty_trend||[]).map(r => [formatDay(r.day), Number(r.qty||0)]));
     const qtyValues = labels.map(day => qtyMap.get(day) || 0);
     return {
       labels,
@@ -244,12 +245,12 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Sales Revenue (Daily)">
+        <Card title="Daily Sales Revenue trend">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={salesTrendBar} options={valueLabelOptions} />
           </div>
         </Card>
-        <Card title="Sales Quantity Trend">
+        <Card title="Daily Sales Quantity trend">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={qtyTrendBar} options={valueLabelOptions} />
           </div>
@@ -257,14 +258,36 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Qty by Customer Type (Daily)">
+        <Card title="Daily Sales Revenue by customer">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+            <Bar data={revenueByCategoryChart} options={{
+              responsive: true,
+              plugins: {
+                legend: baseLegend,
+                datalabels: {
+                  ...datalabelBase,
+                  formatter: (v) => `₹ ${formatINRCompact(v)}`
+                }
+              },
+              scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
+            }} />
           </div>
         </Card>
-        <Card title="Revenue by Customer Type (Daily)">
+        <Card title="Daily Sales Quantity by customer">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+            <Bar data={qtyByCategoryChart} options={{
+              responsive: true,
+              plugins: {
+                legend: baseLegend,
+                datalabels: {
+                  ...datalabelBase,
+                  formatter: (v) => {
+                    const n = Number(v||0); return Math.round(n) === n ? String(n) : String(n.toFixed(0));
+                  }
+                }
+              },
+              scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
+            }} />
           </div>
         </Card>
       </div>
@@ -272,7 +295,18 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Low/Current Stock by Product">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+            <Bar data={lowStockChart} options={{
+              responsive: true,
+              plugins: {
+                legend: baseLegend,
+                datalabels: {
+                  ...datalabelBase,
+                  formatter: (v) => {
+                    const n = Number(v||0); return Math.round(n) === n ? String(n) : String(n.toFixed(0));
+                  }
+                }
+              }
+            }} />
           </div>
         </Card>
         <div />
