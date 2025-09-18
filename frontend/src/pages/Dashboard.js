@@ -242,10 +242,10 @@ const Dashboard = () => {
         formatter: (v, ctx) => {
           const lbl = String(ctx?.dataset?.label||'').toLowerCase();
           if (lbl.includes('quantity') || lbl === 'qty') {
-            return Number(v||0).toLocaleString(undefined, { maximumFractionDigits: 0 });
+            const n = Number(v||0);
+            return Math.round(n) === n ? String(n) : String(n.toFixed(0));
           }
-          const num = Number(v||0);
-          return `₹ ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          return `₹ ${formatINRCompact(v)}`;
         }
       },
       tooltip: {
@@ -258,7 +258,7 @@ const Dashboard = () => {
             if (lbl.includes('quantity') || lbl === 'qty') {
               return `${raw.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
             }
-            return `₹ ${raw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            return `₹ ${formatINRCompact(raw)}`;
           }
         }
       }
