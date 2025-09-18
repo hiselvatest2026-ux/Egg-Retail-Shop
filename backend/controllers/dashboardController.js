@@ -129,7 +129,7 @@ exports.getSummary = async (req, res) => {
          LIMIT 10`,
         params
       ),
-      // Total stock value = sum(price * (opening + purchases - sales - adjustments))
+      // Total stock value using weighted avg purchase cost per product
       pool.query(
         `WITH purchase_qty AS (
            SELECT product_id, SUM(quantity) AS qty FROM purchase_items pi ${condPurchItems} GROUP BY product_id
@@ -142,13 +142,19 @@ exports.getSummary = async (req, res) => {
          ),
          opening AS (
            SELECT product_id, SUM(quantity) AS qty FROM opening_stocks GROUP BY product_id
+         ),
+         purchase_cost AS (
+           SELECT product_id, SUM(quantity*price)/NULLIF(SUM(quantity),0) AS cost
+           FROM purchase_items
+           GROUP BY product_id
          )
-         SELECT COALESCE(SUM(COALESCE(p.price,0) * (COALESCE(op.qty,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.qty,0))), 0) AS total_value
+         SELECT COALESCE(SUM(COALESCE(pc.cost,0) * (COALESCE(op.qty,0) + COALESCE(pq.qty,0) - COALESCE(sq.qty,0) - COALESCE(adj.qty,0))), 0) AS total_value
          FROM products p
          LEFT JOIN purchase_qty pq ON pq.product_id = p.id
          LEFT JOIN sales_qty sq ON sq.product_id = p.id
          LEFT JOIN adjustments adj ON adj.product_id = p.id
-         LEFT JOIN opening op ON op.product_id = p.id`,
+         LEFT JOIN opening op ON op.product_id = p.id
+         LEFT JOIN purchase_cost pc ON pc.product_id = p.id`,
         params
       ),
       // Recent sales (latest 5)
