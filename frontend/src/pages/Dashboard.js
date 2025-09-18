@@ -83,16 +83,10 @@ const Dashboard = () => {
   }, []);
 
   const salesTrendBar = useMemo(() => {
-<<<<<<< HEAD
-    const labels = (data?.sales_trend?.map(d => d.day) ?? []).map(formatDay);
-    const values = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
-    return {
-      labels,
-      datasets: [{ label: 'Sales', data: values, backgroundColor: 'rgba(37, 99, 235, .7)' }]
-=======
-    const labels = data?.sales_trend?.map(d => d.day) ?? [];
+    const rawLabels = data?.sales_trend?.map(d => d.day) ?? [];
+    const labels = rawLabels.map(formatDay);
     const revenueValues = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
-    const qtyMap = new Map((data?.sales_qty_trend||[]).map(r => [r.day, Number(r.qty||0)]));
+    const qtyMap = new Map((data?.sales_qty_trend||[]).map(r => [formatDay(r.day), Number(r.qty||0)]));
     const qtyValues = labels.map(day => qtyMap.get(day) || 0);
     return {
       labels,
@@ -100,7 +94,6 @@ const Dashboard = () => {
         { type: 'bar', label: 'Revenue', data: revenueValues, backgroundColor: 'rgba(37, 99, 235, .7)', yAxisID: 'y' },
         { type: 'line', label: 'Qty', data: qtyValues, borderColor: 'rgb(34,197,94)', backgroundColor: 'rgba(34,197,94,0)', yAxisID: 'y1', borderWidth: 2, pointRadius: 3, tension: 0.25 }
       ]
->>>>>>> 8a573ed (Dashboard: white chart backgrounds; overlay Qty on Revenue; dual Y-axes with labels)
     };
   }, [data]);
 
@@ -176,14 +169,9 @@ const Dashboard = () => {
       }
     },
     scales: {
-<<<<<<< HEAD
       x: { ticks: { autoSkip: true, maxTicksLimit: isNarrow ? 6 : 10, maxRotation: isNarrow ? 30 : 0, minRotation: isNarrow ? 30 : 0 } },
-      y: { beginAtZero: true }
-=======
-      x: { ticks: { autoSkip: false } },
       y: { beginAtZero: true, title: { display: true, text: 'Revenue (₹)' } },
       y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Qty' } }
->>>>>>> 8a573ed (Dashboard: white chart backgrounds; overlay Qty on Revenue; dual Y-axes with labels)
     }
   };
 
@@ -233,15 +221,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-<<<<<<< HEAD
-        <Card title="Daily Sales Revenue trend">
-          <div style={{background:'#fff', padding:8, borderRadius:8}}>
-            <Bar data={salesTrendBar} options={valueLabelOptions} />
-          </div>
-        </Card>
-        <Card title="Daily Sales Quantity trend">
-          <div style={{background:'#fff', padding:8, borderRadius:8}}>
-=======
         <Card title="Sales Revenue (Daily)">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={salesTrendBar} options={valueLabelOptions} />
@@ -249,90 +228,24 @@ const Dashboard = () => {
         </Card>
         <Card title="Sales Quantity Trend">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
->>>>>>> 8a573ed (Dashboard: white chart backgrounds; overlay Qty on Revenue; dual Y-axes with labels)
             <Bar data={qtyTrendBar} options={valueLabelOptions} />
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-<<<<<<< HEAD
-        <Card title="Daily Sales Revenue by Customer">
-          <div style={{background:'#fff', padding:8, borderRadius:8}}>
-            <Bar data={revenueByCategoryChart} options={{
-              responsive: true,
-              plugins: {
-                legend: baseLegend,
-                datalabels: {
-                  ...datalabelBase,
-                  align: 'center',
-                  anchor: 'center',
-                  color: '#111827',
-                  backgroundColor: 'rgba(255,255,255,0.9)',
-                  borderColor: 'rgba(17,24,39,0.1)',
-                  borderWidth: 1,
-                  clip: false,
-                  clamp: true,
-                  font: { weight: '700', size: 9 },
-                  padding: { top:1, bottom:1, left:3, right:3 },
-                  display: (ctx) => {
-                    const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
-                    return val > 0;
-                  },
-                  formatter: (value) => `₹ ${formatINRCompact(value)}`
-                }
-              },
-              scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } }
-            }} />
-          </div>
-        </Card>
-        <Card title="Daily Sales Quantity by Customer">
-          <div style={{background:'#fff', padding:8, borderRadius:8}}>
-            <Bar data={qtyByCategoryChart} options={{
-              responsive: true,
-              plugins: {
-                legend: baseLegend,
-                datalabels: {
-                  ...datalabelBase,
-                  align: 'center',
-                  anchor: 'center',
-                  color: '#111827',
-                  backgroundColor: 'rgba(255,255,255,0.9)',
-                  borderColor: 'rgba(17,24,39,0.1)',
-                  borderWidth: 1,
-                  clip: false,
-                  clamp: true,
-                  font: { weight: '700', size: 9 },
-                  padding: { top:1, bottom:1, left:3, right:3 },
-                  display: (ctx) => {
-                    const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
-                    return val > 0;
-                  },
-                  formatter: (value) => {
-                    const n = Number(value||0);
-                    return Math.round(n) === n ? String(n) : String(n.toFixed(0));
-                  }
-                }
-              },
-              scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } }
-            }} />
-=======
-        <Card title="Qty by Customer Type (Daily)">
-          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
-          </div>
-        </Card>
         <Card title="Revenue by Customer Type (Daily)">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
->>>>>>> 8a573ed (Dashboard: white chart backgrounds; overlay Qty on Revenue; dual Y-axes with labels)
+            <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: baseLegend }, scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } } }} />
+          </div>
+        </Card>
+        <Card title="Qty by Customer Type (Daily)">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: baseLegend }, scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } } }} />
           </div>
         </Card>
       </div>
 
-<<<<<<< HEAD
-      
-=======
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Low/Current Stock by Product">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
@@ -341,7 +254,6 @@ const Dashboard = () => {
         </Card>
         <div />
       </div>
->>>>>>> 8a573ed (Dashboard: white chart backgrounds; overlay Qty on Revenue; dual Y-axes with labels)
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Recent Sales">
