@@ -235,37 +235,18 @@ const Dashboard = () => {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
+                  align: 'center',
+                  anchor: 'center',
+                  color: '#111827',
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                  borderColor: 'rgba(17,24,39,0.1)',
+                  borderWidth: 1,
+                  padding: { top:1, bottom:1, left:3, right:3 },
                   display: (ctx) => {
-                    // Only totals on top of stack; hide on small screens
-                    const w = ctx?.chart?.width || 0;
-                    if (w < 768) return false;
-                    const chart = ctx.chart; const di = ctx.dataIndex;
-                    const datasets = chart.data.datasets || [];
-                    let lastVisible = datasets.length - 1;
-                    for (let i = datasets.length - 1; i >= 0; i--) {
-                      const meta = chart.getDatasetMeta(i);
-                      if (!meta.hidden) { lastVisible = i; break; }
-                    }
-                    return ctx.datasetIndex === lastVisible;
+                    const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
+                    return val > 0;
                   },
-                  formatter: (value, ctx) => {
-                    const di = ctx.dataIndex;
-                    const chart = ctx.chart;
-                    const datasets = chart.data.datasets || [];
-                    let lastVisible = datasets.length - 1;
-                    for (let i = datasets.length - 1; i >= 0; i--) {
-                      const meta = chart.getDatasetMeta(i);
-                      if (!meta.hidden) { lastVisible = i; break; }
-                    }
-                    if (ctx.datasetIndex !== lastVisible) return null;
-                    const total = datasets.reduce((sum, ds, i) => {
-                      const meta = chart.getDatasetMeta(i);
-                      if (meta.hidden) return sum;
-                      const v = Number(ds.data?.[di] || 0);
-                      return sum + (Number.isFinite(v) ? v : 0);
-                    }, 0);
-                    return total > 0 ? `₹ ${formatINRCompact(total)}` : null;
-                  }
+                  formatter: (value) => `₹ ${formatINRCompact(value)}`
                 }
               },
               scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } }
@@ -280,35 +261,20 @@ const Dashboard = () => {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
+                  align: 'center',
+                  anchor: 'center',
+                  color: '#111827',
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                  borderColor: 'rgba(17,24,39,0.1)',
+                  borderWidth: 1,
+                  padding: { top:1, bottom:1, left:3, right:3 },
                   display: (ctx) => {
-                    const w = ctx?.chart?.width || 0;
-                    if (w < 768) return false;
-                    const chart = ctx.chart; const di = ctx.dataIndex;
-                    const datasets = chart.data.datasets || [];
-                    let lastVisible = datasets.length - 1;
-                    for (let i = datasets.length - 1; i >= 0; i--) {
-                      const meta = chart.getDatasetMeta(i);
-                      if (!meta.hidden) { lastVisible = i; break; }
-                    }
-                    return ctx.datasetIndex === lastVisible;
+                    const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
+                    return val > 0;
                   },
-                  formatter: (value, ctx) => {
-                    const di = ctx.dataIndex;
-                    const chart = ctx.chart;
-                    const datasets = chart.data.datasets || [];
-                    let lastVisible = datasets.length - 1;
-                    for (let i = datasets.length - 1; i >= 0; i--) {
-                      const meta = chart.getDatasetMeta(i);
-                      if (!meta.hidden) { lastVisible = i; break; }
-                    }
-                    if (ctx.datasetIndex !== lastVisible) return null;
-                    const total = datasets.reduce((sum, ds, i) => {
-                      const meta = chart.getDatasetMeta(i);
-                      if (meta.hidden) return sum;
-                      const v = Number(ds.data?.[di] || 0);
-                      return sum + (Number.isFinite(v) ? v : 0);
-                    }, 0);
-                    return total > 0 ? (Math.round(total) === total ? total : total.toFixed(0)) : null;
+                  formatter: (value) => {
+                    const n = Number(value||0);
+                    return Math.round(n) === n ? String(n) : String(n.toFixed(0));
                   }
                 }
               },
