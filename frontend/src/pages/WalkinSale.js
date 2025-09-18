@@ -34,8 +34,17 @@ const WalkinSale = () => {
   }, [defaultMaterial, products]);
 
   const walkinCustomer = useMemo(() => {
-    const c = (customers||[]).find(cu => String(cu.name||'').toLowerCase().includes('walk')) || (customers||[])[0];
-    return c || null;
+    const list = customers || [];
+    // Prefer explicit category match
+    const byCategory = list.find(cu => String(cu.category||'').toLowerCase().includes('walk'));
+    if (byCategory) return byCategory;
+    // Normalize and match common Walk-in name variants without falling back to arbitrary first customer
+    const normalize = (v) => String(v||'').toLowerCase().replace(/[^a-z]/g, '');
+    const byName = list.find(cu => {
+      const n = normalize(cu.name);
+      return n.includes('walkin') || n.includes('walk');
+    });
+    return byName || null;
   }, [customers]);
 
   useEffect(() => {
@@ -65,7 +74,7 @@ const WalkinSale = () => {
     // Auto-get price for Walk-in; fallback to Retail; then fallback to last purchase price
     (async()=>{
       try {
-        if (!walkinCustomer || !defaultMaterial) return;
+        if (!defaultMaterial) return;
         const materialCode = defaultMaterial.part_code;
         let selected = 0;
         // 0) Prefer Pricing Master row by category Walk-in for this material
@@ -74,12 +83,12 @@ const WalkinSale = () => {
           if (pm) selected = Number(pm.base_price||0);
         } catch(_) {}
         // 1) Try Walk-in
-        if (!(selected > 0)) try {
+        if (!(selected > 0) && walkinCustomer) try {
           const r1 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Walk-in' });
           selected = Number(r1?.data?.base_price || 0);
         } catch(_) { /* ignore */ }
         // 2) Fallback Retail
-        if (!(selected > 0)) {
+        if (!(selected > 0) && walkinCustomer) {
           try {
             const r2 = await getPricingForSale({ customer_id: walkinCustomer.id, material_code: materialCode, category: 'Retail' });
             selected = Number(r2?.data?.base_price || 0);
@@ -120,7 +129,8 @@ const WalkinSale = () => {
       setError('');
       const q = Number(qty||0);
       const price = Number(pricePerUnit||0);
-      if (!walkinCustomer || !defaultProduct || !defaultMaterial) { setError('Setup error: masters missing'); return; }
+      if (!defaultProduct || !defaultMaterial) { setError('Setup error: masters missing'); return; }
+      if (!walkinCustomer) { setError('Please create a customer named or categorized "Walk-in" to proceed.'); return; }
       if (!(q>0) || !(price>0)) { setError('Enter a valid quantity'); return; }
       if (available != null && q > available) { setError(`Insufficient stock. Available: ${available}`); return; }
       const payload = { customer_id: Number(walkinCustomer.id), total: Number((q*price).toFixed(2)), product_name: defaultMaterial.metal_type, payment_method: mode, sale_type: 'Cash' };
