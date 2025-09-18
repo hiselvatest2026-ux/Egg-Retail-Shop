@@ -139,6 +139,63 @@ const Dashboard = () => {
     return { labels: days.map(formatDay), datasets };
   };
 
+  // Build Top-N + Others stacked daily revenue (by customer type)
+  const topStackedRevenue = useMemo(() => {
+    const rows = Array.isArray(data?.sales_revenue_by_category) ? data.sales_revenue_by_category : [];
+    if (!rows.length) return { labels: [], datasets: [] };
+    const dayKeys = Array.from(new Set(rows.map(r => r.day))).sort();
+    const labels = dayKeys.map(formatDay);
+    // total revenue per category across the window
+    const totals = new Map();
+    rows.forEach(r => {
+      const key = r.category || 'Other';
+      totals.set(key, (totals.get(key)||0) + Number(r.total||0));
+    });
+    const topN = 3;
+    const sortedCats = Array.from(totals.entries()).sort((a,b)=>b[1]-a[1]).map(([k])=>k);
+    const topCats = new Set(sortedCats.slice(0, topN));
+    // per-day sums
+    const perDay = new Map();
+    rows.forEach(r => {
+      const day = formatDay(r.day);
+      if (!perDay.has(day)) perDay.set(day, new Map());
+      const cat = r.category || 'Other';
+      const key = topCats.has(cat) ? cat : 'Others';
+      const m = perDay.get(day);
+      m.set(key, (m.get(key)||0) + Number(r.total||0));
+    });
+    const catPalette = (idx) => `hsl(${(idx*67)%360} 70% 50% / .75)`;
+    const finalCats = Array.from(topCats);
+    if (Array.from(totals.keys()).some(c => !topCats.has(c))) finalCats.push('Others');
+    const datasets = finalCats.map((cat, i) => ({
+      label: cat,
+      data: labels.map(d => (perDay.get(d)?.get(cat)||0)),
+      backgroundColor: cat === 'Others' ? 'hsl(215 15% 65% / .7)' : catPalette(i),
+      stack: 'rev'
+    }));
+    return { labels, datasets };
+  }, [data]);
+
+  // Build Top-10 customers (by customer type) quantity aggregated for the window (horizontal bars)
+  const topQtyByCustomer = useMemo(() => {
+    const rows = Array.isArray(data?.sales_qty_by_category) ? data.sales_qty_by_category : [];
+    if (!rows.length) return { labels: [], datasets: [], options: {} };
+    // total qty per category
+    const totals = new Map();
+    rows.forEach(r => {
+      const key = r.category || 'Other';
+      totals.set(key, (totals.get(key)||0) + Number(r.qty||0));
+    });
+    const sorted = Array.from(totals.entries()).sort((a,b)=>b[1]-a[1]).slice(0, 10);
+    const labels = sorted.map(([k])=>k);
+    const values = sorted.map(([,v])=>v);
+    return {
+      labels,
+      datasets: [{ label: 'Qty', data: values, backgroundColor: 'rgba(34,197,94,.7)' }],
+      options: { indexAxis: 'y' }
+    };
+  }, [data]);
+
   const qtyByCategoryChart = useMemo(() => groupByDay(data?.sales_qty_by_category, 'qty'), [data]);
   const revenueByCategoryChart = useMemo(() => groupByDay(data?.sales_revenue_by_category, 'total'), [data]);
 
@@ -257,12 +314,13 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Daily Sales Revenue by customer">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={revenueByCategoryChart} options={{
+            <Bar data={topStackedRevenue} options={{
               responsive: true,
               plugins: {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => `₹ ${formatINRCompact(v)}`
                 }
               },
@@ -272,18 +330,21 @@ const Dashboard = () => {
         </Card>
         <Card title="Daily Sales Quantity by customer">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={qtyByCategoryChart} options={{
+            <Bar data={{ labels: topQtyByCustomer.labels, datasets: topQtyByCustomer.datasets }} options={{
+              indexAxis: 'y',
               responsive: true,
               plugins: {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
+                  align: 'right',
+                  anchor: 'end',
                   formatter: (v) => {
                     const n = Number(v||0); return Math.round(n) === n ? String(n) : String(n.toFixed(0));
                   }
                 }
               },
-              scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
+              scales: { x: { beginAtZero: true } }
             }} />
           </div>
         </Card>
