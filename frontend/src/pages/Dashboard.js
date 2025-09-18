@@ -318,7 +318,28 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Daily Sales Revenue trend">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={salesTrendBar} options={valueLabelOptions} />
+            <Bar data={salesTrendBar} options={{
+              responsive: true,
+              plugins: {
+                legend: baseLegend,
+                datalabels: {
+                  ...datalabelBase,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  formatter: (v) => `₹ ${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
+                },
+                tooltip: {
+                  enabled: true,
+                  callbacks: {
+                    title: (items) => (items && items[0] ? items[0].label : ''),
+                    label: (ctx) => `₹ ${Number(ctx.parsed?.y ?? ctx.raw ?? 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
+                  }
+                }
+              },
+              scales: {
+                x: { ticks: { autoSkip: false } },
+                y: { beginAtZero: true, title: { display: true, text: 'Revenue (₹)' } }
+              }
+            }} />
           </div>
         </Card>
         <Card title="Daily Sales Quantity trend">
@@ -335,7 +356,18 @@ const Dashboard = () => {
               responsive: true,
               plugins: {
                 legend: baseLegend,
-                datalabels: { ...datalabelBase, display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
+                datalabels: {
+                  ...datalabelBase,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  formatter: (v) => `₹ ${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
+                },
+                tooltip: {
+                  enabled: true,
+                  callbacks: {
+                    title: (items) => (items && items[0] ? items[0].label : ''),
+                    label: (ctx) => `₹ ${Number(ctx.parsed?.y ?? ctx.raw ?? 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
+                  }
+                }
               },
               scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
             }} />
