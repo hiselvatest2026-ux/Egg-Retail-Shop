@@ -59,15 +59,7 @@ const Dashboard = () => {
     };
   }, [data]);
 
-  const lowStockChart = useMemo(() => {
-    const lowStock = Array.isArray(data?.low_stock) ? data.low_stock : [];
-    const labels = lowStock.map(d => d?.name ?? '');
-    const values = lowStock.map(d => Number(d?.stock ?? 0));
-    return {
-      labels,
-      datasets: [{ label: 'Stock', data: values, backgroundColor: 'rgba(16, 185, 129, .5)' }]
-    };
-  }, [data]);
+  
 
   const qtyTrendBar = useMemo(() => {
     const labels = data?.sales_qty_trend?.map(d => d.day) ?? [];
@@ -170,12 +162,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Low/Current Stock by Product">
-          <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
-        </Card>
-        <div />
-      </div>
+      
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Recent Sales">
