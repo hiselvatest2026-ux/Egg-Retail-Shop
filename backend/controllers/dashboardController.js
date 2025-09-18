@@ -81,18 +81,18 @@ exports.getSummary = async (req, res) => {
         const whereParts = [];
         const p = [];
         if (locId) { whereParts.push(`si.location_id = $${p.length+1}`); p.push(locId); }
-        if (start) { whereParts.push(`s.sale_date::date >= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(start); }
-        if (end) { whereParts.push(`s.sale_date::date <= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(end); }
+        if (start) { whereParts.push(`(s.sale_date AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(start); }
+        if (end) { whereParts.push(`(s.sale_date AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${p.length+1}, 'YYYY-MM-DD')`); p.push(end); }
         let where = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
         if (!start && !end) {
           // default last 7 days window
-          where = `WHERE s.sale_date >= CURRENT_DATE - INTERVAL '6 days' ${locId?`AND si.location_id = $1`:''}`;
+          where = `WHERE (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date >= CURRENT_DATE - INTERVAL '6 days' ${locId?`AND si.location_id = $1`:''}`;
           return pool.query(
             `WITH items_by_day AS (
-               SELECT s.sale_date::date AS day, SUM(si.quantity*si.price) AS total
+               SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, SUM(si.quantity*si.price) AS total
                FROM sale_items si JOIN sales s ON s.id=si.sale_id
                ${where}
-               GROUP BY s.sale_date::date
+               GROUP BY 1
              )
              SELECT day, COALESCE(total,0) AS total
              FROM items_by_day
@@ -102,10 +102,10 @@ exports.getSummary = async (req, res) => {
         }
         return pool.query(
           `WITH items_by_day AS (
-             SELECT s.sale_date::date AS day, SUM(si.quantity*si.price) AS total
+             SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, SUM(si.quantity*si.price) AS total
              FROM sale_items si JOIN sales s ON s.id=si.sale_id
              ${where}
-             GROUP BY s.sale_date::date
+             GROUP BY 1
            )
            SELECT day, COALESCE(total,0) AS total
            FROM items_by_day
@@ -212,32 +212,32 @@ exports.getSummary = async (req, res) => {
     const catWhere = buildWhere('si');
     const [qtyTrendRes, qtyByCatRes, revByCatRes] = await Promise.all([
       pool.query(
-        `SELECT s.sale_date::date AS day, COALESCE(SUM(si.quantity),0) AS qty
+        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, COALESCE(SUM(si.quantity),0) AS qty
          FROM sale_items si JOIN sales s ON s.id=si.sale_id
          ${qtyTrendWhere.where}
-         GROUP BY s.sale_date::date
+         GROUP BY 1
          ORDER BY day`,
         qtyTrendWhere.params
       ),
       pool.query(
-        `SELECT s.sale_date::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
+        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
                 COALESCE(SUM(si.quantity),0) AS qty
          FROM sale_items si
          JOIN sales s ON s.id=si.sale_id
          LEFT JOIN customers c ON c.id = s.customer_id
          ${catWhere.where}
-         GROUP BY s.sale_date::date, COALESCE(s.category, c.category, 'Retail')
+         GROUP BY 1, COALESCE(s.category, c.category, 'Retail')
          ORDER BY 1, 2`,
         catWhere.params
       ),
       pool.query(
-        `SELECT s.sale_date::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
+        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
                 COALESCE(SUM(si.quantity*si.price),0) AS total
          FROM sale_items si
          JOIN sales s ON s.id=si.sale_id
          LEFT JOIN customers c ON c.id = s.customer_id
          ${catWhere.where}
-         GROUP BY s.sale_date::date, COALESCE(s.category, c.category, 'Retail')
+         GROUP BY 1, COALESCE(s.category, c.category, 'Retail')
          ORDER BY 1, 2`,
         catWhere.params
       )
