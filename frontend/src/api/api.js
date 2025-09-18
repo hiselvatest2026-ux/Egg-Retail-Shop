@@ -20,8 +20,8 @@ console.log('API_URL resolved to:', API_URL);
 
 // Removed X-Shop-Id header attachment to allow NULL location_id on inserts
 
-// Set a sane global timeout to avoid hanging spinners (e.g., cold starts)
-axios.defaults.timeout = 10000; // 10 seconds
+// Set a generous global timeout to tolerate cold starts and heavy dashboard queries
+axios.defaults.timeout = 30000; // 30 seconds
 export const getPurchases = () => axios.get(`${API_URL}/purchases`);
 export const createPurchase = (data) => axios.post(`${API_URL}/purchases`, data);
 export const updatePurchase = (id, data) => axios.put(`${API_URL}/purchases/${id}`, data);
