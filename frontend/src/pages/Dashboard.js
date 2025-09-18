@@ -344,7 +344,21 @@ const Dashboard = () => {
         </Card>
         <Card title="Daily Sales Quantity trend">
           <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={qtyTrendBar} options={valueLabelOptions} />
+            <Bar data={qtyTrendBar} options={{
+              responsive: true,
+              plugins: {
+                legend: baseLegend,
+                datalabels: {
+                  ...datalabelBase,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  formatter: (v) => Number(v||0).toLocaleString(undefined,{ maximumFractionDigits: 0 })
+                }
+              },
+              scales: {
+                x: { ticks: { autoSkip: false } },
+                y: { beginAtZero: true }
+              }
+            }} />
           </div>
         </Card>
       </div>
