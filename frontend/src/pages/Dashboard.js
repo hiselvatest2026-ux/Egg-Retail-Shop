@@ -354,43 +354,6 @@ const Dashboard = () => {
           </div>
         </Card>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Low Stock Items">
-          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={lowStockChart} options={{
-              responsive: true,
-              plugins: {
-                legend: baseLegend,
-                datalabels: {
-                  ...datalabelBase,
-                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
-                  formatter: (v) => `₹ ${formatINRCompact(v)}`
-                }
-              },
-              scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
-            }} />
-          </div>
-        </Card>
-        <Card title="Revenue by Category">
-          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={revenueByCategoryChart} options={valueLabelOptions} />
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Quantity by Category">
-          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={qtyByCategoryChart} options={valueLabelOptions} />
-          </div>
-        </Card>
-        <Card title="Sales by Day">
-          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Line data={salesTrendBar} options={valueLabelOptions} />
-          </div>
-        </Card>
-      </div>
     </div>
   );
 };
