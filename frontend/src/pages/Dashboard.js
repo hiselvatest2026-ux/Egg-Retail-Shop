@@ -14,8 +14,9 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ChartDataLabels);
 
 const Metric = ({ title, value }) => (
   <div className="kpi-card rounded shadow-sm border border-gray-200 p-4">
@@ -49,12 +50,12 @@ const Dashboard = () => {
 
   useEffect(() => { load(); }, []);
 
-  const salesTrendChart = useMemo(() => {
+  const salesTrendBar = useMemo(() => {
     const labels = data?.sales_trend?.map(d => d.day) ?? [];
-    const values = data?.sales_trend?.map(d => d.total) ?? [];
+    const values = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
     return {
       labels,
-      datasets: [{ label: 'Sales (last 7 days)', data: values, borderColor: 'rgb(37, 99, 235)', backgroundColor: 'rgba(37, 99, 235, .3)' }]
+      datasets: [{ label: 'Sales (last 7 days)', data: values, backgroundColor: 'rgba(37, 99, 235, .7)' }]
     };
   }, [data]);
 
@@ -68,10 +69,10 @@ const Dashboard = () => {
     };
   }, [data]);
 
-  const qtyTrendChart = useMemo(() => {
+  const qtyTrendBar = useMemo(() => {
     const labels = data?.sales_qty_trend?.map(d => d.day) ?? [];
-    const values = data?.sales_qty_trend?.map(d => d.qty) ?? [];
-    return { labels, datasets: [{ label: 'Quantity', data: values, borderColor: 'rgb(34,197,94)', backgroundColor: 'rgba(34,197,94,.3)' }] };
+    const values = data?.sales_qty_trend?.map(d => Number(d.qty||0)) ?? [];
+    return { labels, datasets: [{ label: 'Quantity', data: values, backgroundColor: 'rgba(34,197,94,.7)' }] };
   }, [data]);
 
   const groupByDay = (rows, valueKey) => {
@@ -89,6 +90,22 @@ const Dashboard = () => {
 
   const qtyByCategoryChart = useMemo(() => groupByDay(data?.sales_qty_by_category, 'qty'), [data]);
   const revenueByCategoryChart = useMemo(() => groupByDay(data?.sales_revenue_by_category, 'total'), [data]);
+
+  const valueLabelOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      datalabels: {
+        anchor: 'end',
+        align: 'top',
+        color: '#111827',
+        formatter: (v) => typeof v === 'number' ? (Math.round(v) === v ? v : v.toFixed(0)) : v,
+        font: { weight: '700' }
+      },
+      tooltip: { enabled: true }
+    },
+    scales: { x: { ticks: { autoSkip: false } }, y: { beginAtZero: true } }
+  };
 
   if (loading) return <div className="p-4">Loading dashboard...</div>;
 
@@ -136,11 +153,11 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Sales Revenue Trend">
-          <Line data={salesTrendChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+        <Card title="Sales Revenue (Daily)">
+          <Bar data={salesTrendBar} options={valueLabelOptions} />
         </Card>
         <Card title="Sales Quantity Trend">
-          <Line data={qtyTrendChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+          <Bar data={qtyTrendBar} options={valueLabelOptions} />
         </Card>
       </div>
 
