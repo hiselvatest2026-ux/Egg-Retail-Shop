@@ -52,10 +52,15 @@ const Dashboard = () => {
 
   const salesTrendBar = useMemo(() => {
     const labels = data?.sales_trend?.map(d => d.day) ?? [];
-    const values = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
+    const revenueValues = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
+    const qtyMap = new Map((data?.sales_qty_trend||[]).map(r => [r.day, Number(r.qty||0)]));
+    const qtyValues = labels.map(day => qtyMap.get(day) || 0);
     return {
       labels,
-      datasets: [{ label: 'Sales (last 7 days)', data: values, backgroundColor: 'rgba(37, 99, 235, .7)' }]
+      datasets: [
+        { type: 'bar', label: 'Revenue', data: revenueValues, backgroundColor: 'rgba(37, 99, 235, .7)', yAxisID: 'y' },
+        { type: 'line', label: 'Qty', data: qtyValues, borderColor: 'rgb(34,197,94)', backgroundColor: 'rgba(34,197,94,0)', yAxisID: 'y1', borderWidth: 2, pointRadius: 3, tension: 0.25 }
+      ]
     };
   }, [data]);
 
@@ -104,7 +109,11 @@ const Dashboard = () => {
       },
       tooltip: { enabled: true }
     },
-    scales: { x: { ticks: { autoSkip: false } }, y: { beginAtZero: true } }
+    scales: {
+      x: { ticks: { autoSkip: false } },
+      y: { beginAtZero: true, title: { display: true, text: 'Revenue (₹)' } },
+      y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Qty' } }
+    }
   };
 
   if (loading) return <div className="p-4">Loading dashboard...</div>;
@@ -154,25 +163,35 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Sales Revenue (Daily)">
-          <Bar data={salesTrendBar} options={valueLabelOptions} />
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={salesTrendBar} options={valueLabelOptions} />
+          </div>
         </Card>
         <Card title="Sales Quantity Trend">
-          <Bar data={qtyTrendBar} options={valueLabelOptions} />
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={qtyTrendBar} options={valueLabelOptions} />
+          </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Qty by Customer Type (Daily)">
-          <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+          </div>
         </Card>
         <Card title="Revenue by Customer Type (Daily)">
-          <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+          </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Low/Current Stock by Product">
-          <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
+            <Bar data={lowStockChart} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />
+          </div>
         </Card>
         <div />
       </div>
