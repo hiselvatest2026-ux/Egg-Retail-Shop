@@ -59,6 +59,29 @@ const Dashboard = () => {
     return `${dd}/${mm}/${yy}`;
   };
 
+  const formatINRCompact = (value) => {
+    const n = Number(value || 0);
+    const abs = Math.abs(n);
+    if (abs >= 10000000) return `${(n/10000000).toFixed(2)}Cr`;
+    if (abs >= 100000) return `${(n/100000).toFixed(2)}L`;
+    if (abs >= 1000) return `${(n/1000).toFixed(1)}K`;
+    return `${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  };
+
+  const [isDesktop, setIsDesktop] = useState(true);
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    try {
+      const mqDesktop = window.matchMedia('(min-width: 1024px)');
+      const mqNarrow = window.matchMedia('(max-width: 768px)');
+      const handler = () => { setIsDesktop(!!mqDesktop.matches); setIsNarrow(!!mqNarrow.matches); };
+      handler();
+      mqDesktop.addEventListener('change', handler);
+      mqNarrow.addEventListener('change', handler);
+      return () => { mqDesktop.removeEventListener('change', handler); mqNarrow.removeEventListener('change', handler); };
+    } catch(_) { setIsDesktop(true); setIsNarrow(false); }
+  }, []);
+
   const salesTrendBar = useMemo(() => {
     const labels = (data?.sales_trend?.map(d => d.day) ?? []).map(formatDay);
     const values = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
@@ -104,22 +127,40 @@ const Dashboard = () => {
     padding: { top: 2, bottom: 2, left: 4, right: 4 },
     clip: false,
     font: { weight: '700' },
-    formatter: (v) => typeof v === 'number' ? (Math.round(v) === v ? v : v.toFixed(0)) : v,
+    // formatter is overridden per chart to apply compact INR or raw qty
   };
+
+  const baseLegend = { position: isDesktop ? 'right' : 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 10 } };
 
   const valueLabelOptions = {
     responsive: true,
     plugins: {
-      legend: { position: 'bottom' },
-      datalabels: datalabelBase,
+      legend: baseLegend,
+      datalabels: {
+        ...datalabelBase,
+        display: (ctx) => {
+          const w = ctx?.chart?.width || 0;
+          if (w < 768) return false; // hide on small screens
+          const val = Number(ctx?.dataset?.data?.[ctx?.dataIndex] || 0);
+          return val > 0;
+        },
+        formatter: (v) => formatINRCompact(v)
+      },
       tooltip: {
         enabled: true,
         callbacks: {
-          title: (items) => (items && items[0] ? items[0].label : '').replace(/^(\d{4}-\d{2}-\d{2}).*$/, '$1'),
+          title: (items) => (items && items[0] ? items[0].label : ''),
+          label: (ctx) => {
+            const raw = Number(ctx.parsed?.y || ctx.raw || 0);
+            return `₹ ${formatINRCompact(raw)}`;
+          }
         }
       }
     },
-    scales: { x: { ticks: { autoSkip: false } }, y: { beginAtZero: true } }
+    scales: {
+      x: { ticks: { autoSkip: true, maxTicksLimit: isNarrow ? 6 : 10, maxRotation: isNarrow ? 30 : 0, minRotation: isNarrow ? 30 : 0 } },
+      y: { beginAtZero: true }
+    }
   };
 
   if (loading) return <div className="p-4">Loading dashboard...</div>;
@@ -186,9 +227,22 @@ const Dashboard = () => {
             <Bar data={revenueByCategoryChart} options={{
               responsive: true,
               plugins: {
-                legend: { position: 'bottom' },
+                legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
+                  display: (ctx) => {
+                    // Only totals on top of stack; hide on small screens
+                    const w = ctx?.chart?.width || 0;
+                    if (w < 768) return false;
+                    const chart = ctx.chart; const di = ctx.dataIndex;
+                    const datasets = chart.data.datasets || [];
+                    let lastVisible = datasets.length - 1;
+                    for (let i = datasets.length - 1; i >= 0; i--) {
+                      const meta = chart.getDatasetMeta(i);
+                      if (!meta.hidden) { lastVisible = i; break; }
+                    }
+                    return ctx.datasetIndex === lastVisible;
+                  },
                   formatter: (value, ctx) => {
                     const di = ctx.dataIndex;
                     const chart = ctx.chart;
@@ -205,7 +259,7 @@ const Dashboard = () => {
                       const v = Number(ds.data?.[di] || 0);
                       return sum + (Number.isFinite(v) ? v : 0);
                     }, 0);
-                    return total > 0 ? (Math.round(total) === total ? total : total.toFixed(0)) : null;
+                    return total > 0 ? `₹ ${formatINRCompact(total)}` : null;
                   }
                 }
               },
@@ -218,9 +272,21 @@ const Dashboard = () => {
             <Bar data={qtyByCategoryChart} options={{
               responsive: true,
               plugins: {
-                legend: { position: 'bottom' },
+                legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
+                  display: (ctx) => {
+                    const w = ctx?.chart?.width || 0;
+                    if (w < 768) return false;
+                    const chart = ctx.chart; const di = ctx.dataIndex;
+                    const datasets = chart.data.datasets || [];
+                    let lastVisible = datasets.length - 1;
+                    for (let i = datasets.length - 1; i >= 0; i--) {
+                      const meta = chart.getDatasetMeta(i);
+                      if (!meta.hidden) { lastVisible = i; break; }
+                    }
+                    return ctx.datasetIndex === lastVisible;
+                  },
                   formatter: (value, ctx) => {
                     const di = ctx.dataIndex;
                     const chart = ctx.chart;
@@ -257,7 +323,7 @@ const Dashboard = () => {
                 <div>
                   <div className="font-medium">Invoice #{r.id} — {r.customer_name || '-'}
                   </div>
-                  <div className="text-xs" style={{color:'#6b7280'}}>{new Date(r.sale_date).toLocaleString()}</div>
+                  <div className="text-xs" style={{color:'#6b7280'}}>{formatDay(r.sale_date)}</div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">₹ {Number(r.total||0).toFixed(2)}</div>
@@ -277,7 +343,7 @@ const Dashboard = () => {
               <div key={r.id} className="py-2 flex items-center justify-between">
                 <div>
                   <div className="font-medium">Purchase #{r.id} — {r.vendor_name || '-'}</div>
-                  <div className="text-xs" style={{color:'#6b7280'}}>{new Date(r.purchase_date).toLocaleString()}</div>
+                  <div className="text-xs" style={{color:'#6b7280'}}>{formatDay(r.purchase_date)}</div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">₹ {Number(r.total||0).toFixed(2)}</div>
