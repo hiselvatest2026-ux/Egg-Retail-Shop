@@ -76,6 +76,7 @@ function App() {
             {/* Mobile: show only Purchases, Sales, Inventory, MIS */}
             {isMobile ? (
               <>
+                <NavLink to="/" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Dashboard</NavLink>
                 <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
                 <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
                 <NavLink to="/walkin" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Walk‑in Sale</NavLink>
@@ -84,6 +85,7 @@ function App() {
               </>
             ) : (
               <>
+                <NavLink to="/" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Dashboard</NavLink>
                 <NavLink to="/purchases" className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:8}} /> Purchase</NavLink>
                 <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
                 <NavLink to="/walkin" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Walk‑in Sale</NavLink>

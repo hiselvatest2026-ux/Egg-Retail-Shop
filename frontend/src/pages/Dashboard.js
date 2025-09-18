@@ -50,8 +50,17 @@ const Dashboard = () => {
 
   useEffect(() => { load(); }, []);
 
+  const formatDay = (s) => {
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return s;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+  };
+
   const salesTrendBar = useMemo(() => {
-    const labels = data?.sales_trend?.map(d => d.day) ?? [];
+    const labels = (data?.sales_trend?.map(d => d.day) ?? []).map(formatDay);
     const values = data?.sales_trend?.map(d => Number(d.total||0)) ?? [];
     return {
       labels,
@@ -62,7 +71,7 @@ const Dashboard = () => {
   
 
   const qtyTrendBar = useMemo(() => {
-    const labels = data?.sales_qty_trend?.map(d => d.day) ?? [];
+    const labels = (data?.sales_qty_trend?.map(d => d.day) ?? []).map(formatDay);
     const values = data?.sales_qty_trend?.map(d => Number(d.qty||0)) ?? [];
     return { labels, datasets: [{ label: 'Quantity', data: values, backgroundColor: 'rgba(34,197,94,.7)' }] };
   }, [data]);
@@ -77,7 +86,7 @@ const Dashboard = () => {
     const days = Array.from(map.keys()).sort();
     const cats = Array.from(new Set([].concat(...Array.from(map.values()).map(o=>Object.keys(o)))));
     const datasets = cats.map((c,i)=>({ label: c, data: days.map(d => (map.get(d)?.[c]||0)), backgroundColor: `hsl(${(i*67)%360} 70% 50% / .6)` }));
-    return { labels: days, datasets };
+    return { labels: days.map(formatDay), datasets };
   };
 
   const qtyByCategoryChart = useMemo(() => groupByDay(data?.sales_qty_by_category, 'qty'), [data]);
@@ -86,7 +95,7 @@ const Dashboard = () => {
   const valueLabelOptions = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' },
+      legend: { position: 'bottom' },
       datalabels: {
         anchor: 'end',
         align: 'top',
@@ -146,19 +155,27 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <Card title="Sales Revenue (Daily)">
-          <Bar data={salesTrendBar} options={valueLabelOptions} />
+          <div style={{background:'#fff', padding:8, borderRadius:8}}>
+            <Bar data={salesTrendBar} options={valueLabelOptions} />
+          </div>
         </Card>
         <Card title="Sales Quantity Trend">
-          <Bar data={qtyTrendBar} options={valueLabelOptions} />
+          <div style={{background:'#fff', padding:8, borderRadius:8}}>
+            <Bar data={qtyTrendBar} options={valueLabelOptions} />
+          </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Qty by Customer Type (Daily)">
-          <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+        <Card title="Daily Sales Revenue by Customer">
+          <div style={{background:'#fff', padding:8, borderRadius:8}}>
+            <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'bottom' }, datalabels: { anchor:'end', align:'top', color:'#111827', formatter:(v)=> typeof v === 'number' ? (Math.round(v)===v ? v : v.toFixed(0)) : v, font:{weight:'700'} } }, scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } } }} />
+          </div>
         </Card>
-        <Card title="Revenue by Customer Type (Daily)">
-          <Bar data={revenueByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { stacked:true }, y: { stacked:true } } }} />
+        <Card title="Daily Sales Quantity by Customer">
+          <div style={{background:'#fff', padding:8, borderRadius:8}}>
+            <Bar data={qtyByCategoryChart} options={{ responsive: true, plugins: { legend: { position: 'bottom' }, datalabels: { anchor:'end', align:'top', color:'#111827', formatter:(v)=> typeof v === 'number' ? (Math.round(v)===v ? v : v.toFixed(0)) : v, font:{weight:'700'} } }, scales: { x: { stacked:true, ticks: { autoSkip: false } }, y: { stacked:true, beginAtZero:true } } }} />
+          </div>
         </Card>
       </div>
 
