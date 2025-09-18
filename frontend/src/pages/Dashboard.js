@@ -292,26 +292,6 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Low/Current Stock by Product">
-          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
-            <Bar data={lowStockChart} options={{
-              responsive: true,
-              plugins: {
-                legend: baseLegend,
-                datalabels: {
-                  ...datalabelBase,
-                  formatter: (v) => {
-                    const n = Number(v||0); return Math.round(n) === n ? String(n) : String(n.toFixed(0));
-                  }
-                }
-              }
-            }} />
-          </div>
-        </Card>
-        <div />
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Recent Sales">
           <div className="divide-y">
