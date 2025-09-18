@@ -154,12 +154,12 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Sales Revenue (Daily)">
+        <Card title="Daily Sales Revenue trend">
           <div style={{background:'#fff', padding:8, borderRadius:8}}>
             <Bar data={salesTrendBar} options={valueLabelOptions} />
           </div>
         </Card>
-        <Card title="Sales Quantity Trend">
+        <Card title="Daily Sales Quantity trend">
           <div style={{background:'#fff', padding:8, borderRadius:8}}>
             <Bar data={qtyTrendBar} options={valueLabelOptions} />
           </div>
