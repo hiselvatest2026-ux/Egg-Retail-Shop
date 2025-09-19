@@ -1,0 +1,22 @@
+name: Publish API Docs (bump.sh POC)
+
+on:
+  push:
+    branches:
+      - main
+      - feat/bump-poc
+    paths:
+      - 'openapi.yaml'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bump CLI
+        run: npm i -g @bump.sh/cli
+      - name: Deploy to bump.sh
+        env:
+          BUMP_TOKEN: ${{ secrets.BUMP_TOKEN }}
+          BUMP_DOC: ${{ vars.BUMP_DOC || 'sample-vendor-api' }}
+        run: bump deploy --doc "$BUMP_DOC" --token "$BUMP_TOKEN" openapi.yaml
