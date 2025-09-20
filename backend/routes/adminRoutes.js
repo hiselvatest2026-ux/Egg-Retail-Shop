@@ -62,6 +62,82 @@ router.post('/sales/bulk-reassign-customer', async (req, res) => {
   }
 });
 
+// --- Tray adjustments for existing records (qty-only, no value) ---
+
+// Adjust a customer's tray balance by a delta (positive=in, negative=out)
+router.post('/trays/adjust-customer', async (req, res) => {
+  try {
+    const { customer_id, delta, reference_id, note } = req.body || {};
+    const cid = Number(customer_id);
+    const d = Number(delta);
+    if (!Number.isFinite(cid) || !Number.isFinite(d) || d === 0) {
+      return res.status(400).json({ message: 'customer_id and non-zero delta required' });
+    }
+    const direction = d > 0 ? 'in' : 'out';
+    const qty = Math.abs(Math.trunc(d));
+    await pool.query(
+      'INSERT INTO tray_ledger (customer_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)',
+      [cid, direction, 'adjustment', reference_id ?? null, qty]
+    );
+    res.json({ message: 'Customer tray adjusted', customer_id: cid, delta: d });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Adjust a vendor's tray stock by a delta (positive=in to shop, negative=out from shop)
+router.post('/trays/adjust-vendor', async (req, res) => {
+  try {
+    const { vendor_id, delta, reference_id, note } = req.body || {};
+    const vid = Number(vendor_id);
+    const d = Number(delta);
+    if (!Number.isFinite(vid) || !Number.isFinite(d) || d === 0) {
+      return res.status(400).json({ message: 'vendor_id and non-zero delta required' });
+    }
+    const direction = d > 0 ? 'in' : 'out';
+    const qty = Math.abs(Math.trunc(d));
+    await pool.query(
+      'INSERT INTO tray_ledger (vendor_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)',
+      [vid, direction, 'adjustment', reference_id ?? null, qty]
+    );
+    res.json({ message: 'Vendor tray adjusted', vendor_id: vid, delta: d });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Attach tray qty to an existing sale (customer out)
+router.post('/trays/attach-sale', async (req, res) => {
+  try {
+    const { sale_id, tray_qty } = req.body || {};
+    const sid = Number(sale_id);
+    const qty = Math.abs(Math.trunc(Number(tray_qty||0)));
+    if (!Number.isFinite(sid) || !(qty>0)) return res.status(400).json({ message: 'sale_id and positive tray_qty required' });
+    const saleRes = await pool.query('SELECT customer_id FROM sales WHERE id=$1', [sid]);
+    if (saleRes.rowCount === 0) return res.status(404).json({ message: 'Sale not found' });
+    const cid = saleRes.rows[0].customer_id;
+    if (!cid) return res.status(400).json({ message: 'Sale has no customer_id' });
+    await pool.query('INSERT INTO tray_ledger (customer_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [cid, 'out', 'sale', sid, qty]);
+    res.json({ message: 'Tray attached to sale', sale_id: sid, customer_id: cid, tray_qty: qty });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
+// Attach tray qty to an existing purchase (vendor in/out)
+router.post('/trays/attach-purchase', async (req, res) => {
+  try {
+    const { purchase_id, in_qty, out_qty } = req.body || {};
+    const pid = Number(purchase_id);
+    if (!Number.isFinite(pid)) return res.status(400).json({ message: 'purchase_id required' });
+    const purRes = await pool.query('SELECT vendor_id FROM purchases WHERE id=$1', [pid]);
+    if (purRes.rowCount === 0) return res.status(404).json({ message: 'Purchase not found' });
+    const vid = purRes.rows[0].vendor_id || null;
+    const tasks = [];
+    const inq = Math.abs(Math.trunc(Number(in_qty||0)));
+    const outq = Math.abs(Math.trunc(Number(out_qty||0)));
+    if (vid && inq>0) tasks.push(pool.query('INSERT INTO tray_ledger (vendor_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [vid, 'in', 'purchase', pid, inq]));
+    if (vid && outq>0) tasks.push(pool.query('INSERT INTO tray_ledger (vendor_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [vid, 'out', 'purchase', pid, outq]));
+    if (!tasks.length) return res.status(400).json({ message: 'No vendor_id on purchase or no positive in/out qty provided' });
+    await Promise.all(tasks);
+    res.json({ message: 'Tray attached to purchase', purchase_id: pid, vendor_id: vid, in_qty: inq, out_qty: outq });
+  } catch (e) { res.status(500).json({ message: e.message }); }
+});
+
 // Purge and reseed data for a specific location (removed)
 /* router.post('/seed/ratinam', async (_req, res) => {
   try {
