@@ -54,7 +54,7 @@ exports.purchasesCsv = async (req, res) => {
                 pu.vendor_id,
                 v.vendor_code,
                 v.name AS vendor_name,
-                pr.name AS product_name,
+                COALESCE(mm.metal_type, pr.name, '-') AS material_type,
                 pi.price AS price_per_unit,
                 pi.quantity AS quantity,
                 COALESCE(mm.gst_percent, 0) AS gst_percent,
@@ -74,7 +74,7 @@ exports.purchasesCsv = async (req, res) => {
                 pu.vendor_id,
                 v.vendor_code,
                 v.name AS vendor_name,
-                COALESCE(pu.product_name, '-') AS product_name,
+                COALESCE(pu.product_name, '-') AS material_type,
                 pu.price_per_unit AS price_per_unit,
                 pu.quantity AS quantity,
                 COALESCE(pu.gst_percent, 0) AS gst_percent,
@@ -89,7 +89,7 @@ exports.purchasesCsv = async (req, res) => {
        SELECT * FROM header_only
        ORDER BY purchase_date DESC, id DESC`
     , params);
-    const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','product_name','price_per_unit','quantity','gst_percent','total'];
+    const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','material_type','price_per_unit','quantity','gst_percent','total'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
