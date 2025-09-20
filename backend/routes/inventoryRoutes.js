@@ -141,6 +141,37 @@ router.get('/closing-stocks/materials', async (req, res) => {
   } catch (e) { res.status(500).send(e.message); }
 });
 
+// Tray balances per customer (qty only)
+router.get('/tray-balances/customers', async (_req, res) => {
+  try {
+    const r = await pool.query(`
+      WITH agg AS (
+        SELECT customer_id,
+               SUM(CASE WHEN direction='in' THEN qty ELSE 0 END) AS q_in,
+               SUM(CASE WHEN direction='out' THEN qty ELSE 0 END) AS q_out
+        FROM tray_ledger
+        WHERE customer_id IS NOT NULL
+        GROUP BY customer_id
+      )
+      SELECT c.id AS customer_id, c.name AS customer_name, COALESCE(a.q_in,0) - COALESCE(a.q_out,0) AS tray_balance
+      FROM customers c
+      LEFT JOIN agg a ON a.customer_id = c.id
+      ORDER BY c.id ASC`);
+    res.json(r.rows || []);
+  } catch (e) { res.status(500).send(e.message); }
+});
+
+// Shop closing stock of trays (vendor movements not tied to a customer)
+router.get('/tray-stock/shop', async (_req, res) => {
+  try {
+    const r = await pool.query(`
+      SELECT COALESCE(SUM(CASE WHEN direction='in' THEN qty ELSE -qty END),0) AS tray_stock
+      FROM tray_ledger
+      WHERE customer_id IS NULL`);
+    res.json({ tray_stock: Number(r.rows[0]?.tray_stock || 0) });
+  } catch (e) { res.status(500).send(e.message); }
+});
+
 // Product-level closing stocks (optional, derived)
 router.get('/closing-stocks', async (req, res) => {
   try {

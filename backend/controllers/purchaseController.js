@@ -8,7 +8,7 @@ exports.getPurchases = async (req, res) => {
 };
 exports.createPurchase = async (req, res) => {
     try {
-        const { vendor_id, product_name, price_per_unit, quantity, gst_percent } = req.body;
+        const { vendor_id, product_name, price_per_unit, quantity, gst_percent, tray_in_qty, tray_out_qty } = req.body;
         const unit = Number(price_per_unit || 0);
         const qty = Number(quantity || 0);
         const gst = Number(gst_percent || 0);
@@ -17,7 +17,19 @@ exports.createPurchase = async (req, res) => {
             'INSERT INTO purchases (vendor_id, product_name, price_per_unit, quantity, gst_percent, total) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
             [vendor_id || null, product_name || null, unit || null, qty || null, gst || null, total]
         );
-        res.status(201).json(result.rows[0]);
+        const purchase = result.rows[0];
+        // Record tray movements (qty-only, no value)
+        const inQty = Number(tray_in_qty || 0);
+        const outQty = Number(tray_out_qty || 0);
+        const tasks = [];
+        if (inQty > 0) {
+          tasks.push(pool.query('INSERT INTO tray_ledger (vendor_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [vendor_id || null, 'in', 'purchase', purchase.id, inQty]));
+        }
+        if (outQty > 0) {
+          tasks.push(pool.query('INSERT INTO tray_ledger (vendor_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [vendor_id || null, 'out', 'purchase', purchase.id, outQty]));
+        }
+        if (tasks.length) { try { await Promise.all(tasks); } catch(_) {} }
+        res.status(201).json(purchase);
     } catch (err) { res.status(500).send(err.message); }
 };
 exports.updatePurchase = async (req, res) => {

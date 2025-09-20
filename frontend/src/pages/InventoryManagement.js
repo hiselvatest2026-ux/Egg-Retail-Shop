@@ -8,7 +8,9 @@ const InventoryManagement = () => {
   const [rows, setRows] = useState([]);
   const [lowCount, setLowCount] = useState(0);
   const [insights, setInsights] = useState({ kpis:{ total_stock_value:0, low_stock_count:0 }, low_stock:[], fast_movers:[], slow_movers:[], reorder_suggestions:[] });
-  const [tab, setTab] = useState('overview'); // overview | opening | closing
+  const [tab, setTab] = useState('overview'); // overview | opening | closing | trays
+  const [trayBalances, setTrayBalances] = useState([]);
+  const [trayStock, setTrayStock] = useState(0);
   const [opening, setOpening] = useState([]);
   const [openingMaterials, setOpeningMaterials] = useState([]);
   const [closing, setClosing] = useState([]);
@@ -44,6 +46,7 @@ const InventoryManagement = () => {
       setClosingMaterials(m.data||[]);
     } catch(e){ console.error('load closing failed', e);} }
   useEffect(() => { (async()=>{ try{ await load(); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load failed', e);} })(); }, [tab]);
+  useEffect(() => { (async()=>{ try{ if (tab==='trays') { const [b, s] = await Promise.all([axios.get(`${baseUrl}/inventory/tray-balances/customers`), axios.get(`${baseUrl}/inventory/tray-stock/shop`)]); setTrayBalances(b.data||[]); setTrayStock(Number(s.data?.tray_stock||0)); } } catch(e){ console.error('load trays failed', e);} })(); }, [tab]);
 
   // Auto-refresh when purchases/sales emit events
   useEffect(() => {
@@ -75,6 +78,7 @@ const InventoryManagement = () => {
         <button className={`btn ${tab==='overview'?'':'secondary'}`} onClick={()=>setTab('overview')}>Overview</button>
         <button className={`btn ${tab==='opening'?'':'secondary'}`} onClick={()=>setTab('opening')}>Opening Stock</button>
         <button className={`btn ${tab==='closing'?'':'secondary'}`} onClick={()=>setTab('closing')}>Closing Stock</button>
+        <button className={`btn ${tab==='trays'?'':'secondary'}`} onClick={()=>setTab('trays')}>Trays</button>
       </div>
 
       {tab==='overview' && (
@@ -208,6 +212,25 @@ const InventoryManagement = () => {
           <button className="btn secondary" onClick={loadClosing}>Refresh</button>
         </div>
         {saveMsg && <div className="toast" style={{marginTop:8}}>{saveMsg}</div>}
+      </Card>
+      </>
+      )}
+
+      {tab==='trays' && (
+      <>
+      <Card title="Customer Tray Balances">
+        <table className="table table-hover">
+          <thead><tr><th>Customer</th><th style={{textAlign:'right'}}>Tray Balance</th></tr></thead>
+          <tbody>
+            {trayBalances.map(r => (
+              <tr key={r.customer_id}><td>{r.customer_name}</td><td style={{textAlign:'right'}}>{r.tray_balance}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <div style={{height:12}} />
+      <Card title="Shop Tray Closing Stock">
+        <div className="stat-grid"><div className="stat info"><div className="stat-label">Trays in Shop</div><div className="stat-value">{trayStock}</div></div></div>
       </Card>
       </>
       )}

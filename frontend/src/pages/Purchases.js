@@ -11,7 +11,7 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '' });
+  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '', tray_in_qty: '', tray_out_qty: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -154,7 +154,7 @@ const Purchases = () => {
       // Create minimal header, then items based on rows
       let purchaseId = editing;
       if (!editing) {
-        const header = { vendor_id: Number(form.vendor_id) };
+        const header = { vendor_id: Number(form.vendor_id), tray_in_qty: Number(form.tray_in_qty||0), tray_out_qty: Number(form.tray_out_qty||0) };
         const res = await createPurchase(header);
         purchaseId = res.data?.id || res.id;
       }
@@ -166,7 +166,7 @@ const Purchases = () => {
       }
       // Do not update opening stocks when purchases are added (per new policy)
       setSuccess(`Purchase Number ${purchaseId} saved successfully.`);
-      setForm({ vendor_id: '', total_purchase_value: '' });
+      setForm({ vendor_id: '', total_purchase_value: '', tray_in_qty:'', tray_out_qty:'' });
       setRows([]);
       setEditing(null);
       await fetchPurchases();
@@ -245,6 +245,17 @@ const Purchases = () => {
                     />
                   )}
                   {!form.vendor_id && error && <div className="form-help">Vendor is required</div>}
+                </div>
+                {/* Tray movement (qty only, no value) */}
+                <div className="grid grid-cols-2 gap-2 sm:contents">
+                  <div className="input-group">
+                    <label>Tray In Qty (Vendor)</label>
+                    <input className="input" placeholder="0" value={form.tray_in_qty||''} onChange={e=>setForm(prev=>({...prev, tray_in_qty: e.target.value}))} inputMode="numeric" />
+                  </div>
+                  <div className="input-group">
+                    <label>Tray Out Qty (Return)</label>
+                    <input className="input" placeholder="0" value={form.tray_out_qty||''} onChange={e=>setForm(prev=>({...prev, tray_out_qty: e.target.value}))} inputMode="numeric" />
+                  </div>
                 </div>
                 {form.vendor_id && (()=>{
                   const v = vendors.find(x=> String(x.id) === String(form.vendor_id));

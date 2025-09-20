@@ -11,7 +11,7 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash', route_trip_id } = req.body;
+    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash', route_trip_id, tray_qty } = req.body;
     // Credit limit validation
     if (sale_type === 'Credit' && customer_id) {
       const limRes = await pool.query('SELECT COALESCE(credit_limit,0) AS credit_limit FROM customers WHERE id=$1', [customer_id]);
@@ -37,7 +37,13 @@ exports.createSale = async (req, res) => {
       'INSERT INTO sales (customer_id, total, egg_type, product_name, payment_method, status, discount, sale_type, route_trip_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [customer_id, total, egg_type || null, pn, payment_method || null, status, discount, sale_type, route_trip_id || null]
     );
-    res.status(201).json(result.rows[0]);
+    const sale = result.rows[0];
+    // Record tray movement (customer out) if provided; qty-only
+    const tqty = Number(tray_qty || 0);
+    if (tqty > 0 && customer_id) {
+      try { await pool.query('INSERT INTO tray_ledger (customer_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [customer_id, 'out', 'sale', sale.id, tqty]); } catch(_) {}
+    }
+    res.status(201).json(sale);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -233,7 +239,25 @@ exports.getSaleInvoice = async (req, res) => {
 
     const balance = Number((total - paid).toFixed(2));
 
-    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance } });
+    // Tray balance for this customer (qty only)
+    let tray_balance = 0;
+    if (sale.customer_id) {
+      try {
+        const t = await pool.query(`
+          WITH agg AS (
+            SELECT customer_id,
+                   SUM(CASE WHEN direction='in' THEN qty ELSE 0 END) AS q_in,
+                   SUM(CASE WHEN direction='out' THEN qty ELSE 0 END) AS q_out
+            FROM tray_ledger
+            WHERE customer_id = $1
+            GROUP BY customer_id
+          )
+          SELECT COALESCE(q_in,0) - COALESCE(q_out,0) AS bal FROM agg`, [sale.customer_id]);
+        tray_balance = Number(t.rows[0]?.bal || 0);
+      } catch(_) { tray_balance = 0; }
+    }
+
+    res.json({ company, sale, items: enrichedItems, total, totals: { subtotal, cgst_total, sgst_total, igst_total, round_off, grand_total, paid, balance }, tray_balance });
   } catch (err) {
     res.status(500).send(err.message);
   }
