@@ -22,6 +22,7 @@ import MetalMaster from './pages/MetalMaster';
 import PricingMaster from './pages/PricingMaster';
 import Vendors from './pages/Vendors';
 import WalkinSale from './pages/WalkinSale';
+import TrayAdjustments from './pages/TrayAdjustments';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -98,6 +99,7 @@ function App() {
                 <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
                 <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
                 <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
+                <NavLink to="/admin/trays" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Tray Adjustments</NavLink>
               </>
             )}
           </nav>
@@ -125,6 +127,7 @@ function App() {
             <Route path="/mis" element={<MISReports />} />
             <Route path="/Material-master" element={<MetalMaster />} />
             <Route path="/pricing-master" element={<PricingMaster />} />
+            <Route path="/admin/trays" element={<TrayAdjustments />} />
             
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

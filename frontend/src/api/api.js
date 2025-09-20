@@ -152,6 +152,12 @@ export const getTotalCollection = (params) => axios.get(`${API_URL}/collection-a
 // Admin utilities
 export const clearTransactions = () => axios.post(`${API_URL}/admin/clear-transactions`);
 
+// Admin Tray Endpoints (retroactive, qty-only)
+export const adminAdjustCustomerTrays = (data) => axios.post(`${API_URL}/admin/trays/adjust-customer`, data);
+export const adminAdjustVendorTrays = (data) => axios.post(`${API_URL}/admin/trays/adjust-vendor`, data);
+export const adminAttachSaleTrays = (data) => axios.post(`${API_URL}/admin/trays/attach-sale`, data);
+export const adminAttachPurchaseTrays = (data) => axios.post(`${API_URL}/admin/trays/attach-purchase`, data);
+
 // Sale Items
 export const getSaleItems = (saleId) => axios.get(`${API_URL}/sales/${saleId}/items`);
 export const createSaleItem = (saleId, data) => axios.post(`${API_URL}/sales/${saleId}/items`, data);
