@@ -108,11 +108,22 @@ exports.salesCsv = async (req, res) => {
          FROM payments
          GROUP BY invoice_id
        ),
+       mm_guess AS (
+         SELECT p.id AS product_id,
+                CASE
+                  WHEN LOWER(p.name) LIKE 'egg%' THEN 'M00001'
+                  WHEN LOWER(p.name) LIKE 'paneer%' OR LOWER(p.name) LIKE 'panner%' THEN 'M00002'
+                  ELSE NULL
+                END AS part_code
+         FROM products p
+       ),
        items AS (
          SELECT si.sale_id,
-                STRING_AGG(p.name || ' x' || si.quantity, '; ' ORDER BY si.id) AS items_text
+                STRING_AGG(COALESCE(mm.metal_type, p.name, '-') || ' x' || si.quantity, '; ' ORDER BY si.id) AS material_text
          FROM sale_items si
          JOIN products p ON p.id = si.product_id
+         LEFT JOIN mm_guess g ON g.product_id = si.product_id
+         LEFT JOIN metal_master mm ON mm.part_code = g.part_code
          GROUP BY si.sale_id
        ),
        item_stats AS (
@@ -131,7 +142,7 @@ exports.salesCsv = async (req, res) => {
               to_char((s.sale_date AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS sale_date,
               s.customer_id,
               c.name AS customer_name,
-              COALESCE(i.items_text, s.product_name, s.egg_type, CASE WHEN ct.computed_total IS NULL AND COALESCE(p.paid,0) > 0 THEN 'Payment Only' ELSE '-' END) AS product_name,
+              COALESCE(i.material_text, s.egg_type, s.product_name, CASE WHEN ct.computed_total IS NULL AND COALESCE(p.paid,0) > 0 THEN 'Payment Only' ELSE '-' END) AS product_name,
               REPLACE(COALESCE(s.category, c.category, 'Retail'), 'Horecha', 'Horeca') AS category,
               COALESCE(s.sale_type, 'Cash') AS sale_type,
               s.payment_method,
