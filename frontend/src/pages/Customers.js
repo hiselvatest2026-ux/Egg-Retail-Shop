@@ -84,7 +84,7 @@ const Customers = () => {
           <Dropdown
             value={form.category}
             onChange={(v)=>setForm({...form, category: v})}
-            options={[{value:'Retail',label:'Retail'},{value:'Wholesale',label:'Wholesale'},{value:'Walk-in',label:'Walk-in'},{value:'Horecha',label:'Horecha'}]}
+            options={[{value:'Retail',label:'Retail'},{value:'Wholesale',label:'Wholesale'},{value:'Walk-in',label:'Walk-in'},{value:'Horeca',label:'Horeca'}]}
           />
         </div>
         <div className="input-group">

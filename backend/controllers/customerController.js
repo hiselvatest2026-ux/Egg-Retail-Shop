@@ -13,9 +13,10 @@ exports.createCustomer = async (req, res) => {
   try {
     const { name, contact_info, phone, category, gstin, credit_limit } = req.body;
     const creditParsed = (credit_limit === '' || credit_limit == null) ? 0 : Number(credit_limit);
+    const normalizedCategory = (category && String(category).toLowerCase() === 'horecha') ? 'Horeca' : category;
     const result = await pool.query(
       'INSERT INTO customers (name, contact_info, phone, category, gstin, credit_limit) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, contact_info || null, phone || null, category || null, gstin || null, creditParsed]
+      [name, contact_info || null, phone || null, normalizedCategory || null, gstin || null, creditParsed]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -27,10 +28,11 @@ exports.updateCustomer = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, contact_info, phone, category, gstin, credit_limit } = req.body;
+    const normalizedCategory = (category && String(category).toLowerCase() === 'horecha') ? 'Horeca' : category;
     const creditParsed = (credit_limit === '' || credit_limit == null) ? null : Number(credit_limit);
     const result = await pool.query(
       'UPDATE customers SET name=COALESCE($1, name), contact_info=COALESCE($2, contact_info), phone=COALESCE($3, phone), category=COALESCE($4, category), gstin=COALESCE($5, gstin), credit_limit=COALESCE($6, credit_limit) WHERE id=$7 RETURNING *',
-      [name ?? null, contact_info ?? null, phone ?? null, category ?? null, gstin ?? null, creditParsed, id]
+      [name ?? null, contact_info ?? null, phone ?? null, normalizedCategory ?? null, gstin ?? null, creditParsed, id]
     );
     res.json(result.rows[0]);
   } catch (err) {

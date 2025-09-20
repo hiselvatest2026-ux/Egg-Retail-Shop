@@ -220,7 +220,7 @@ exports.getSummary = async (req, res) => {
         qtyTrendWhere.params
       ),
       pool.query(
-        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
+        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, REPLACE(COALESCE(s.category, c.category, 'Retail'), 'Horecha', 'Horeca') AS category,
                 COALESCE(SUM(si.quantity),0) AS qty
          FROM sale_items si
          JOIN sales s ON s.id=si.sale_id
@@ -231,7 +231,7 @@ exports.getSummary = async (req, res) => {
         catWhere.params
       ),
       pool.query(
-        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, COALESCE(s.category, c.category, 'Retail') AS category,
+        `SELECT (s.sale_date AT TIME ZONE 'Asia/Kolkata')::date AS day, REPLACE(COALESCE(s.category, c.category, 'Retail'), 'Horecha', 'Horeca') AS category,
                 COALESCE(SUM(si.quantity*si.price),0) AS total
          FROM sale_items si
          JOIN sales s ON s.id=si.sale_id
