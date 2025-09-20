@@ -119,7 +119,7 @@ exports.salesCsv = async (req, res) => {
        ),
        items AS (
          SELECT si.sale_id,
-                STRING_AGG(COALESCE(mm.metal_type, p.name, '-') || ' x' || si.quantity, '; ' ORDER BY si.id) AS material_text
+                STRING_AGG(COALESCE(mm.metal_type, p.name, '-'), '; ' ORDER BY si.id) AS material_text
          FROM sale_items si
          JOIN products p ON p.id = si.product_id
          LEFT JOIN mm_guess g ON g.product_id = si.product_id
