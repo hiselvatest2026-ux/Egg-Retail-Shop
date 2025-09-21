@@ -166,7 +166,7 @@ exports.getSaleInvoice = async (req, res) => {
        )
        SELECT si.id,
               si.product_id,
-              COALESCE(p.name, 'Product #' || si.product_id) AS product_name,
+              COALESCE(mm.metal_type, p.name, 'Product #' || si.product_id) AS product_name,
               si.quantity,
               si.price,
               (si.quantity * si.price) AS line_total,
