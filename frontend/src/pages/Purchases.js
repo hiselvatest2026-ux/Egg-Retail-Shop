@@ -11,7 +11,7 @@ const Purchases = () => {
   const [vendorFilter, setVendorFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '', tray_in_qty: '', tray_out_qty: '' });
+  const [form, setForm] = useState({ vendor_id: '', total_purchase_value: '', tray_in_qty: '', tray_out_qty: '', type: 'Purchase', ref_purchase_id: '' });
   const [editing, setEditing] = useState(null);
   const [vendors, setVendors] = useState([]);
   const [materials, setMaterials] = useState([]);
@@ -154,7 +154,7 @@ const Purchases = () => {
       // Create minimal header, then items based on rows
       let purchaseId = editing;
       if (!editing) {
-        const header = { vendor_id: Number(form.vendor_id), tray_in_qty: Number(form.tray_in_qty||0), tray_out_qty: Number(form.tray_out_qty||0) };
+        const header = { vendor_id: Number(form.vendor_id), type: (form.type||'Purchase'), ref_purchase_id: form.ref_purchase_id ? Number(form.ref_purchase_id) : undefined };
         const res = await createPurchase(header);
         purchaseId = res.data?.id || res.id;
       }
@@ -274,6 +274,26 @@ const Purchases = () => {
                   {(rows.length>0 && String(form.total_purchase_value||'').length>0) && (Math.round(Number(form.total_purchase_value||0)*100) !== Math.round(itemsGrandTotal*100)) && (
                     <div className="form-help">Must equal Items Total: ₹ {itemsGrandTotal.toFixed(2)}</div>
                   )}
+                </div>
+                {/* Purchase type and reference (for returns) */}
+                <div className="grid grid-cols-2 gap-2 sm:contents">
+                  <div className="input-group" style={{overflow:'visible'}}>
+                    <label>Type</label>
+                    {isMobile ? (
+                      <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>setForm(prev=>({...prev, type: prev.type==='Return'?'Purchase':'Return'}))}>
+                        {form.type || 'Purchase'}
+                      </button>
+                    ) : (
+                      <select className="input" value={form.type||'Purchase'} onChange={e=>setForm(prev=>({...prev, type: e.target.value }))}>
+                        <option value="Purchase">Purchase</option>
+                        <option value="Return">Return</option>
+                      </select>
+                    )}
+                  </div>
+                  <div className="input-group">
+                    <label>Reference Purchase ID (optional)</label>
+                    <input className="input" placeholder="e.g., 123" value={form.ref_purchase_id} onChange={e=>setForm(prev=>({...prev, ref_purchase_id: e.target.value}))} inputMode="numeric" />
+                  </div>
                 </div>
               </div>
             </div>
