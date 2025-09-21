@@ -280,7 +280,7 @@ const Purchases = () => {
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Type</label>
                     {isMobile ? (
-                      <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>setForm(prev=>({...prev, type: prev.type==='Return'?'Purchase':'Return'}))}>
+                      <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('purchase_type')}>
                         {form.type || 'Purchase'}
                       </button>
                     ) : (
@@ -526,7 +526,7 @@ const Purchases = () => {
           <div style={{position:'fixed', inset:0, background:'#0b0f14', zIndex:9999, display:'flex', flexDirection:'column'}}>
             <div style={{padding:'12px', borderBottom:'1px solid #1f2937', display:'flex', alignItems:'center', gap:8}}>
               <button type="button" className="btn secondary btn-sm" onClick={closePicker}>Back</button>
-              <div style={{fontWeight:800}}>{pickerType==='vendor'?'Select Vendor':pickerType==='material'?'Select Material':'Select UOM'}</div>
+              <div style={{fontWeight:800}}>{pickerType==='vendor'?'Select Vendor':pickerType==='material'?'Select Material':pickerType==='uom'?'Select UOM':pickerType==='purchase_type'?'Select Type':'Select'}</div>
             </div>
             <div style={{padding:'10px'}}>
               {pickerType !== 'uom' && (
@@ -569,6 +569,15 @@ const Purchases = () => {
                   <div className="card-body" style={{padding:0}}>
                     {['Piece','Tray'].map(u=> (
                       <button key={u} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setAddForm(prev=>({...prev, uom: u})); closePicker(); }}>{u}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {pickerType==='purchase_type' && (
+                <div className="card" style={{padding:0}}>
+                  <div className="card-body" style={{padding:0}}>
+                    {['Purchase','Return'].map(t=> (
+                      <button key={t} type="button" className="btn secondary" style={{display:'block', width:'100%', textAlign:'left', borderRadius:0, border:'0', borderBottom:'1px solid #1f2937'}} onClick={()=>{ setForm(prev=>({...prev, type: t })); closePicker(); }}>{t}</button>
                     ))}
                   </div>
                 </div>
