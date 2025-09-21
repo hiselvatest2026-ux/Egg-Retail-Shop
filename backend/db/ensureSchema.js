@@ -95,6 +95,8 @@ async function ensureSchema() {
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS price_per_unit NUMERIC(10,2);"
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS quantity INT;"
     ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS gst_percent NUMERIC(5,2);"
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT 'Purchase';"
+    ,"ALTER TABLE IF EXISTS purchases ADD COLUMN IF NOT EXISTS ref_purchase_id INT REFERENCES purchases(id);"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS product_name VARCHAR(100);"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS sale_type VARCHAR(20) DEFAULT 'Cash';"
     ,"ALTER TABLE IF EXISTS sales ADD COLUMN IF NOT EXISTS category VARCHAR(20);"

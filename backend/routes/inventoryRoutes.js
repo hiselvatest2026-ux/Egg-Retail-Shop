@@ -88,8 +88,9 @@ router.get('/closing-stocks/materials', async (req, res) => {
                END AS part_code
         FROM products
       )
-      SELECT gp.part_code AS material_code, COALESCE(SUM(pi.quantity),0) AS qty
+      SELECT gp.part_code AS material_code, COALESCE(SUM(CASE WHEN pu.type='Return' THEN -pi.quantity ELSE pi.quantity END),0) AS qty
       FROM purchase_items pi
+      JOIN purchases pu ON pu.id = pi.purchase_id
       JOIN gp ON gp.product_id = pi.product_id
       GROUP BY gp.part_code
     `);
@@ -178,7 +179,10 @@ router.get('/closing-stocks', async (req, res) => {
     const locHeader = req.headers['x-shop-id'];
     const locId = req.query.location_id ? Number(req.query.location_id) : (locHeader ? Number(locHeader) : null);
     const opening = await pool.query(`SELECT product_id, COALESCE(quantity,0) AS qty FROM opening_stocks`);
-    const purchases = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM purchase_items GROUP BY product_id`);
+    const purchases = await pool.query(`
+      SELECT pi.product_id, COALESCE(SUM(CASE WHEN p.type='Return' THEN -pi.quantity ELSE pi.quantity END),0) AS qty
+      FROM purchase_items pi JOIN purchases p ON p.id=pi.purchase_id GROUP BY pi.product_id
+    `);
     const sales = await pool.query(`SELECT product_id, COALESCE(SUM(quantity),0) AS qty FROM sale_items WHERE ($1::int IS NULL OR location_id=$1) GROUP BY product_id`, [locId]);
     const adjustments = await pool.query(`
       SELECT product_id, COALESCE(SUM(quantity),0) AS deducted

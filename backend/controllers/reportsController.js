@@ -58,7 +58,8 @@ exports.purchasesCsv = async (req, res) => {
                 pi.price AS price_per_unit,
                 pi.quantity AS quantity,
                 COALESCE(mm.gst_percent, 0) AS gst_percent,
-                ROUND(pi.price * pi.quantity * (1 + (COALESCE(mm.gst_percent,0)/100.0)), 2) AS total
+                pu.type AS type,
+                ROUND((CASE WHEN pu.type='Return' THEN -1 ELSE 1 END) * pi.price * pi.quantity * (1 + (COALESCE(mm.gst_percent,0)/100.0)), 2) AS total
          FROM purchase_items pi
          JOIN purchases pu ON pu.id = pi.purchase_id
          JOIN purchases p ON p.id = pi.purchase_id
@@ -78,7 +79,8 @@ exports.purchasesCsv = async (req, res) => {
                 pu.price_per_unit AS price_per_unit,
                 pu.quantity AS quantity,
                 COALESCE(pu.gst_percent, 0) AS gst_percent,
-                COALESCE(pu.total, 0) AS total
+                pu.type AS type,
+                (CASE WHEN pu.type='Return' THEN -1 ELSE 1 END) * COALESCE(pu.total, 0) AS total
          FROM purchases pu
          LEFT JOIN vendors v ON v.id = pu.vendor_id
          WHERE NOT EXISTS (SELECT 1 FROM purchase_items pi WHERE pi.purchase_id = pu.id)
@@ -89,7 +91,7 @@ exports.purchasesCsv = async (req, res) => {
        SELECT * FROM header_only
        ORDER BY purchase_date DESC, id DESC`
     , params);
-    const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','material_type','price_per_unit','quantity','gst_percent','total'];
+    const headers = ['id','purchase_date','vendor_id','vendor_code','vendor_name','material_type','price_per_unit','quantity','gst_percent','type','total'];
     sendCsv(res, 'purchases.csv', headers, result.rows);
   } catch (err) { res.status(500).send(err.message); }
 };
