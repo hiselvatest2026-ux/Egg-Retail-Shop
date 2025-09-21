@@ -173,6 +173,26 @@ router.get('/tray-stock/shop', async (_req, res) => {
   } catch (e) { res.status(500).send(e.message); }
 });
 
+// Tray balances per vendor (qty only)
+router.get('/tray-balances/vendors', async (_req, res) => {
+  try {
+    const r = await pool.query(`
+      WITH agg AS (
+        SELECT vendor_id,
+               SUM(CASE WHEN direction='in' THEN qty ELSE 0 END) AS q_in,
+               SUM(CASE WHEN direction='out' THEN qty ELSE 0 END) AS q_out
+        FROM tray_ledger
+        WHERE vendor_id IS NOT NULL
+        GROUP BY vendor_id
+      )
+      SELECT v.id AS vendor_id, v.vendor_code, v.name AS vendor_name, COALESCE(a.q_in,0) - COALESCE(a.q_out,0) AS tray_balance
+      FROM vendors v
+      LEFT JOIN agg a ON a.vendor_id = v.id
+      ORDER BY v.id ASC`);
+    res.json(r.rows || []);
+  } catch (e) { res.status(500).send(e.message); }
+});
+
 // Product-level closing stocks (optional, derived)
 router.get('/closing-stocks', async (req, res) => {
   try {

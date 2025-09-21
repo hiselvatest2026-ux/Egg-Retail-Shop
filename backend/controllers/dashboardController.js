@@ -14,6 +14,8 @@ exports.getSummary = async (req, res) => {
     const [
       salesTodayRes,
       purchasesTodayRes,
+      mtdSalesRes,
+      ytdSalesRes,
       pendingOrdersRes,
       pendingCollectionsRes,
       salesTrendRes,
@@ -35,6 +37,18 @@ exports.getSummary = async (req, res) => {
          FROM purchase_items pi JOIN purchases p ON p.id=pi.purchase_id
          WHERE p.purchase_date::date = CURRENT_DATE ${condPurchToday}`,
         params
+      ),
+      // Month-to-date sales
+      pool.query(
+        `SELECT COALESCE(SUM(si.quantity*si.price),0) AS mtd_sales
+         FROM sale_items si JOIN sales s ON s.id=si.sale_id
+         WHERE date_trunc('month', s.sale_date) = date_trunc('month', CURRENT_DATE)`
+      ),
+      // Year-to-date sales
+      pool.query(
+        `SELECT COALESCE(SUM(si.quantity*si.price),0) AS ytd_sales
+         FROM sale_items si JOIN sales s ON s.id=si.sale_id
+         WHERE date_trunc('year', s.sale_date) = date_trunc('year', CURRENT_DATE)`
       ),
       // Pending invoices: compute total from items per sale, compare with payments
       pool.query(
@@ -247,6 +261,8 @@ exports.getSummary = async (req, res) => {
       metrics: {
         total_sales_today: Number(salesTodayRes.rows[0]?.total_sales_today || 0),
         total_purchases_today: Number(purchasesTodayRes.rows[0]?.total_purchases_today || 0),
+        mtd_sales: Number(mtdSalesRes.rows[0]?.mtd_sales || 0),
+        ytd_sales: Number(ytdSalesRes.rows[0]?.ytd_sales || 0),
         current_stock_level: currentStockTotal,
         pending_orders: Number(pendingOrdersRes.rows[0]?.pending_invoices || 0),
         pending_collections: Number(pendingCollectionsRes.rows[0]?.pending_collections || 0),
