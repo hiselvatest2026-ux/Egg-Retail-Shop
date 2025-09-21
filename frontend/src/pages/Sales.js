@@ -12,7 +12,7 @@ const Sales = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit: 'Piece', trays: '', tray_qty: '', sale_type: 'Cash', payment_mode: 'Cash' });
+  const [form, setForm] = useState({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit: 'Piece', trays: '', tray_given_qty: '', tray_taken_qty: '', sale_type: 'Cash', payment_mode: 'Cash' });
   
   const [available, setAvailable] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -292,7 +292,7 @@ const Sales = () => {
           setError(`Insufficient stock for ${first.label || 'item'}: required ${first.required}, available ${first.availableNow}`);
           return;
         }
-        const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, tray_qty: Number(form.tray_qty||0) });
+        const res = await createSale({ customer_id: Number(form.customer_id), total: 0, product_name: null, payment_method: form.payment_mode, sale_type: form.sale_type, tray_given_qty: Number(form.tray_given_qty||0), tray_taken_qty: Number(form.tray_taken_qty||0) });
         const newSale = res.data;
         const tasks = itemsToSave.map(async (it) => {
           const effQty = it.qty_unit === 'Tray' ? Number(it.trays||0) * 30 : (it.effectiveQty != null ? Number(it.effectiveQty||0) : Number(it.qty_pieces||0));
@@ -343,7 +343,7 @@ const Sales = () => {
         const qty = String(form.quantity_unit)==='Tray' ? (Number(form.trays||0)*30) : Number(form.quantity||0);
         const unitFinal = pricingInfo ? Number(pricingInfo.final_price || 0) : 0;
         const pricePerPiece = unitFinal > 0 ? unitFinal : (Number(form.total||0) / (qty||1));
-        const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, tray_qty: Number(form.tray_qty||0) };
+        const payload = { customer_id: Number(form.customer_id), total: Number(form.total), product_name: form.product_name || null, payment_method: form.payment_mode, sale_type: form.sale_type, tray_given_qty: Number(form.tray_given_qty||0), tray_taken_qty: Number(form.tray_taken_qty||0) };
         if (editing) { 
           await updateSale(editing, payload); 
         } else { 
@@ -364,7 +364,7 @@ const Sales = () => {
           navigate(`/invoice/${newSale.id}`);
         }
       }
-      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit:'Piece', trays:'', sale_type:'Cash', payment_mode:'Cash' });
+      setForm({ customer_id: '', total: '', product_name: '', material_code: '', category: '', quantity: '1', quantity_unit:'Piece', trays:'', tray_given_qty:'', tray_taken_qty:'', sale_type:'Cash', payment_mode:'Cash' });
       setLineItems([]);
       setRecordPaymentNow(false);
       setPaymentAtCreate({ amount: '', mode: 'Cash' });
@@ -581,11 +581,15 @@ const Sales = () => {
           </div>
           {/* Divider */}
           <div style={{height:1, background:'#3A3A4D', margin:'6px 0 12px 0'}} />
-          {/* Tray quantity (qty-only, no value) */}
+          {/* Tray quantities (qty-only, no value) */}
           <div className="form-row" style={{marginBottom:12}}>
             <div className="input-group">
-              <label>Tray Qty (no value)</label>
-              <input className="input" placeholder="Tray Qty" value={form.tray_qty||''} onChange={e=>setForm(prev=>({...prev, tray_qty: e.target.value}))} inputMode="numeric" />
+              <label>Tray given (to customer)</label>
+              <input className="input" placeholder="0" value={form.tray_given_qty||''} onChange={e=>setForm(prev=>({...prev, tray_given_qty: e.target.value}))} inputMode="numeric" />
+            </div>
+            <div className="input-group">
+              <label>Tray taken (from customer)</label>
+              <input className="input" placeholder="0" value={form.tray_taken_qty||''} onChange={e=>setForm(prev=>({...prev, tray_taken_qty: e.target.value}))} inputMode="numeric" />
             </div>
           </div>
           <div className="card-header" style={{borderRadius:12, marginBottom:12, display:'flex', justifyContent:'space-between', alignItems:'center'}}>

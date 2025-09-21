@@ -11,7 +11,7 @@ exports.getSales = async (req, res) => {
 
 exports.createSale = async (req, res) => {
   try {
-    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash', route_trip_id, tray_qty } = req.body;
+    const { customer_id, total, egg_type, product_name, payment_method, status = 'Completed', discount = 0, sale_type = 'Cash', route_trip_id, tray_qty, tray_given_qty, tray_taken_qty } = req.body;
     // Credit limit validation
     if (sale_type === 'Credit' && customer_id) {
       const limRes = await pool.query('SELECT COALESCE(credit_limit,0) AS credit_limit FROM customers WHERE id=$1', [customer_id]);
@@ -38,11 +38,19 @@ exports.createSale = async (req, res) => {
       [customer_id, total, egg_type || null, pn, payment_method || null, status, discount, sale_type, route_trip_id || null]
     );
     const sale = result.rows[0];
-    // Record tray movement (customer out) if provided; qty-only
-    const tqty = Number(tray_qty || 0);
-    if (tqty > 0 && customer_id) {
-      try { await pool.query('INSERT INTO tray_ledger (customer_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [customer_id, 'out', 'sale', sale.id, tqty]); } catch(_) {}
-    }
+    // Record tray movements (qty-only): given => out, taken => in
+    const given = Number(tray_given_qty != null ? tray_given_qty : tray_qty || 0);
+    const taken = Number(tray_taken_qty || 0);
+    try {
+      if (customer_id) {
+        if (given > 0) {
+          await pool.query('INSERT INTO tray_ledger (customer_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [customer_id, 'out', 'sale', sale.id, Math.trunc(Math.abs(given))]);
+        }
+        if (taken > 0) {
+          await pool.query('INSERT INTO tray_ledger (customer_id, direction, reference_type, reference_id, qty) VALUES ($1,$2,$3,$4,$5)', [customer_id, 'in', 'sale', sale.id, Math.trunc(Math.abs(taken))]);
+        }
+      }
+    } catch(_) {}
     res.status(201).json(sale);
   } catch (err) {
     res.status(500).send(err.message);
