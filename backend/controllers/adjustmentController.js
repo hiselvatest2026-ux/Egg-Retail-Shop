@@ -3,8 +3,28 @@ const pool = require('../models/db');
 exports.listAdjustments = async (_req, res) => {
   try {
     const r = await pool.query(`
-      SELECT a.id, a.product_id, p.name AS product_name, a.adjustment_type, a.quantity, a.note, a.created_at
-      FROM stock_adjustments a LEFT JOIN products p ON p.id = a.product_id
+      WITH mm_guess AS (
+        SELECT p.id AS product_id,
+               CASE
+                 WHEN LOWER(p.name) LIKE 'egg%' THEN 'M00001'
+                 WHEN LOWER(p.name) LIKE 'paneer%' OR LOWER(p.name) LIKE 'panner%' THEN 'M00002'
+                 ELSE NULL
+               END AS part_code
+        FROM products p
+      )
+      SELECT a.id,
+             a.product_id,
+             p.name AS product_name,
+             mm.part_code AS material_code,
+             mm.metal_type AS material_type,
+             a.adjustment_type,
+             a.quantity,
+             a.note,
+             a.created_at
+      FROM stock_adjustments a
+      LEFT JOIN products p ON p.id = a.product_id
+      LEFT JOIN mm_guess g ON g.product_id = a.product_id
+      LEFT JOIN metal_master mm ON mm.part_code = g.part_code
       ORDER BY a.id DESC`);
     res.json(r.rows);
   } catch (e) { res.status(500).send(e.message); }
