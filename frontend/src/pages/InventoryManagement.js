@@ -10,6 +10,7 @@ const InventoryManagement = () => {
   const [insights, setInsights] = useState({ kpis:{ total_stock_value:0, low_stock_count:0 }, low_stock:[], fast_movers:[], slow_movers:[], reorder_suggestions:[] });
   const [tab, setTab] = useState('overview'); // overview | opening | closing | trays
   const [trayBalances, setTrayBalances] = useState([]);
+  const [trayVendorBalances, setTrayVendorBalances] = useState([]);
   const [trayStock, setTrayStock] = useState(0);
   const [opening, setOpening] = useState([]);
   const [openingMaterials, setOpeningMaterials] = useState([]);
@@ -46,7 +47,14 @@ const InventoryManagement = () => {
       setClosingMaterials(m.data||[]);
     } catch(e){ console.error('load closing failed', e);} }
   useEffect(() => { (async()=>{ try{ await load(); if (tab==='opening') await loadOpening(); if (tab==='closing') await loadClosing(); }catch(e){ console.error('load failed', e);} })(); }, [tab]);
-  useEffect(() => { (async()=>{ try{ if (tab==='trays') { const [b, s] = await Promise.all([axios.get(`${baseUrl}/inventory/tray-balances/customers`), axios.get(`${baseUrl}/inventory/tray-stock/shop`)]); setTrayBalances(b.data||[]); setTrayStock(Number(s.data?.tray_stock||0)); } } catch(e){ console.error('load trays failed', e);} })(); }, [tab]);
+  useEffect(() => { (async()=>{ try{ if (tab==='trays') { const [b, v, s] = await Promise.all([
+        axios.get(`${baseUrl}/inventory/tray-balances/customers`),
+        axios.get(`${baseUrl}/inventory/tray-balances/vendors`),
+        axios.get(`${baseUrl}/inventory/tray-stock/shop`)
+      ]);
+      setTrayBalances(b.data||[]);
+      setTrayVendorBalances(v.data||[]);
+      setTrayStock(Number(s.data?.tray_stock||0)); } } catch(e){ console.error('load trays failed', e);} })(); }, [tab]);
 
   // Auto-refresh when purchases/sales emit events
   useEffect(() => {
@@ -224,6 +232,17 @@ const InventoryManagement = () => {
           <tbody>
             {trayBalances.map(r => (
               <tr key={r.customer_id}><td>{r.customer_name}</td><td style={{textAlign:'right'}}>{r.tray_balance}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+      <div style={{height:12}} />
+      <Card title="Vendor Tray Balances">
+        <table className="table table-hover">
+          <thead><tr><th>Vendor</th><th style={{textAlign:'right'}}>Tray Balance</th></tr></thead>
+          <tbody>
+            {trayVendorBalances.map(r => (
+              <tr key={r.vendor_id}><td>{r.vendor_name}</td><td style={{textAlign:'right'}}>{r.tray_balance}</td></tr>
             ))}
           </tbody>
         </table>

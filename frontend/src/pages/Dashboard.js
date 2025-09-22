@@ -300,7 +300,12 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Metric title="Total Sales Today" value={`₹ ${Number(data?.metrics?.total_sales_today || 0).toFixed(2)}`} />
+        <Metric title="MTD Sales" value={`₹ ${Number(data?.metrics?.mtd_sales || 0).toFixed(2)}`} />
+        <Metric title="YTD Sales" value={`₹ ${Number(data?.metrics?.ytd_sales || 0).toFixed(2)}`} />
         <Metric title="Purchases Today" value={`₹ ${Number(data?.metrics?.total_purchases_today || 0).toFixed(2)}`} />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
         <Metric title="Total Stock Value" value={`₹ ${Number(data?.metrics?.total_stock_value || 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`} />
         <Metric title="Pending Collections" value={`₹ ${Number(data?.metrics?.pending_collections || 0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`} />
       </div>
