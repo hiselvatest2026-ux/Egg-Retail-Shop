@@ -94,12 +94,12 @@ const StockAdjustments = () => {
 
       <Card title="Adjustments List">
         <table className="table table-hover">
-          <thead><tr><th>ID</th><th>Product</th><th>Type</th><th>Qty</th><th>Note</th><th>When</th><th>Actions</th></tr></thead>
+          <thead><tr><th>ID</th><th>Material Type</th><th>Type</th><th>Qty</th><th>Note</th><th>When</th><th>Actions</th></tr></thead>
           <tbody>
             {adjustments.map(a => (
               <tr key={a.id}>
                 <td>#{a.id}</td>
-                <td>{a.product_name || `#${a.product_id}`}</td>
+                <td>{a.material_type || '-'}</td>
                 <td>{a.adjustment_type}</td>
                 <td>{a.quantity}</td>
                 <td>{a.note || '-'}</td>
