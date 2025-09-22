@@ -91,34 +91,41 @@ exports.getPricingForSale = async (req, res) => {
   try {
     const { customer_id, material_code } = req.query;
     let { category } = req.query;
-    // Normalize Walk-in to Retail pricing unless explicitly defined
-    if (category && /walk-?in/i.test(category)) {
-      category = 'Retail';
-    }
+    // Normalize categories to align with Pricing Master
+    const normalizeCategory = (c) => {
+      if (!c) return '';
+      if (/walk-?in/i.test(c)) return 'Retail';
+      if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+      return c;
+    };
+    category = normalizeCategory(category);
     
     // Get customer tax applicability (optional)
     let isTaxable = true;
     // Customer tax applicability removed; default to taxable
     isTaxable = true;
     
-    // Get pricing information
-    let pricingQuery = `
-      SELECT pm.base_price, pm.gst_percent, mm.description as material_description
-      FROM pricing_master pm
-      LEFT JOIN metal_master mm ON pm.material_code = mm.part_code
-      WHERE pm.material_code = $1 AND pm.category = $2
-    `;
-    let pricingParams = [material_code, category];
-    
-    // If customer_id is provided, look for customer-specific pricing first
-    if (customer_id) {
-      pricingQuery += ' AND (pm.customer_id = $3 OR pm.customer_id IS NULL)';
-      pricingParams.push(customer_id);
+    // Get pricing information with proper customer-first ordering and category fallbacks
+    const tryResolve = async (cat) => {
+      let q = `
+        SELECT pm.base_price, pm.gst_percent, mm.description as material_description
+        FROM pricing_master pm
+        LEFT JOIN metal_master mm ON pm.material_code = mm.part_code
+        WHERE pm.material_code = $1 AND pm.category = $2
+      `;
+      const p = [material_code, cat];
+      if (customer_id) { q += ' AND (pm.customer_id = $3 OR pm.customer_id IS NULL)'; p.push(customer_id); }
+      // Ensure customer-specific rows take priority over generic (NULL)
+      q += ' ORDER BY pm.customer_id DESC NULLS LAST LIMIT 1';
+      const r = await pool.query(q, p);
+      return r;
+    };
+    let pricingResult = await tryResolve(category);
+    // If not found and category was non-empty, try Retail as a final fallback
+    if (pricingResult.rows.length === 0 && category) {
+      const fallbackCat = normalizeCategory('Retail');
+      pricingResult = await tryResolve(fallbackCat);
     }
-    
-    pricingQuery += ' ORDER BY pm.customer_id DESC LIMIT 1'; // Customer-specific first, then general
-    
-    const pricingResult = await pool.query(pricingQuery, pricingParams);
     
     if (pricingResult.rows.length === 0) {
       return res.status(404).json({ message: 'Pricing not found for this material and category' });
