@@ -405,10 +405,16 @@ const Sales = () => {
     }
     
     try {
+      const normalizeCategory = (c) => {
+        if (!c) return '';
+        if (/walk-?in/i.test(c)) return 'Retail';
+        if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+        return c;
+      };
       const result = await getPricingForSale({
         customer_id: form.customer_id,
         material_code: form.material_code,
-        category: form.category
+        category: normalizeCategory(form.category)
       });
       setPricingInfo(result.data);
     } catch (err) {
@@ -426,12 +432,24 @@ const Sales = () => {
     const code = addForm.material_code;
     if (!code) return;
     const customer = customers.find(c => String(c.id) === String(form.customer_id));
-    const categoryForPricing = form.category || (customer && customer.category) || '';
+    const normalizeCategory = (c) => {
+      if (!c) return '';
+      if (/walk-?in/i.test(c)) return 'Retail';
+      if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+      return c;
+    };
+    const categoryForPricing = normalizeCategory(form.category || (customer && customer.category) || '');
     // Prefer Pricing Master row directly
     try {
-      const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+      let pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
         && String(r.category||'').toLowerCase()===String(categoryForPricing||'').toLowerCase()
         && String(r.customer_id||'')===String(form.customer_id||''));
+      // Fallback to Retail category if not found
+      if (!pm && categoryForPricing) {
+        pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+          && String(r.category||'').toLowerCase()==='retail'
+          && String(r.customer_id||'')===String(form.customer_id||''));
+      }
       const base = pm ? Number(pm.base_price||0) : 0;
       if (base > 0) { setAddForm(prev=>({ ...prev, price_per_piece: String(base) })); return; }
     } catch(_) {}
@@ -462,11 +480,22 @@ const Sales = () => {
     const code = addForm.material_code;
     if (!code) return;
     const customer = customers.find(c => String(c.id) === String(form.customer_id));
-    const categoryForPricing = form.category || (customer && customer.category) || '';
+    const normalizeCategory = (c) => {
+      if (!c) return '';
+      if (/walk-?in/i.test(c)) return 'Retail';
+      if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+      return c;
+    };
+    const categoryForPricing = normalizeCategory(form.category || (customer && customer.category) || '');
     try {
-      const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+      let pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
         && String(r.category||'').toLowerCase()===String(categoryForPricing||'').toLowerCase()
         && String(r.customer_id||'')===String(form.customer_id||''));
+      if (!pm && categoryForPricing) {
+        pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+          && String(r.category||'').toLowerCase()==='retail'
+          && String(r.customer_id||'')===String(form.customer_id||''));
+      }
       const base = pm ? Number(pm.base_price||0) : 0;
       if (base > 0) {
         setAddForm(prev=> ({ ...prev, price_per_piece: String(base) }));
@@ -626,15 +655,27 @@ const Sales = () => {
                           // Prefer Pricing Master row directly; if found, skip API overwrite
                           let base0 = 0;
                           try {
-                            const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
-                              && String(r.category||'').toLowerCase()===String((form.category||'').toLowerCase())
+                            const normalizeCategory = (c) => {
+                              if (!c) return '';
+                              if (/walk-?in/i.test(c)) return 'Retail';
+                              if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+                              return c;
+                            };
+                            const normCat = normalizeCategory(form.category);
+                            let pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+                              && String(r.category||'').toLowerCase()===String((normCat||'').toLowerCase())
                               && String(r.customer_id||'')===String(form.customer_id||''));
+                            if (!pm && normCat) {
+                              pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+                                && String(r.category||'').toLowerCase()==='retail'
+                                && String(r.customer_id||'')===String(form.customer_id||''));
+                            }
                             base0 = pm ? Number(pm.base_price||0) : 0;
                             if (base0 > 0) {
                               setAddForm(prev=>({ ...prev, price_per_piece: String(base0) }));
                             }
                           } catch(_) {}
-                          if (!(base0 > 0)) getPricingForSale({ customer_id: form.customer_id, material_code: code, category: form.category })
+                          if (!(base0 > 0)) getPricingForSale({ customer_id: form.customer_id, material_code: code, category: (function(){ const c=form.category; if (!c) return ''; if (/walk-?in/i.test(c)) return 'Retail'; if (/horec(a|ha)?/i.test(c)) return 'Wholesale'; return c; })() })
                             .then(r=>{
                               const base = Number(r?.data?.base_price || 0);
                               if (base > 0) {
@@ -1105,16 +1146,28 @@ const Sales = () => {
                         // Prefer Pricing Master row directly; if found, skip API overwrite
                         let pmBase = 0;
                         try {
-                          const pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
-                            && String(r.category||'').toLowerCase()===String((form.category||'').toLowerCase())
+                          const normalizeCategory = (c) => {
+                            if (!c) return '';
+                            if (/walk-?in/i.test(c)) return 'Retail';
+                            if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+                            return c;
+                          };
+                          const normCat = normalizeCategory(form.category);
+                          let pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+                            && String(r.category||'').toLowerCase()===String((normCat||'').toLowerCase())
                             && String(r.customer_id||'')===String(form.customer_id||''));
+                          if (!pm && normCat) {
+                            pm = (pricingRows||[]).find(r => String(r.material_code)===String(code)
+                              && String(r.category||'').toLowerCase()==='retail'
+                              && String(r.customer_id||'')===String(form.customer_id||''));
+                          }
                           pmBase = pm ? Number(pm.base_price||0) : 0;
                           if (pmBase > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(pmBase) }));
                         } catch(_) {}
                         if (!(pmBase > 0)) {
                           try {
                             const cust = customers.find(c=> String(c.id)===String(form.customer_id));
-                            const categoryForPricing = form.category || (cust && cust.category) || '';
+                            const categoryForPricing = (function(){ const c=(form.category || (cust && cust.category) || ''); if (!c) return ''; if (/walk-?in/i.test(c)) return 'Retail'; if (/horec(a|ha)?/i.test(c)) return 'Wholesale'; return c; })();
                             const r = await getPricingForSale({ customer_id: form.customer_id, material_code: code, category: categoryForPricing });
                             const base = Number(r?.data?.base_price || 0);
                             if (base > 0) setAddForm(prev=>({ ...prev, price_per_piece: String(base) }));
