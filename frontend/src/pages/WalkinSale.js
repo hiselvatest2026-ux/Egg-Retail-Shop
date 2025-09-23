@@ -15,8 +15,9 @@ const WalkinSale = () => {
   const [pricePerUnit, setPricePerUnit] = useState('');
   const [available, setAvailable] = useState(null);
   const [total, setTotal] = useState(0);
-  const [showSheet, setShowSheet] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [pricingRows, setPricingRows] = useState([]);
+  const [payMethod, setPayMethod] = useState('Cash'); // 'Cash' | 'Gpay' | 'Card'
 
   const defaultMaterial = useMemo(() => {
     // Prefer Egg
@@ -127,6 +128,7 @@ const WalkinSale = () => {
   const submitSale = async (mode) => {
     try {
       setError('');
+      setSubmitting(true);
       const q = Number(qty||0);
       const price = Number(pricePerUnit||0);
       if (!defaultProduct || !defaultMaterial) { setError('Setup error: masters missing'); return; }
@@ -142,59 +144,83 @@ const WalkinSale = () => {
       navigate(`/invoice/${sale.id}`);
     } catch (e) {
       setError(e?.response?.data?.message || 'Failed to create sale');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (loading) return <div className="p-4">Loading…</div>;
 
   return (
-    <div className="page">
-      <div className="page-header">
+    <div className="page" style={{background:'#F5F5F5'}}>
+      <div className="page-header" style={{background:'transparent'}}>
         <div>
-          <h1 className="page-title">Walk‑in Sale</h1>
-          <p className="page-subtitle">Quantity‑only entry with auto‑pricing and one‑tap payment</p>
+          <button type="button" className="btn secondary btn-sm" onClick={()=>navigate(-1)} aria-label="Go back" style={{marginBottom:8}}>{'<'} Back</button>
+          <h1 className="page-title" style={{color:'#333', fontSize:isMobile?28:24, fontWeight:800}}>Walk‑in Sale</h1>
+          <p className="page-subtitle" style={{color:'#7A7A7A'}}>Quick & Easy Checkout</p>
         </div>
       </div>
 
       <Card title={defaultMaterial ? `${defaultMaterial.part_code} - ${defaultMaterial.metal_type}` : 'Walk-in Item'}>
         <div className="card-body" style={{padding:isMobile?16:22}}>
-          <div className="form-row" style={{marginBottom:12}}>
+          <div className="form-row" style={{marginBottom:12, alignItems:'end'}}>
             <div className="input-group" style={{gridColumn:'1/-1'}}>
-              <label style={{fontSize:12, fontWeight:800}}>Quantity</label>
-              <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:14}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value)} />
-              {available != null && <div className="form-help">Available: {available}</div>}
+              <label style={{fontSize:12, fontWeight:800, color:'#7A7A7A'}}>Quantity</label>
+              <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value.replace(/[^0-9]/g,''))} />
+              {available != null && <div className="form-help" style={{color:'#7A7A7A'}}>Available: {available}</div>}
             </div>
             <div className="input-group">
-              <label style={{fontSize:12, fontWeight:800}}>Price / unit</label>
-              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:14}} />
+              <label style={{fontSize:12, fontWeight:800, color:'#7A7A7A'}}>Price / unit</label>
+              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12}} />
             </div>
-            <div className="input-group">
-              <label style={{fontSize:12, fontWeight:800}}>Total</label>
-              <div className="badge" style={{fontSize:isMobile?20:16, padding:isMobile?'10px 14px':'8px 12px', fontWeight:900}}>₹ {total.toFixed(2)}</div>
+            <div className="input-group" style={{textAlign:'right'}}>
+              <label style={{fontSize:12, fontWeight:800, color:'#7A7A7A'}}>Total</label>
+              <div className="badge" style={{background:'#00BFA5', color:'#fff', border:'none', fontSize:isMobile?22:18, padding:isMobile?'12px 16px':'10px 14px', fontWeight:900, borderRadius:12, boxShadow:'0 6px 16px rgba(0,0,0,0.08)'}}>₹ {total.toFixed(2)}</div>
             </div>
           </div>
+
+          {/* Payment method segmented buttons */}
+          <div className="btn-group" style={{gap:8, margin:'8px 0 12px 0'}}>
+            {['Cash','Gpay','Card'].map(m => {
+              const selected = String(payMethod).toLowerCase() === String(m).toLowerCase();
+              return (
+                <button key={m} type="button" className="btn" onClick={()=>setPayMethod(m)}
+                  style={{
+                    background: selected ? '#FF8C00' : '#E5E7EB',
+                    color: selected ? '#fff' : '#7A7A7A',
+                    border:'none',
+                    borderRadius:12,
+                    minHeight:40,
+                    padding:'10px 14px',
+                    fontWeight:800
+                  }}>
+                  {selected ? '✓ ' : ''}{m === 'Gpay' ? 'GPay' : m}
+                </button>
+              );
+            })}
+          </div>
+
           {error && <div className="form-help" style={{marginBottom:8}}>{error}</div>}
           <div className="actions-row" style={{justifyContent:'center'}}>
-            <button className="btn primary" style={{width:isMobile?'100%':'auto', minHeight:isMobile?56:40, fontSize:isMobile?18:14}} onClick={()=>submitSale('Cash')}>Pay Now (Cash)</button>
+            <button disabled={submitting} className="btn" style={{
+              width:isMobile?'100%':'100%',
+              minHeight:isMobile?56:50,
+              fontSize:isMobile?18:16,
+              background:'#FF8C00',
+              color:'#fff',
+              fontWeight:900,
+              border:'none',
+              borderRadius:12,
+              boxShadow:'0 12px 24px rgba(255,140,0,0.25)'
+            }} onClick={()=>submitSale(payMethod)}>
+              {submitting ? 'Processing…' : `Pay with ${payMethod === 'Gpay' ? 'GPay' : payMethod}`}
+            </button>
           </div>
-          <div style={{marginTop:8, textAlign:'center'}}>
-            <button type="button" className="btn secondary btn-sm" onClick={()=>setShowSheet(true)} style={{width:isMobile?'100%':'auto'}}>Other payment options</button>
-          </div>
+          <div style={{marginTop:8, textAlign:'center', color:'#7A7A7A'}}>Invoice opens after successful payment</div>
         </div>
       </Card>
 
-      {showSheet && (
-        <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:1000}} onClick={()=>setShowSheet(false)}>
-          <div style={{position:'absolute', left:0, right:0, bottom:0, background:'#1a1f2b', borderTopLeftRadius:16, borderTopRightRadius:16, padding:16, boxShadow:'0 -10px 30px rgba(0,0,0,.5)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{height:4, width:48, background:'#334155', borderRadius:9999, margin:'0 auto 12px auto'}} />
-            <div className="btn-group" style={{flexDirection:'column'}}>
-              <button className="btn" style={{width:'100%', minHeight:56, fontSize:18}} onClick={()=>{ setShowSheet(false); submitSale('Cash'); }}>Pay Cash & Generate</button>
-              <button className="btn secondary" style={{width:'100%', minHeight:56, fontSize:18}} onClick={()=>{ setShowSheet(false); submitSale('Gpay'); }}>Pay GPay & Generate</button>
-              <button className="btn secondary" style={{width:'100%', minHeight:56, fontSize:18}} onClick={()=>{ setShowSheet(false); submitSale('Card'); }}>Pay Card & Generate</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Bottom sheet removed in consolidated flow */}
     </div>
   );
 };
