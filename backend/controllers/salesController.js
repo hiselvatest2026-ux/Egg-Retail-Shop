@@ -114,8 +114,12 @@ exports.getPricingForSale = async (req, res) => {
     };
     // Attempt exact category first; if Walk-in, fallback to Retail; finally try Retail generically
     const candidates = [];
-    if (categoryRaw) candidates.push(categoryRaw);
-    if (/walk-?in/i.test(categoryRaw)) candidates.push('Retail');
+    if (categoryRaw) {
+      candidates.push(categoryRaw);
+      // Cross-fallback between Walk-in and Retail to ensure compatibility
+      if (/^retail$/i.test(categoryRaw)) candidates.push('Walk-in');
+      if (/walk-?in/i.test(categoryRaw)) candidates.push('Retail');
+    }
     // Ensure Retail considered as a general fallback once
     if (!candidates.some(c=>/^retail$/i.test(c))) candidates.push('Retail');
     let pricingResult = { rows: [] };
