@@ -67,7 +67,7 @@ router.get('/closing-stocks/materials', async (req, res) => {
         SELECT id AS product_id,
                CASE
                  WHEN LOWER(name) LIKE 'egg%' THEN 'M00001'
-                 WHEN LOWER(name) LIKE 'paneer%' OR LOWER(name) LIKE 'panner%' THEN 'M00002'
+                 /* removed paneer/panner mapping */
                  ELSE NULL
                END AS part_code
         FROM products

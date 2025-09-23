@@ -7,7 +7,6 @@ exports.listAdjustments = async (_req, res) => {
         SELECT p.id AS product_id,
                CASE
                  WHEN LOWER(p.name) LIKE 'egg%' THEN 'M00001'
-                 WHEN LOWER(p.name) LIKE 'paneer%' OR LOWER(p.name) LIKE 'panner%' THEN 'M00002'
                  ELSE NULL
                END AS part_code
         FROM products p
