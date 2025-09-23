@@ -17,7 +17,7 @@ const WalkinSale = () => {
   const [total, setTotal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [pricingRows, setPricingRows] = useState([]);
-  const [payMethod, setPayMethod] = useState('Cash'); // 'Cash' | 'Gpay' | 'Card'
+  const [payMethod, setPayMethod] = useState('Card'); // default Card per Option 10
   const [platform, setPlatform] = useState('web'); // 'android' | 'ios' | 'web'
 
   const defaultMaterial = useMemo(() => {
@@ -170,33 +170,43 @@ const WalkinSale = () => {
   const segRadius = platform==='ios' ? 12 : 10;
   const segHeight = isMobile ? 44 : 40;
   const ctaRadius = platform==='ios' ? 14 : 12;
-  const ctaShadow = platform==='android' ? '0 6px 14px rgba(255,140,0,0.3)' : '0 12px 24px rgba(255,140,0,0.25)';
+  const ctaShadow = platform==='android' ? '0 6px 14px rgba(33,150,243,0.3)' : '0 12px 24px rgba(33,150,243,0.25)';
+  const accentBlue = '#2196F3';
+  const bgSoft = '#F7F4EF';
+  const textPrimary = '#333333';
+  const textSecondary = '#7A7A7A';
+  const errorRed = '#F44336';
 
   return (
-    <div className="page" style={{background:'#F5F5F5', fontFamily}}>
+    <div className="page" style={{background:bgSoft, fontFamily}}>
       <div className="page-header" style={{background:'transparent'}}>
         <div>
           <button type="button" className="btn secondary btn-sm" onClick={()=>navigate(-1)} aria-label="Go back" style={{marginBottom:8}}>{'<'} Back</button>
-          <h1 className="page-title" style={{color:'#333', fontSize:isMobile?28:24, fontWeight:800}}>Walk‑in Sale</h1>
-          <p className="page-subtitle" style={{color:'#7A7A7A'}}>Quick & Easy Checkout</p>
+          <h1 className="page-title" style={{color:textPrimary, fontSize:isMobile?28:24, fontWeight:800}}>Walk‑in Sale</h1>
+          <p className="page-subtitle" style={{color:textSecondary}}>Quick & Easy Checkout</p>
         </div>
       </div>
 
-      <Card title={defaultMaterial ? `${defaultMaterial.part_code} - ${defaultMaterial.metal_type}` : 'Walk-in Item'}>
-        <div className="card-body" style={{padding:isMobile?16:22}}>
+      <Card title={null}>
+        <div className="card-body" style={{padding:isMobile?16:22, background:'#FFFFFF', borderRadius:12, boxShadow:'0px 2px 4px rgba(0,0,0,0.08)'}}>
+          <div style={{marginBottom:10}}>
+            <div style={{color:textPrimary, fontSize:isMobile?22:20, fontWeight:900}}>Quick & Easy Checkout</div>
+            <div style={{height:1, background:'#E5E5E5', marginTop:8}} />
+          </div>
+          <div style={{color:textPrimary, fontWeight:700, marginBottom:6}}>{defaultMaterial ? `${defaultMaterial.part_code} - ${defaultMaterial.metal_type}` : 'Walk-in Item'}</div>
           <div className="form-row" style={{marginBottom:12, alignItems:'end'}}>
             <div className="input-group" style={{gridColumn:'1/-1'}}>
-              <label style={{fontSize:12, fontWeight:800, color:'#7A7A7A'}}>Quantity</label>
-              <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value.replace(/[^0-9]/g,''))} />
-              {available != null && <div className="form-help" style={{color:'#7A7A7A'}}>Available: {available}</div>}
+              <label style={{fontSize:12, fontWeight:800, color:textSecondary}}>Quantity</label>
+              <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12, background:'#FFFFFF', borderColor:'#E5E7EB'}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value.replace(/[^0-9]/g,''))} />
+              {available != null && <div className="form-help" style={{color:textSecondary}}>Available: {available}</div>}
             </div>
             <div className="input-group">
-              <label style={{fontSize:12, fontWeight:800, color:'#7A7A7A'}}>Price / unit</label>
-              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12}} />
+              <label style={{fontSize:12, fontWeight:800, color:textSecondary}}>Price / unit</label>
+              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12, background:'#FFFFFF', borderColor:'#E5E7EB'}} />
             </div>
             <div className="input-group" style={{textAlign:'right'}}>
-              <label style={{fontSize:12, fontWeight:800, color:'#7A7A7A'}}>Total</label>
-              <div className="badge" style={{background:'#00BFA5', color:'#fff', border:'none', fontSize:isMobile?22:18, padding:isMobile?'12px 16px':'10px 14px', fontWeight:900, borderRadius:12, boxShadow:'0 6px 16px rgba(0,0,0,0.08)'}}>₹ {total.toFixed(2)}</div>
+              <label style={{fontSize:12, fontWeight:800, color:textSecondary}}>Total</label>
+              <div className="badge" style={{background:accentBlue, color:'#fff', border:'none', fontSize:isMobile?22:18, padding:isMobile?'12px 16px':'10px 14px', fontWeight:900, borderRadius:12, boxShadow:'0 6px 16px rgba(0,0,0,0.08)'}}>₹ {total.toFixed(2)}</div>
             </div>
           </div>
 
@@ -207,8 +217,8 @@ const WalkinSale = () => {
               return (
                 <button key={m} type="button" className="btn" onClick={()=>setPayMethod(m)}
                   style={{
-                    background: selected ? '#FF8C00' : '#E5E7EB',
-                    color: selected ? '#fff' : '#7A7A7A',
+                    background: selected ? accentBlue : '#E5E7EB',
+                    color: selected ? '#fff' : textSecondary,
                     border:'none',
                     borderRadius:segRadius,
                     minHeight:segHeight,
@@ -221,13 +231,18 @@ const WalkinSale = () => {
             })}
           </div>
 
+          {/* Validation error below payment selectors */}
+          {(!(Number(qty||0)>0)) && (
+            <div className="form-help" style={{color:errorRed, marginTop:-6, marginBottom:8}}>Enter a valid quantity</div>
+          )}
+
           {error && <div className="form-help" style={{marginBottom:8}}>{error}</div>}
           <div className="actions-row" style={{justifyContent:'center'}}>
             <button disabled={submitting} className="btn" style={{
               width:isMobile?'100%':'100%',
               minHeight:isMobile?56:50,
               fontSize:isMobile?18:16,
-              background:'#FF8C00',
+              background:accentBlue,
               color:'#fff',
               fontWeight:900,
               border:'none',
