@@ -329,7 +329,7 @@ const Dashboard = () => {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
-                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => `₹ ${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
                 },
                 tooltip: {
@@ -355,7 +355,7 @@ const Dashboard = () => {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
-                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => Number(v||0).toLocaleString(undefined,{ maximumFractionDigits: 0 })
                 }
               },
@@ -377,7 +377,7 @@ const Dashboard = () => {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
-                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => `₹ ${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
                 },
                 tooltip: {
@@ -398,7 +398,7 @@ const Dashboard = () => {
               responsive: true,
               plugins: {
                 legend: baseLegend,
-                datalabels: { ...datalabelBase, display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
+                datalabels: { ...datalabelBase, display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
               },
               scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
             }} />
