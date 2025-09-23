@@ -178,31 +178,33 @@ const WalkinSale = () => {
   const errorRed = '#F44336';
 
   return (
-    <div className="page" style={{background:bgSoft, fontFamily}}>
-      <div className="page-header" style={{background:'transparent'}}>
+    <div className="page" style={{background:'#FFFFFF', fontFamily}}>
+      <div className="page-header" style={{background:'#FFFFFF'}}>
         <div>
-          <button type="button" className="btn secondary btn-sm" onClick={()=>navigate(-1)} aria-label="Go back" style={{marginBottom:8}}>{'<'} Back</button>
-          <h1 className="page-title" style={{color:textPrimary, fontSize:isMobile?28:24, fontWeight:800}}>Walk‑in Sale</h1>
-          <p className="page-subtitle" style={{color:textSecondary}}>Quick & Easy Checkout</p>
+          <div style={{position:'sticky', top:0, background:'#FFFFFF', padding:'8px 0', boxShadow:'0 2px 4px rgba(0,0,0,0.08)', zIndex:5}}>
+            <button type="button" className="btn secondary btn-sm" onClick={()=>navigate(-1)} aria-label="Go back" style={{marginBottom:8}}>{'<'} Back</button>
+          </div>
+          <h1 className="page-title" style={{color:textPrimary, fontSize:isMobile?28:24, fontWeight:800, marginTop:8}}>Quick & Easy Checkout</h1>
+          <div style={{height:1, background:'#E0E0E0', marginTop:8}} />
         </div>
       </div>
 
       <Card title={null}>
-        <div className="card-body" style={{padding:isMobile?16:22, background:'#FFFFFF', borderRadius:12, boxShadow:'0px 2px 4px rgba(0,0,0,0.08)'}}>
-          <div style={{marginBottom:10}}>
-            <div style={{color:textPrimary, fontSize:isMobile?22:20, fontWeight:900}}>Quick & Easy Checkout</div>
-            <div style={{height:1, background:'#E5E5E5', marginTop:8}} />
-          </div>
+        <div className="card-body" style={{padding:isMobile?16:22, background:'#FFFFFF', borderRadius:0, boxShadow:'none'}}>
           <div style={{color:textPrimary, fontWeight:700, marginBottom:6}}>{defaultMaterial ? `${defaultMaterial.part_code} - ${defaultMaterial.metal_type}` : 'Walk-in Item'}</div>
           <div className="form-row" style={{marginBottom:12, alignItems:'end'}}>
             <div className="input-group" style={{gridColumn:'1/-1'}}>
               <label style={{fontSize:12, fontWeight:800, color:textSecondary}}>Quantity</label>
-              <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12, background:'#FFFFFF', borderColor:'#E5E7EB'}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value.replace(/[^0-9]/g,''))} />
+              <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                <button type="button" className="btn secondary" aria-label="Decrease" onClick={()=>setQty(v=>{ const n = Math.max(0, Number(String(v||'0').replace(/[^0-9]/g,'')) - 1); return String(n); })} style={{minWidth:42}}>−</button>
+                <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12, background:'#FFFFFF', borderColor:'#E0E0E0', flex:1}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value.replace(/[^0-9]/g,''))} />
+                <button type="button" className="btn secondary" aria-label="Increase" onClick={()=>setQty(v=>{ const n = Math.max(0, Number(String(v||'0').replace(/[^0-9]/g,'')) + 1); return String(n); })} style={{minWidth:42}}>+</button>
+              </div>
               {available != null && <div className="form-help" style={{color:textSecondary}}>Available: {available}</div>}
             </div>
             <div className="input-group">
               <label style={{fontSize:12, fontWeight:800, color:textSecondary}}>Price / unit</label>
-              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12, background:'#FFFFFF', borderColor:'#E5E7EB'}} />
+              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:16, borderRadius:12, background:'#FFFFFF', borderColor:'#E0E0E0'}} />
             </div>
             <div className="input-group" style={{textAlign:'right'}}>
               <label style={{fontSize:12, fontWeight:800, color:textSecondary}}>Total</label>
