@@ -33,7 +33,6 @@ const Sales = () => {
     const pr = (m)=>{
       const n = String(m.description || m.metal_type || '').toLowerCase();
       if (n.includes('egg')) return 0;
-      if (n.includes('panner') || n.includes('paneer')) return 1;
       return 2;
     };
     src.sort((a,b)=>{ const da=pr(a), db=pr(b); if (da!==db) return da-db; return String(a.metal_type||'').localeCompare(String(b.metal_type||'')); });
