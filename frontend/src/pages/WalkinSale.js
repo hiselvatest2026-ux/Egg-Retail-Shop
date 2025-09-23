@@ -18,6 +18,7 @@ const WalkinSale = () => {
   const [submitting, setSubmitting] = useState(false);
   const [pricingRows, setPricingRows] = useState([]);
   const [payMethod, setPayMethod] = useState('Cash'); // 'Cash' | 'Gpay' | 'Card'
+  const [platform, setPlatform] = useState('web'); // 'android' | 'ios' | 'web'
 
   const defaultMaterial = useMemo(() => {
     // Prefer Egg
@@ -56,6 +57,15 @@ const WalkinSale = () => {
       mq.addEventListener('change', apply);
       return () => mq.removeEventListener('change', apply);
     } catch(_) {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      const ua = (navigator && navigator.userAgent) ? navigator.userAgent : '';
+      if (/Android/i.test(ua)) setPlatform('android');
+      else if (/iPhone|iPad|iPod/i.test(ua)) setPlatform('ios');
+      else setPlatform('web');
+    } catch(_) { setPlatform('web'); }
   }, []);
 
   useEffect(() => {
@@ -151,8 +161,19 @@ const WalkinSale = () => {
 
   if (loading) return <div className="p-4">Loading…</div>;
 
+  const fontFamily = platform==='android'
+    ? 'Roboto, system-ui, -apple-system, Segoe UI, Arial, sans-serif'
+    : (platform==='ios'
+      ? 'SF Pro Display, -apple-system, system-ui, Segoe UI, Arial, sans-serif'
+      : 'Inter, system-ui, -apple-system, Segoe UI, Arial, sans-serif');
+
+  const segRadius = platform==='ios' ? 12 : 10;
+  const segHeight = isMobile ? 44 : 40;
+  const ctaRadius = platform==='ios' ? 14 : 12;
+  const ctaShadow = platform==='android' ? '0 6px 14px rgba(255,140,0,0.3)' : '0 12px 24px rgba(255,140,0,0.25)';
+
   return (
-    <div className="page" style={{background:'#F5F5F5'}}>
+    <div className="page" style={{background:'#F5F5F5', fontFamily}}>
       <div className="page-header" style={{background:'transparent'}}>
         <div>
           <button type="button" className="btn secondary btn-sm" onClick={()=>navigate(-1)} aria-label="Go back" style={{marginBottom:8}}>{'<'} Back</button>
@@ -189,9 +210,9 @@ const WalkinSale = () => {
                     background: selected ? '#FF8C00' : '#E5E7EB',
                     color: selected ? '#fff' : '#7A7A7A',
                     border:'none',
-                    borderRadius:12,
-                    minHeight:40,
-                    padding:'10px 14px',
+                    borderRadius:segRadius,
+                    minHeight:segHeight,
+                    padding:isMobile?'10px 14px':'8px 12px',
                     fontWeight:800
                   }}>
                   {selected ? '✓ ' : ''}{m === 'Gpay' ? 'GPay' : m}
@@ -210,8 +231,8 @@ const WalkinSale = () => {
               color:'#fff',
               fontWeight:900,
               border:'none',
-              borderRadius:12,
-              boxShadow:'0 12px 24px rgba(255,140,0,0.25)'
+              borderRadius:ctaRadius,
+              boxShadow:ctaShadow
             }} onClick={()=>submitSale(payMethod)}>
               {submitting ? 'Processing…' : `Pay with ${payMethod === 'Gpay' ? 'GPay' : payMethod}`}
             </button>
