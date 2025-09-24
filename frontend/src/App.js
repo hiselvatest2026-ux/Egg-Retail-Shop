@@ -65,7 +65,7 @@ function AppShell() {
     }
   }, [isWalkin, isMobile]);
   return (
-      <div className="layout">
+      <div className="layout" style={isWalkin && isMobile ? { background:'#FFFFFF' } : undefined}>
         <div className="mobile-header" style={{background: (isWalkin && isMobile) ? '#FFFFFF' : '#F8F5F1', boxShadow:'0px 4px 10px rgba(0,0,0,0.05)'}}>
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu" style={{color:'#333333'}}>☰</button>
           <div style={{display:'flex', alignItems:'center', gap:8, marginLeft:10}}>
