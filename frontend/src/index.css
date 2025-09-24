@@ -17,8 +17,10 @@ body {
 /* Mobile-wide light theme overrides */
 @media (max-width: 1024px) {
   body { background: #ffffff !important; color: #111827 !important; color-scheme: light !important; }
+  html, body, #root { background: #ffffff !important; min-height: 100vh; }
   .layout { background: #ffffff !important; }
   .content { background: #ffffff !important; }
+  .page { background: #ffffff !important; }
   .mobile-header { background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; }
   .bottom-tabs { background: #ffffff !important; border-top: 1px solid #e5e7eb !important; }
   .sidebar { background: #ffffff !important; color: #111827 !important; border-right: 1px solid #e5e7eb !important; }
