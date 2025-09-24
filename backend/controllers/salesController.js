@@ -90,7 +90,15 @@ exports.deleteSale = async (req, res) => {
 exports.getPricingForSale = async (req, res) => {
   try {
     const { customer_id, material_code } = req.query;
-    const categoryRaw = req.query.category || '';
+    let { category } = req.query;
+    // Normalize categories to align with Pricing Master
+    const normalizeCategory = (c) => {
+      if (!c) return '';
+      if (/walk-?in/i.test(c)) return 'Retail';
+      if (/horec(a|ha)?/i.test(c)) return 'Wholesale';
+      return c;
+    };
+    category = normalizeCategory(category);
     
     // Get customer tax applicability (optional)
     let isTaxable = true;
@@ -112,24 +120,11 @@ exports.getPricingForSale = async (req, res) => {
       const r = await pool.query(q, p);
       return r;
     };
-    // Attempt exact category first; if Walk-in, fallback to Retail; finally try Retail generically
-    const candidates = [];
-    if (categoryRaw) {
-      candidates.push(categoryRaw);
-      // Cross-fallback between Walk-in and Retail to ensure compatibility
-      if (/^retail$/i.test(categoryRaw)) candidates.push('Walk-in');
-      if (/walk-?in/i.test(categoryRaw)) candidates.push('Retail');
-    }
-    // Ensure Retail considered as a general fallback once
-    if (!candidates.some(c=>/^retail$/i.test(c))) candidates.push('Retail');
-    let pricingResult = { rows: [] };
-    for (const cat of candidates) {
-      // try exact (case-sensitive not important since we compare as text) category
-      // Use canonical capitalization for stored data
-      const canon = /^retail$/i.test(cat) ? 'Retail' : (/^wholesale$/i.test(cat) ? 'Wholesale' : (/^walk-?in$/i.test(cat) ? 'Walk-in' : cat));
-      // eslint-disable-next-line no-await-in-loop
-      const r = await tryResolve(canon);
-      if (r.rows.length) { pricingResult = r; break; }
+    let pricingResult = await tryResolve(category);
+    // If not found and category was non-empty, try Retail as a final fallback
+    if (pricingResult.rows.length === 0 && category) {
+      const fallbackCat = normalizeCategory('Retail');
+      pricingResult = await tryResolve(fallbackCat);
     }
     
     if (pricingResult.rows.length === 0) {

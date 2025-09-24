@@ -62,10 +62,10 @@ const MetalMaster = () => {
             <Dropdown
               value={form.metal_type}
               onChange={(nextType)=>{
-                const mappedGst = '0';
+                const mappedGst = nextType === 'Panner' ? '5' : '0';
                 setForm({...form, metal_type: nextType, gst_percent: mappedGst});
               }}
-              options={[{value:'Egg',label:'Egg'}]}
+              options={[{value:'Egg',label:'Egg'},{value:'Panner',label:'Panner'}]}
             />
           </div>
           <div className="input-group">

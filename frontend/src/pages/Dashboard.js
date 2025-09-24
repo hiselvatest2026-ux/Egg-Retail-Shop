@@ -33,19 +33,9 @@ ChartJS.register(
 );
 
 const Metric = ({ title, value }) => (
-  <div
-    className="kpi-card rounded shadow-sm border border-gray-200 p-4"
-    style={{
-      background:'#FFFFFF',
-      borderRadius:12,
-      boxShadow:'0 2px 4px rgba(0,0,0,0.08)',
-      transition:'transform 120ms ease, box-shadow 120ms ease'
-    }}
-    onMouseEnter={(e)=>{ e.currentTarget.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'; e.currentTarget.style.transform='translateY(-2px)'; }}
-    onMouseLeave={(e)=>{ e.currentTarget.style.boxShadow='0 2px 4px rgba(0,0,0,0.08)'; e.currentTarget.style.transform='translateY(0)'; }}
-  >
-    <div className="kpi-title text-sm" style={{color:'#7A7A7A', fontWeight:700}}>{title}</div>
-    <div className="kpi-value text-2xl font-bold" style={{color:'#333333'}}>{value}</div>
+  <div className="kpi-card rounded shadow-sm border border-gray-200 p-4">
+    <div className="kpi-title text-sm">{title}</div>
+    <div className="kpi-value text-2xl font-bold">{value}</div>
   </div>
 );
 
@@ -237,16 +227,7 @@ const Dashboard = () => {
     // formatter is overridden per chart to apply compact INR or raw qty
   };
 
-  const baseLegend = {
-    position: 'bottom',
-    labels: {
-      boxWidth: 14,
-      boxHeight: 14,
-      padding: 12,
-      color: '#374151',
-      font: { weight: '700', size: 12 }
-    }
-  };
+  const baseLegend = { position: 'bottom', labels: { boxWidth: 12, boxHeight: 12, padding: 10 } };
 
   const valueLabelOptions = {
     responsive: true,
@@ -289,13 +270,12 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) return <div className="p-4" style={{background:'#0F1220', minHeight:'100vh', color:'#E5E7EB'}}>Loading dashboard...</div>;
+  if (loading) return <div className="p-4">Loading dashboard...</div>;
 
   return (
-    <div className="p-4" style={{background:'#0F1220'}}>
-      <div style={{maxWidth:1200, margin:'0 auto'}}>
-      <h1 className="text-2xl font-bold mb-4" style={{color:'#E5E7EB'}}>Dashboard</h1>
-      <div className="form-row" style={{marginBottom: 12, color:'#E5E7EB'}}>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <div className="form-row" style={{marginBottom: 12}}>
         <div className="input-group">
           <label>Start Date</label>
           <input className="input date" type="date" value={start} onChange={(e)=>setStart(e.target.value)} />
@@ -331,26 +311,25 @@ const Dashboard = () => {
       </div>
 
       <div className="mb-6">
-        <div className="text-sm mb-2" style={{color:'#E5E7EB'}}>Quick Actions</div>
+        <div className="text-sm mb-2" style={{color:'#6b7280'}}>Quick Actions</div>
         <div className="flex flex-wrap gap-3">
-          <Link className="btn" style={{background:'#2196F3', color:'#fff', border:'none'}} to="/sales">New Sale</Link>
-          <Link className="btn" style={{background:'#2196F3', color:'#fff', border:'none'}} to="/walkin">Walk‑in Sale</Link>
-          <Link className="btn" style={{background:'#2196F3', color:'#fff', border:'none'}} to="/purchases">New Purchase</Link>
-          <Link className="btn" style={{background:'#2196F3', color:'#fff', border:'none'}} to="/inventory/adjustments">Stock Adjustment</Link>
+          <Link className="btn" to="/sales">New Sale</Link>
+          <Link className="btn" to="/walkin">Walk‑in Sale</Link>
+          <Link className="btn" to="/purchases">New Purchase</Link>
+          <Link className="btn" to="/inventory/adjustments">Stock Adjustment</Link>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title={null}>
-          <div style={{ background:'#ffffff', borderRadius:12, padding:16, boxShadow:'0 2px 4px rgba(0,0,0,0.08)' }}>
-            <div style={{color:'#333333', fontWeight:900, marginBottom:6}}>Daily Sales Revenue trend</div>
+        <Card title="Daily Sales Revenue trend">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={salesTrendBar} options={{
               responsive: true,
               plugins: {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
-                  display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => `₹ ${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
                 },
                 tooltip: {
@@ -368,16 +347,15 @@ const Dashboard = () => {
             }} />
           </div>
         </Card>
-        <Card title={null}>
-          <div style={{ background:'#ffffff', borderRadius:12, padding:16, boxShadow:'0 2px 4px rgba(0,0,0,0.08)' }}>
-            <div style={{color:'#333333', fontWeight:900, marginBottom:6}}>Daily Sales Quantity trend</div>
+        <Card title="Daily Sales Quantity trend">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={qtyTrendBar} options={{
               responsive: true,
               plugins: {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
-                  display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => Number(v||0).toLocaleString(undefined,{ maximumFractionDigits: 0 })
                 }
               },
@@ -391,16 +369,15 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title={null}>
-          <div style={{ background:'#ffffff', borderRadius:12, padding:16, boxShadow:'0 2px 4px rgba(0,0,0,0.08)' }}>
-            <div style={{color:'#333333', fontWeight:900, marginBottom:6}}>Daily Sales Revenue by customer Type</div>
+        <Card title="Daily Sales Revenue by customer Type">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={topStackedRevenue} options={{
               responsive: true,
               plugins: {
                 legend: baseLegend,
                 datalabels: {
                   ...datalabelBase,
-                  display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
+                  display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0,
                   formatter: (v) => `₹ ${Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})}`
                 },
                 tooltip: {
@@ -415,20 +392,18 @@ const Dashboard = () => {
             }} />
           </div>
         </Card>
-        <Card title={null}>
-          <div style={{ background:'#ffffff', borderRadius:12, padding:16, boxShadow:'0 2px 4px rgba(0,0,0,0.08)' }}>
-            <div style={{color:'#333333', fontWeight:900, marginBottom:6}}>Daily Sales Quantity by customer Type</div>
+        <Card title="Daily Sales Quantity by customer Type">
+          <div style={{ background:'#ffffff', borderRadius:12, padding:12 }}>
             <Bar data={topStackedQty} options={{
               responsive: true,
               plugins: {
                 legend: baseLegend,
-                datalabels: { ...datalabelBase, display: (ctx) => !isNarrow && Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
+                datalabels: { ...datalabelBase, display: (ctx) => Number(ctx?.dataset?.data?.[ctx?.dataIndex]||0) > 0 }
               },
               scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true } }
             }} />
           </div>
         </Card>
-      </div>
       </div>
     </div>
   );

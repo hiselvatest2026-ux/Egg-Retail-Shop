@@ -161,10 +161,6 @@ async function ensureSchema() {
     // Performance indexes for faster invoice loads
     ,"CREATE INDEX IF NOT EXISTS idx_sale_items_sale_id ON sale_items(sale_id);"
     ,"CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON payments(invoice_id);"
-    ,"CREATE INDEX IF NOT EXISTS idx_sales_sale_date ON sales((sale_date AT TIME ZONE 'Asia/Kolkata'));"
-    ,"CREATE INDEX IF NOT EXISTS idx_sale_items_product_id ON sale_items(product_id);"
-    ,"CREATE INDEX IF NOT EXISTS idx_purchase_items_product_id ON purchase_items(product_id);"
-    ,"CREATE INDEX IF NOT EXISTS idx_purchases_purchase_date ON purchases((purchase_date AT TIME ZONE 'Asia/Kolkata'));"
   ];
   for (const sql of alters) {
     try {

@@ -43,6 +43,7 @@ exports.purchasesCsv = async (req, res) => {
          SELECT p.id AS product_id,
                 CASE
                   WHEN LOWER(p.name) LIKE 'egg%' THEN 'M00001'
+                  WHEN LOWER(p.name) LIKE 'paneer%' OR LOWER(p.name) LIKE 'panner%' THEN 'M00002'
                   ELSE NULL
                 END AS part_code
          FROM products p
@@ -102,9 +103,8 @@ exports.salesCsv = async (req, res) => {
     // Build date window using Asia/Kolkata local dates
     const where = [];
     const params = [];
-    // Interpret stored sale_date as UTC if it's naive, then convert to Asia/Kolkata for filtering
-    if (start) { where.push(`((s.sale_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
-    if (end) { where.push(`((s.sale_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
+    if (start) { where.push(`(s.sale_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date >= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(start); }
+    if (end) { where.push(`(s.sale_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date <= TO_DATE($${params.length+1}, 'YYYY-MM-DD')`); params.push(end); }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await pool.query(
       `WITH paid AS (
@@ -143,7 +143,7 @@ exports.salesCsv = async (req, res) => {
          GROUP BY sale_id
        )
        SELECT s.id,
-              to_char(((s.sale_date AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS sale_date,
+              to_char((s.sale_date AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD HH24:MI:SS') AS sale_date,
               s.customer_id,
               c.name AS customer_name,
               COALESCE(i.material_text, s.egg_type, s.product_name, CASE WHEN ct.computed_total IS NULL AND COALESCE(p.paid,0) > 0 THEN 'Payment Only' ELSE '-' END) AS product_name,

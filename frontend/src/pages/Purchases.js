@@ -279,16 +279,10 @@ const Purchases = () => {
                 <div className="grid grid-cols-2 gap-2 sm:contents">
                   <div className="input-group" style={{overflow:'visible'}}>
                     <label>Type</label>
-                    {isMobile ? (
-                      <button type="button" className="input" style={{textAlign:'left'}} onClick={()=>openPicker('purchase_type')}>
-                        {form.type || 'Purchase'}
-                      </button>
-                    ) : (
-                      <select className="input" value={form.type||'Purchase'} onChange={e=>setForm(prev=>({...prev, type: e.target.value }))}>
-                        <option value="Purchase">Purchase</option>
-                        <option value="Return">Return</option>
-                      </select>
-                    )}
+                    <select className="input" value={form.type||'Purchase'} onChange={e=>setForm(prev=>({...prev, type: e.target.value }))}>
+                      <option value="Purchase">Purchase</option>
+                      <option value="Return">Return</option>
+                    </select>
                   </div>
                   <div className="input-group">
                     <label>Reference Purchase ID (optional)</label>

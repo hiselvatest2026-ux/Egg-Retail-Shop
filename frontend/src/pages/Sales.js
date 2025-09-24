@@ -33,6 +33,7 @@ const Sales = () => {
     const pr = (m)=>{
       const n = String(m.description || m.metal_type || '').toLowerCase();
       if (n.includes('egg')) return 0;
+      if (n.includes('panner') || n.includes('paneer')) return 1;
       return 2;
     };
     src.sort((a,b)=>{ const da=pr(a), db=pr(b); if (da!==db) return da-db; return String(a.metal_type||'').localeCompare(String(b.metal_type||'')); });
@@ -167,33 +168,18 @@ const Sales = () => {
         const pr = await getProducts();
         setProducts(pr.data || []);
         try { const pm = await getPricing(); setPricingRows(pm.data || []); } catch(_) {}
-        // Defer payments load until Payments tab is opened
-        if (activeTab === 'payments') {
-          const pays = await getPayments();
-          const map = {};
-          (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
-          setPaymentsByInvoice(map);
-          setPaymentsList(pays.data||[]);
-        }
-      } catch(e){ 
-        console.error('data load failed', e);
-      } 
-    })(); 
-  }, []);
-
-  // Lazy-load payments only when Payments tab is opened
-  useEffect(() => {
-    (async()=>{
-      if (activeTab !== 'payments') return;
-      try {
         const pays = await getPayments();
         const map = {};
         (pays.data||[]).forEach(p=>{ const k = String(p.invoice_id); map[k] = (map[k]||0) + Number(p.amount||0); });
         setPaymentsByInvoice(map);
         setPaymentsList(pays.data||[]);
-      } catch (e) { /* ignore */ }
-    })();
-  }, [activeTab]);
+        // Removed route trips (location/shop removed)
+        
+      } catch(e){ 
+        console.error('data load failed', e);
+      } 
+    })(); 
+  }, []);
 
   // Auto-populate Sale Category from selected customer (Customer Master)
   useEffect(() => {
@@ -591,7 +577,7 @@ const Sales = () => {
                   value={form.customer_id}
                   onChange={(v)=>setForm(prev=>({ ...prev, customer_id: v }))}
                   placeholder={'Select Customer'}
-                  options={(customers||[]).slice(0,200).map(c=>({ value:String(c.id), label:c.name }))}
+                  options={(customers||[]).map(c=>({ value:String(c.id), label:c.name }))}
                 />
               )}
             </div>
@@ -744,7 +730,7 @@ const Sales = () => {
                         }
                       }}
                       placeholder={'Material Code *'}
-                      options={(sortedMaterials||[]).slice(0,200).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
+                      options={(sortedMaterials||[]).map(m=>({ value:String(m.part_code), label:`${m.part_code} - ${m.metal_type}` }))}
                     />
                   )}
                 </div>
