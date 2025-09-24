@@ -17,7 +17,6 @@ import InventoryManagement from './pages/InventoryManagement';
 import StockAdjustments from './pages/StockAdjustments';
 import CollectionSettlement from './pages/CollectionSettlement';
 import InvoicePrinting from './pages/InvoicePrinting';
-import MISReports from './pages/MISReports';
 import MetalMaster from './pages/MetalMaster';
 import PricingMaster from './pages/PricingMaster';
 import Vendors from './pages/Vendors';
@@ -101,7 +100,6 @@ function AppShell() {
                 <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
                 <NavLink to="/walkin" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Walk‑in Sale</NavLink>
                 <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
-                <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
               </>
             ) : (
               <>
@@ -113,7 +111,6 @@ function AppShell() {
                 <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
                 <NavLink to="/inventory/adjustments" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Stock Adjustments</NavLink>
                 <NavLink to="/collection" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Collection settlement</NavLink>
-                <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
                 <NavLink to="/customers" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Customer Master</NavLink>
                 <NavLink to="/vendors" className={({isActive})=> isActive ? 'active' : ''}><FiUsers style={{marginRight:8}} /> Vendor Master</NavLink>
                 <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
@@ -143,7 +140,7 @@ function AppShell() {
             
             <Route path="/collection" element={<CollectionSettlement />} />
             <Route path="/invoice-print" element={<InvoicePrinting />} />
-            <Route path="/mis" element={<MISReports />} />
+            
             <Route path="/Material-master" element={<MetalMaster />} />
             <Route path="/pricing-master" element={<PricingMaster />} />
             <Route path="/admin/trays" element={<TrayAdjustments />} />
@@ -153,9 +150,7 @@ function AppShell() {
         </main>
         <nav className="bottom-tabs" style={{background:'#FFFFFF', boxShadow:'0px -4px 10px rgba(0,0,0,0.05)'}}>
           <NavLink to="/sales" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
-          <NavLink to="/purchases" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
           <NavLink to="/inventory" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
-          <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
   );
