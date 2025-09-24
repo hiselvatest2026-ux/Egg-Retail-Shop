@@ -22,6 +22,7 @@ import PricingMaster from './pages/PricingMaster';
 import Vendors from './pages/Vendors';
 import WalkinSale from './pages/WalkinSale';
 import TrayAdjustments from './pages/TrayAdjustments';
+import MISReports from './pages/MISReports';
 
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -100,6 +101,7 @@ function AppShell() {
                 <NavLink to="/sales" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Sales</NavLink>
                 <NavLink to="/walkin" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Walk‑in Sale</NavLink>
                 <NavLink to="/inventory" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Inventory Management</NavLink>
+                <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
               </>
             ) : (
               <>
@@ -116,6 +118,7 @@ function AppShell() {
                 <NavLink to="/Material-master" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> Material Master</NavLink>
                 <NavLink to="/pricing-master" className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:8}} /> Pricing Master</NavLink>
                 <NavLink to="/admin/trays" className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:8}} /> Tray Adjustments</NavLink>
+                <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:8}} /> MIS</NavLink>
               </>
             )}
           </nav>
@@ -140,6 +143,7 @@ function AppShell() {
             
             <Route path="/collection" element={<CollectionSettlement />} />
             <Route path="/invoice-print" element={<InvoicePrinting />} />
+            <Route path="/mis" element={<MISReports />} />
             
             <Route path="/Material-master" element={<MetalMaster />} />
             <Route path="/pricing-master" element={<PricingMaster />} />
