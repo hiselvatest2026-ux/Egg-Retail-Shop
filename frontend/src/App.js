@@ -50,17 +50,18 @@ function AppShell() {
     if (isWalkin) {
       const prevBg = document.body.style.backgroundColor;
       const prevCs = document.body.style.colorScheme;
-      document.body.style.backgroundColor = '#F8F5F1';
+      const targetBg = isMobile ? '#FFFFFF' : '#F8F5F1';
+      document.body.style.backgroundColor = targetBg;
       document.body.style.colorScheme = 'light';
       return () => {
         document.body.style.backgroundColor = prevBg;
         document.body.style.colorScheme = prevCs;
       };
     }
-  }, [isWalkin]);
+  }, [isWalkin, isMobile]);
   return (
       <div className="layout">
-        <div className="mobile-header" style={{background:'#F8F5F1', boxShadow:'0px 4px 10px rgba(0,0,0,0.05)'}}>
+        <div className="mobile-header" style={{background: (isWalkin && isMobile) ? '#FFFFFF' : '#F8F5F1', boxShadow:'0px 4px 10px rgba(0,0,0,0.05)'}}>
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu" style={{color:'#333333'}}>☰</button>
           <div style={{display:'flex', alignItems:'center', gap:8, marginLeft:10}}>
             <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/zingupdated.png" alt="ZingPayPOS" width="28" height="28" style={{borderRadius:6, border:'1px solid #e5e7eb', objectFit:'cover', background:'#FFFFFF'}} />
@@ -117,7 +118,7 @@ function AppShell() {
             )}
           </nav>
         </aside>
-        <main className="content" style={isWalkin ? { background:'#F8F5F1' } : undefined}>
+        <main className="content" style={isWalkin ? { background: isMobile ? '#FFFFFF' : '#F8F5F1' } : undefined}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/purchases" element={<Purchases />} />

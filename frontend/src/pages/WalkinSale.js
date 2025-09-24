@@ -145,10 +145,10 @@ const WalkinSale = () => {
     }
   };
 
-  if (loading) return <div className="p-4" style={{background:'#F8F5F1', minHeight:'100vh', position:'relative', zIndex:0}}>Loading…</div>;
+  if (loading) return <div className="p-4" style={{background:isMobile?'#FFFFFF':'#F8F5F1', minHeight:'100vh', position:'relative', zIndex:0}}>Loading…</div>;
 
   return (
-    <div className="page" style={{background:'#F8F5F1', minHeight:'100vh', padding:isMobile?16:24, position:'relative', zIndex:0, pointerEvents:'auto'}}>
+    <div className="page" style={{background:isMobile?'#FFFFFF':'#F8F5F1', minHeight:'100vh', padding:isMobile?16:24, position:'relative', zIndex:0, pointerEvents:'auto'}}>
       <div style={{maxWidth:520, margin:'0 auto', position:'relative', zIndex:1}}>
         {/* Top App Bar spacer visually aligns with theme */}
         <div style={{height:isMobile?0:8}} />
