@@ -24,7 +24,7 @@ import Vendors from './pages/Vendors';
 import WalkinSale from './pages/WalkinSale';
 import TrayAdjustments from './pages/TrayAdjustments';
 
-function App() {
+function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const loc = useLocation();
@@ -59,8 +59,6 @@ function App() {
     }
   }, [isWalkin]);
   return (
-    <Router>
-      <ShopProvider>
       <div className="layout">
         <div className="mobile-header" style={{background:'#F8F5F1', boxShadow:'0px 4px 10px rgba(0,0,0,0.05)'}}>
           <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu" style={{color:'#333333'}}>☰</button>
@@ -154,6 +152,14 @@ function App() {
           <NavLink to="/mis" className={({isActive})=> isActive ? 'active' : ''}><FiHome style={{marginRight:6}} />MIS</NavLink>
         </nav>
       </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <ShopProvider>
+        <AppShell />
       </ShopProvider>
     </Router>
   );
