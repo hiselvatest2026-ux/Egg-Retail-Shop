@@ -145,14 +145,14 @@ const WalkinSale = () => {
     }
   };
 
-  if (loading) return <div className="p-4" style={{background:'#F8F5F1', minHeight:'100vh'}}>Loading…</div>;
+  if (loading) return <div className="p-4" style={{background:'#F8F5F1', minHeight:'100vh', position:'relative', zIndex:0}}>Loading…</div>;
 
   return (
-    <div className="page" style={{background:'#F8F5F1', minHeight:'100vh', padding:isMobile?16:24}}>
-      <div style={{maxWidth:520, margin:'0 auto'}}>
+    <div className="page" style={{background:'#F8F5F1', minHeight:'100vh', padding:isMobile?16:24, position:'relative', zIndex:0, pointerEvents:'auto'}}>
+      <div style={{maxWidth:520, margin:'0 auto', position:'relative', zIndex:1}}>
         {/* Top App Bar spacer visually aligns with theme */}
         <div style={{height:isMobile?0:8}} />
-        <div style={{background:'#FFFFFF', borderRadius:12, boxShadow:'0px 4px 10px rgba(0, 0, 0, 0.05)', padding:isMobile?16:20, fontFamily:'Inter, Roboto, "SF Pro Display", system-ui, -apple-system, Segoe UI, Arial, sans-serif'}}>
+        <div style={{background:'#FFFFFF', borderRadius:12, boxShadow:'0px 4px 10px rgba(0, 0, 0, 0.05)', padding:isMobile?16:20, fontFamily:'Inter, Roboto, "SF Pro Display", system-ui, -apple-system, Segoe UI, Arial, sans-serif', position:'relative', zIndex:2}}>
           {/* Title */}
           <div style={{color:'#333333', fontSize:isMobile?22:20, fontWeight:800}}>Quick & Easy Checkout</div>
           <div style={{height:1, background:'#E0E0E0', margin:'10px 0 14px 0'}} />
@@ -173,7 +173,7 @@ const WalkinSale = () => {
                 <button type="button" aria-label="Decrease quantity" onClick={()=>{
                   const n = Math.max(0, Number(qty||0) - 1);
                   setQty(String(n));
-                }} style={{minWidth:48, minHeight:48, borderRadius:10, background:'#505050', color:'#FFFFFF', border:'0', fontSize:22, fontWeight:800}}>-</button>
+                }} style={{minWidth:48, minHeight:48, borderRadius:10, background:'#505050', color:'#FFFFFF', border:'0', fontSize:22, fontWeight:800, touchAction:'manipulation'}}>-</button>
                 <input aria-label="Quantity" className="input" style={{flex:1, textAlign:'center', height:48, fontSize:18, background:'#FFFFFF', border:'1px solid #E0E0E0', borderRadius:10, color:'#333333'}} inputMode="numeric" pattern="[0-9]*" placeholder="1" value={qty} onChange={(e)=>{
                   const v = e.target.value.replace(/[^0-9]/g,'');
                   setQty(v);
@@ -181,7 +181,7 @@ const WalkinSale = () => {
                 <button type="button" aria-label="Increase quantity" onClick={()=>{
                   const n = Number(qty||0) + 1;
                   setQty(String(n));
-                }} style={{minWidth:48, minHeight:48, borderRadius:10, background:'#505050', color:'#FFFFFF', border:'0', fontSize:22, fontWeight:800}}>+</button>
+                }} style={{minWidth:48, minHeight:48, borderRadius:10, background:'#505050', color:'#FFFFFF', border:'0', fontSize:22, fontWeight:800, touchAction:'manipulation'}}>+</button>
               </div>
               {available != null && <div style={{marginTop:6, color:'#7A7A7A', fontSize:12}}>Available: {available}</div>}
             </div>
@@ -214,7 +214,8 @@ const WalkinSale = () => {
                   border:'0',
                   background: selected ? '#2196F3' : '#E0E0E0',
                   color: selected ? '#FFFFFF' : '#7A7A7A',
-                  fontWeight: selected ? 800 : 600
+                  fontWeight: selected ? 800 : 600,
+                  touchAction:'manipulation'
                 }}>
                   {selected ? '✓ ' : ''}{m}
                 </button>
