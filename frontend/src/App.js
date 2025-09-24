@@ -53,9 +53,14 @@ function AppShell() {
       const targetBg = isMobile ? '#FFFFFF' : '#F8F5F1';
       document.body.style.backgroundColor = targetBg;
       document.body.style.colorScheme = 'light';
+      const prevHtmlBg = document.documentElement.style.backgroundColor;
+      document.documentElement.style.backgroundColor = targetBg;
+      document.documentElement.classList.add('walkin-light');
       return () => {
         document.body.style.backgroundColor = prevBg;
         document.body.style.colorScheme = prevCs;
+        document.documentElement.style.backgroundColor = prevHtmlBg;
+        document.documentElement.classList.remove('walkin-light');
       };
     }
   }, [isWalkin, isMobile]);

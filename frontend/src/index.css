@@ -13,6 +13,22 @@ body {
   overflow-x: hidden;
   color-scheme: dark;
 }
+
+/* Route-scoped override for Walk-in page on mobile */
+@media (max-width: 1024px) {
+  .walkin-light body,
+  .walkin-light .layout,
+  .walkin-light .mobile-header,
+  .walkin-light .content,
+  .walkin-light .page,
+  .walkin-light .bottom-tabs {
+    background: #ffffff !important;
+    color-scheme: light !important;
+  }
+  .walkin-light .sidebar { background: #ffffff !important; }
+  .walkin-light .sidebar a { color: #333333 !important; }
+  .walkin-light .sidebar a.active, .walkin-light .sidebar a:hover { background:#e5e7eb !important; color:#111827 !important; }
+}
 /* Ensure consistent sizing under browser zoom */
 *, *::before, *::after { box-sizing: border-box; }
 img { max-width: 100%; height: auto; }
