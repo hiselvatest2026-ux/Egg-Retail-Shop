@@ -14,6 +14,42 @@ body {
   color-scheme: dark;
 }
 
+/* Mobile-wide light theme overrides */
+@media (max-width: 1024px) {
+  body { background: #ffffff !important; color: #111827 !important; color-scheme: light !important; }
+  .layout { background: #ffffff !important; }
+  .content { background: #ffffff !important; }
+  .mobile-header { background: #ffffff !important; border-bottom: 1px solid #e5e7eb !important; }
+  .bottom-tabs { background: #ffffff !important; border-top: 1px solid #e5e7eb !important; }
+  .sidebar { background: #ffffff !important; color: #111827 !important; border-right: 1px solid #e5e7eb !important; }
+  .sidebar .brand { border-bottom: 1px solid #e5e7eb !important; }
+  .sidebar a { color: #111827 !important; }
+  .sidebar a.active, .sidebar a:hover { background:#e5e7eb !important; color:#111827 !important; }
+  /* Cards and surfaces */
+  .card { background:#ffffff !important; border:1px solid #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,.06) !important; }
+  .card-header { background:#ffffff !important; border-bottom:1px solid #e5e7eb !important; }
+  .card-title { color:#111827 !important; }
+  .card-body { color:#111827 !important; }
+  /* Tables */
+  .table { background:#ffffff !important; color:#111827 !important; }
+  .table th, .table td { border:1px solid #e5e7eb !important; }
+  .table thead th { background:#f9fafb !important; color:#111827 !important; }
+  .table-zebra tbody tr:nth-child(odd) { background:#ffffff !important; }
+  .table-zebra tbody tr:nth-child(even) { background:#f9fafb !important; }
+  /* Inputs and buttons */
+  .input { background:#ffffff !important; color:#111827 !important; border:1px solid #e5e7eb !important; }
+  .input:focus { box-shadow: 0 0 0 3px rgba(59,130,246,.18) !important; border-color:#60a5fa !important; }
+  .btn.secondary, .btn.icon { color:#111827 !important; border:1px solid #e5e7eb !important; }
+  /* Badges and helpers */
+  .badge { background:#eef2ff !important; color:#1e3a8a !important; border-color:#e0e7ff !important; }
+  .form-help { color:#b91c1c !important; }
+  /* Accordions */
+  details.accordion { background:#ffffff !important; border:1px solid #e5e7eb !important; }
+  details.accordion > summary { background:#ffffff !important; color:#111827 !important; }
+  /* Data pairs */
+  .data-pairs .pair { background:#ffffff !important; border:1px solid #e5e7eb !important; }
+}
+
 /* Route-scoped override for Walk-in page on mobile */
 @media (max-width: 1024px) {
   .walkin-light body,
