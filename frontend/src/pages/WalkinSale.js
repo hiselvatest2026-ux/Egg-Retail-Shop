@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Card from '../components/Card';
 import { getMetals, getProducts, getAvailable, getPricingForSale, getLastPurchasePrice, createSale, createSaleItem, createPayment, getCustomers, getPricing } from '../api/api';
 
 const WalkinSale = () => {
@@ -15,8 +14,8 @@ const WalkinSale = () => {
   const [pricePerUnit, setPricePerUnit] = useState('');
   const [available, setAvailable] = useState(null);
   const [total, setTotal] = useState(0);
-  const [showSheet, setShowSheet] = useState(false);
   const [pricingRows, setPricingRows] = useState([]);
+  const [payMethod, setPayMethod] = useState('Card');
 
   const defaultMaterial = useMemo(() => {
     // Prefer Egg
@@ -127,17 +126,18 @@ const WalkinSale = () => {
   const submitSale = async (mode) => {
     try {
       setError('');
+      const effectiveMode = String(mode) === 'GPay' ? 'Gpay' : mode;
       const q = Number(qty||0);
       const price = Number(pricePerUnit||0);
       if (!defaultProduct || !defaultMaterial) { setError('Setup error: masters missing'); return; }
       if (!walkinCustomer) { setError('Please create a customer named or categorized "Walk-in" to proceed.'); return; }
       if (!(q>0) || !(price>0)) { setError('Enter a valid quantity'); return; }
       if (available != null && q > available) { setError(`Insufficient stock. Available: ${available}`); return; }
-      const payload = { customer_id: Number(walkinCustomer.id), total: Number((q*price).toFixed(2)), product_name: defaultMaterial.metal_type, payment_method: mode, sale_type: 'Cash' };
+      const payload = { customer_id: Number(walkinCustomer.id), total: Number((q*price).toFixed(2)), product_name: defaultMaterial.metal_type, payment_method: effectiveMode, sale_type: 'Cash' };
       const res = await createSale(payload);
       const sale = res.data;
       await createSaleItem(sale.id, { product_id: Number(defaultProduct.id), quantity: q, price: price });
-      await createPayment({ customer_id: Number(walkinCustomer.id), invoice_id: Number(sale.id), amount: Number((q*price).toFixed(2)), payment_mode: mode });
+      await createPayment({ customer_id: Number(walkinCustomer.id), invoice_id: Number(sale.id), amount: Number((q*price).toFixed(2)), payment_mode: effectiveMode });
       try { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('inventory:refresh', { detail: { type: 'closing' } })); } catch(_) {}
       navigate(`/invoice/${sale.id}`);
     } catch (e) {
@@ -145,56 +145,107 @@ const WalkinSale = () => {
     }
   };
 
-  if (loading) return <div className="p-4">Loading…</div>;
+  if (loading) return <div className="p-4" style={{background:'#F8F5F1', minHeight:'100vh'}}>Loading…</div>;
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Walk‑in Sale</h1>
-          <p className="page-subtitle">Quantity‑only entry with auto‑pricing and one‑tap payment</p>
+    <div className="page" style={{background:'#F8F5F1', minHeight:'100vh', padding:isMobile?16:24}}>
+      <div style={{maxWidth:520, margin:'0 auto'}}>
+        {/* Top App Bar spacer visually aligns with theme */}
+        <div style={{height:isMobile?0:8}} />
+        <div style={{background:'#FFFFFF', borderRadius:12, boxShadow:'0px 4px 10px rgba(0, 0, 0, 0.05)', padding:isMobile?16:20, fontFamily:'Inter, Roboto, "SF Pro Display", system-ui, -apple-system, Segoe UI, Arial, sans-serif'}}>
+          {/* Title */}
+          <div style={{color:'#333333', fontSize:isMobile?22:20, fontWeight:800}}>Quick & Easy Checkout</div>
+          <div style={{height:1, background:'#E0E0E0', margin:'10px 0 14px 0'}} />
+
+          {/* Product info */}
+          <div style={{color:'#333333', fontSize:isMobile?18:16, fontWeight:600, marginBottom:10}}>
+            {defaultMaterial ? `${defaultMaterial.part_code} - ${defaultMaterial.metal_type}` : 'Walk-in Item'}
+          </div>
+
+          {/* Quantity + Price row */}
+          <div style={{display:'grid', gridTemplateColumns:'1fr', gap:12, marginBottom:8}}>
+            {/* Quantity stepper */}
+            <div>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6}}>
+                <label style={{color:'#333333', fontWeight:600}}>Quantity</label>
+              </div>
+              <div style={{display:'flex', alignItems:'center', gap:10}}>
+                <button type="button" aria-label="Decrease quantity" onClick={()=>{
+                  const n = Math.max(0, Number(qty||0) - 1);
+                  setQty(String(n));
+                }} style={{minWidth:48, minHeight:48, borderRadius:10, background:'#505050', color:'#FFFFFF', border:'0', fontSize:22, fontWeight:800}}>-</button>
+                <input aria-label="Quantity" className="input" style={{flex:1, textAlign:'center', height:48, fontSize:18, background:'#FFFFFF', border:'1px solid #E0E0E0', borderRadius:10, color:'#333333'}} inputMode="numeric" pattern="[0-9]*" placeholder="1" value={qty} onChange={(e)=>{
+                  const v = e.target.value.replace(/[^0-9]/g,'');
+                  setQty(v);
+                }} />
+                <button type="button" aria-label="Increase quantity" onClick={()=>{
+                  const n = Number(qty||0) + 1;
+                  setQty(String(n));
+                }} style={{minWidth:48, minHeight:48, borderRadius:10, background:'#505050', color:'#FFFFFF', border:'0', fontSize:22, fontWeight:800}}>+</button>
+              </div>
+              {available != null && <div style={{marginTop:6, color:'#7A7A7A', fontSize:12}}>Available: {available}</div>}
+            </div>
+
+            {/* Price per unit */}
+            <div>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6}}>
+                <label style={{color:'#333333', fontWeight:600}}>Price / unit</label>
+              </div>
+              <input className="input" readOnly value={pricePerUnit} style={{width:'100%', height:48, fontSize:18, background:'#FFFFFF', border:'1px solid #E0E0E0', borderRadius:10, color:'#333333'}} />
+            </div>
+          </div>
+
+          {/* Total */}
+          <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, margin:'10px 0 4px 0'}}>
+            <div style={{color:'#333333', fontWeight:600}}>Total</div>
+            <div aria-live="polite" style={{background:'#28A89A', color:'#FFFFFF', fontWeight:900, fontSize:isMobile?22:20, padding:'10px 14px', borderRadius:10, minWidth:160, textAlign:'center'}}>
+              ₹ {total.toFixed(2)}
+            </div>
+          </div>
+
+          {/* Payment segmented */}
+          <div role="tablist" aria-label="Select payment method" style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginTop:12}}>
+            {['Cash','GPay','Card'].map(m=>{
+              const selected = String(payMethod).toLowerCase() === String(m).toLowerCase();
+              return (
+                <button key={m} role="tab" aria-selected={selected} onClick={()=>setPayMethod(m)} style={{
+                  height:44,
+                  borderRadius:10,
+                  border:'0',
+                  background: selected ? '#2196F3' : '#E0E0E0',
+                  color: selected ? '#FFFFFF' : '#7A7A7A',
+                  fontWeight: selected ? 800 : 600
+                }}>
+                  {selected ? '✓ ' : ''}{m}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Error */}
+          {error && <div role="alert" style={{marginTop:10, color:'#E53935', fontSize:13}}>{error}</div>}
+
+          {/* CTA */}
+          <div className="actions-row" style={{marginTop:16, justifyContent:'center'}}>
+            <button className="btn" onClick={()=>submitSale(payMethod)} style={{
+              width:'100%',
+              minHeight:52,
+              background:'#2196F3',
+              color:'#FFFFFF',
+              fontWeight:800,
+              border:'0',
+              borderRadius:12,
+              boxShadow:'0px 4px 10px rgba(0, 0, 0, 0.05)',
+              fontSize:18
+            }}>
+              {`Pay with ${payMethod}`}
+            </button>
+          </div>
+
+          {/* Footer note */}
+          <div style={{marginTop:10, textAlign:'center', color:'#7A7A7A', fontSize:12}}>Invoice opens after successful payment</div>
         </div>
       </div>
-
-      <Card title={defaultMaterial ? `${defaultMaterial.part_code} - ${defaultMaterial.metal_type}` : 'Walk-in Item'}>
-        <div className="card-body" style={{padding:isMobile?16:22}}>
-          <div className="form-row" style={{marginBottom:12}}>
-            <div className="input-group" style={{gridColumn:'1/-1'}}>
-              <label style={{fontSize:12, fontWeight:800}}>Quantity</label>
-              <input className="input" style={{height:isMobile?56:46, fontSize:isMobile?18:14}} inputMode="numeric" placeholder="e.g., 1" value={qty} onChange={e=>setQty(e.target.value)} />
-              {available != null && <div className="form-help">Available: {available}</div>}
-            </div>
-            <div className="input-group">
-              <label style={{fontSize:12, fontWeight:800}}>Price / unit</label>
-              <input className="input" readOnly value={pricePerUnit} style={{height:isMobile?56:46, fontSize:isMobile?18:14}} />
-            </div>
-            <div className="input-group">
-              <label style={{fontSize:12, fontWeight:800}}>Total</label>
-              <div className="badge" style={{fontSize:isMobile?20:16, padding:isMobile?'10px 14px':'8px 12px', fontWeight:900}}>₹ {total.toFixed(2)}</div>
-            </div>
-          </div>
-          {error && <div className="form-help" style={{marginBottom:8}}>{error}</div>}
-          <div className="actions-row" style={{justifyContent:'center'}}>
-            <button className="btn primary" style={{width:isMobile?'100%':'auto', minHeight:isMobile?56:40, fontSize:isMobile?18:14}} onClick={()=>submitSale('Cash')}>Pay Now (Cash)</button>
-          </div>
-          <div style={{marginTop:8, textAlign:'center'}}>
-            <button type="button" className="btn secondary btn-sm" onClick={()=>setShowSheet(true)} style={{width:isMobile?'100%':'auto'}}>Other payment options</button>
-          </div>
-        </div>
-      </Card>
-
-      {showSheet && (
-        <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', zIndex:1000}} onClick={()=>setShowSheet(false)}>
-          <div style={{position:'absolute', left:0, right:0, bottom:0, background:'#1a1f2b', borderTopLeftRadius:16, borderTopRightRadius:16, padding:16, boxShadow:'0 -10px 30px rgba(0,0,0,.5)'}} onClick={e=>e.stopPropagation()}>
-            <div style={{height:4, width:48, background:'#334155', borderRadius:9999, margin:'0 auto 12px auto'}} />
-            <div className="btn-group" style={{flexDirection:'column'}}>
-              <button className="btn" style={{width:'100%', minHeight:56, fontSize:18}} onClick={()=>{ setShowSheet(false); submitSale('Cash'); }}>Pay Cash & Generate</button>
-              <button className="btn secondary" style={{width:'100%', minHeight:56, fontSize:18}} onClick={()=>{ setShowSheet(false); submitSale('Gpay'); }}>Pay GPay & Generate</button>
-              <button className="btn secondary" style={{width:'100%', minHeight:56, fontSize:18}} onClick={()=>{ setShowSheet(false); submitSale('Card'); }}>Pay Card & Generate</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

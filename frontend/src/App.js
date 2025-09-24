@@ -47,11 +47,11 @@ function App() {
     <Router>
       <ShopProvider>
       <div className="layout">
-        <div className="mobile-header">
-          <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu">☰</button>
+        <div className="mobile-header" style={{background:'#F8F5F1', boxShadow:'0px 4px 10px rgba(0,0,0,0.05)'}}>
+          <button className="btn secondary btn-sm" onClick={()=>setSidebarOpen(v=>!v)} aria-label="Toggle menu" style={{color:'#333333'}}>☰</button>
           <div style={{display:'flex', alignItems:'center', gap:8, marginLeft:10}}>
-            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/zingupdated.png" alt="ZingPayPOS" width="28" height="28" style={{borderRadius:6, border:'1px solid #1f2937', objectFit:'cover'}} />
-            <span style={{fontWeight:800}}>ZingPayPOS</span>
+            <img src="https://raw.githubusercontent.com/hiselvatest2026-ux/Egg-Retail-Shop/main/zingupdated.png" alt="ZingPayPOS" width="28" height="28" style={{borderRadius:6, border:'1px solid #e5e7eb', objectFit:'cover', background:'#FFFFFF'}} />
+            <span style={{fontWeight:800, color:'#333333'}}>ZingPayPOS</span>
           </div>
           <div style={{marginLeft:12, flex:1, display:'flex', justifyContent:'flex-end'}}>
             <ShopSwitcher />
@@ -132,7 +132,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        <nav className="bottom-tabs">
+        <nav className="bottom-tabs" style={{background:'#FFFFFF', boxShadow:'0px -4px 10px rgba(0,0,0,0.05)'}}>
           <NavLink to="/sales" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiDollarSign style={{marginRight:6}} />Sales</NavLink>
           <NavLink to="/purchases" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiShoppingCart style={{marginRight:6}} />Purchases</NavLink>
           <NavLink to="/inventory" onClick={()=>setSidebarOpen(false)} className={({isActive})=> isActive ? 'active' : ''}><FiPackage style={{marginRight:6}} />Inventory</NavLink>
