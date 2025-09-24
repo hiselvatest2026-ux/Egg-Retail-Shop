@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ShopProvider } from './components/ShopContext';
 import ShopSwitcher from './components/ShopSwitcher';
-import { HashRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
 import { FiHome, FiShoppingCart, FiDollarSign, FiPackage, FiUsers, FiCreditCard } from 'react-icons/fi';
 import Purchases from './pages/Purchases';
 import Sales from './pages/Sales';
@@ -27,6 +27,8 @@ import TrayAdjustments from './pages/TrayAdjustments';
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const loc = useLocation();
+  const isWalkin = loc && loc.pathname === '/walkin';
   // Auto-close sidebar on route change (mobile)
   useEffect(() => {
     const closeOnNav = () => setSidebarOpen(false);
@@ -43,6 +45,19 @@ function App() {
       return () => mq.removeEventListener('change', apply);
     } catch (_) { setIsMobile(false); }
   }, []);
+  // Route-scoped light theme for Walk-in checkout (overrides global dark body)
+  useEffect(() => {
+    if (isWalkin) {
+      const prevBg = document.body.style.backgroundColor;
+      const prevCs = document.body.style.colorScheme;
+      document.body.style.backgroundColor = '#F8F5F1';
+      document.body.style.colorScheme = 'light';
+      return () => {
+        document.body.style.backgroundColor = prevBg;
+        document.body.style.colorScheme = prevCs;
+      };
+    }
+  }, [isWalkin]);
   return (
     <Router>
       <ShopProvider>
@@ -104,7 +119,7 @@ function App() {
             )}
           </nav>
         </aside>
-        <main className="content">
+        <main className="content" style={isWalkin ? { background:'#F8F5F1' } : undefined}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/purchases" element={<Purchases />} />
