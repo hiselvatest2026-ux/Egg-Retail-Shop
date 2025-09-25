@@ -138,6 +138,33 @@ router.post('/trays/attach-purchase', async (req, res) => {
   } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
+// Export JSON backup of all public tables
+router.get('/backup', async (_req, res) => {
+  try {
+    const tablesRes = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname='public'");
+    const tableNames = (tablesRes.rows || [])
+      .map(r => String(r.tablename))
+      .filter(name => /^[a-z_][a-z0-9_]*$/.test(name))
+      .filter(name => !name.startsWith('pg_') && !name.startsWith('sql_'));
+    const data = {};
+    for (const name of tableNames) {
+      try {
+        // Note: identifiers are validated above; avoid injection by not interpolating arbitrary input
+        const r = await pool.query(`SELECT * FROM ${name}`);
+        data[name] = r.rows || [];
+      } catch (e) {
+        data[name] = { error: e.message };
+      }
+    }
+    const payload = { dumped_at: new Date().toISOString(), tables: tableNames, data };
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="db_backup_${new Date().toISOString().replace(/[:.]/g,'-')}.json"`);
+    res.status(200).send(JSON.stringify(payload));
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // Purge and reseed data for a specific location (removed)
 /* router.post('/seed/ratinam', async (_req, res) => {
   try {
