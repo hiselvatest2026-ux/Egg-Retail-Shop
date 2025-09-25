@@ -165,6 +165,135 @@ router.get('/backup', async (_req, res) => {
   }
 });
 
+// Export JSON backup including schema (tables, columns, constraints, indexes) and data
+router.get('/backup/full', async (_req, res) => {
+  try {
+    // Fetch table names in public schema
+    const tablesRes = await pool.query("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name");
+    const tableNames = (tablesRes.rows || []).map(r => String(r.table_name));
+
+    const schema = { tables: {}, sequences: [] };
+    const data = {};
+
+    // Sequences and their last values
+    try {
+      const seqRes = await pool.query("SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema='public' ORDER BY sequence_name");
+      for (const row of (seqRes.rows || [])) {
+        const name = String(row.sequence_name);
+        try {
+          const last = await pool.query(`SELECT last_value FROM ${name}`);
+          schema.sequences.push({ name, last_value: Number(last.rows?.[0]?.last_value ?? 0) });
+        } catch (e) {
+          schema.sequences.push({ name, error: e.message });
+        }
+      }
+    } catch (_) { /* ignore */ }
+
+    for (const name of tableNames) {
+      // Columns
+      const colsRes = await pool.query(
+        "SELECT column_name, data_type, is_nullable, column_default, is_identity, character_maximum_length, numeric_precision, numeric_scale FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 ORDER BY ordinal_position",
+        [name]
+      );
+      const columns = (colsRes.rows || []).map(r => ({
+        name: r.column_name,
+        data_type: r.data_type,
+        is_nullable: r.is_nullable === 'YES',
+        default: r.column_default ?? null,
+        is_identity: (String(r.is_identity||'').toUpperCase() === 'YES'),
+        char_max_length: r.character_maximum_length != null ? Number(r.character_maximum_length) : null,
+        numeric_precision: r.numeric_precision != null ? Number(r.numeric_precision) : null,
+        numeric_scale: r.numeric_scale != null ? Number(r.numeric_scale) : null,
+      }));
+
+      // Primary key
+      const pkRes = await pool.query(
+        `SELECT kcu.column_name
+         FROM information_schema.table_constraints tc
+         JOIN information_schema.key_column_usage kcu
+           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+         WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema='public' AND tc.table_name=$1
+         ORDER BY kcu.ordinal_position`,
+        [name]
+      );
+      const primary_key = (pkRes.rows || []).map(r => r.column_name);
+
+      // Unique constraints
+      const uniqCons = [];
+      const uRes = await pool.query(
+        `SELECT tc.constraint_name, kcu.column_name
+         FROM information_schema.table_constraints tc
+         JOIN information_schema.key_column_usage kcu
+           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+         WHERE tc.constraint_type = 'UNIQUE' AND tc.table_schema='public' AND tc.table_name=$1
+         ORDER BY tc.constraint_name, kcu.ordinal_position`,
+        [name]
+      );
+      for (const row of (uRes.rows || [])) {
+        let entry = uniqCons.find(x => x.name === row.constraint_name);
+        if (!entry) { entry = { name: row.constraint_name, columns: [] }; uniqCons.push(entry); }
+        entry.columns.push(row.column_name);
+      }
+
+      // Foreign keys
+      const fkRes = await pool.query(
+        `SELECT c.conname AS constraint_name,
+                tgt.relname AS referenced_table,
+                src_col.attname AS column_name,
+                tgt_col.attname AS referenced_column
+         FROM pg_constraint c
+         JOIN pg_class src ON src.oid = c.conrelid
+         JOIN pg_namespace nsp ON nsp.oid = src.relnamespace AND nsp.nspname='public'
+         JOIN pg_class tgt ON tgt.oid = c.confrelid
+         JOIN LATERAL unnest(c.conkey) WITH ORDINALITY AS s(attnum, ord) ON TRUE
+         JOIN LATERAL unnest(c.confkey) WITH ORDINALITY AS t(attnum, ord) ON TRUE
+         JOIN pg_attribute src_col ON src_col.attrelid = src.oid AND src_col.attnum = s.attnum
+         JOIN pg_attribute tgt_col ON tgt_col.attrelid = tgt.oid AND tgt_col.attnum = t.attnum
+         WHERE c.contype='f' AND src.relname = $1
+         ORDER BY c.conname, s.ord`,
+        [name]
+      );
+      const foreign_keys = [];
+      for (const row of (fkRes.rows || [])) {
+        let entry = foreign_keys.find(x => x.name === row.constraint_name);
+        if (!entry) { entry = { name: row.constraint_name, referenced_table: row.referenced_table, columns: [] }; foreign_keys.push(entry); }
+        entry.columns.push({ column: row.column_name, references: row.referenced_column });
+      }
+
+      // Indexes
+      const idxRes = await pool.query(
+        `SELECT indexname, indexdef FROM pg_indexes WHERE schemaname='public' AND tablename=$1 ORDER BY indexname`,
+        [name]
+      );
+      const indexes = (idxRes.rows || []).map(r => ({ name: r.indexname, definition: r.indexdef }));
+
+      // Row count
+      let row_count = null;
+      try {
+        const cnt = await pool.query(`SELECT COUNT(*) AS c FROM ${name}`);
+        row_count = Number(cnt.rows?.[0]?.c ?? 0);
+      } catch (_) {}
+
+      schema.tables[name] = { columns, primary_key, unique_constraints: uniqCons, foreign_keys, indexes, row_count };
+
+      // Data
+      try {
+        const r = await pool.query(`SELECT * FROM ${name}`);
+        data[name] = r.rows || [];
+      } catch (e) {
+        data[name] = { error: e.message };
+      }
+    }
+
+    const payload = { dumped_at: new Date().toISOString(), schema, data };
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="db_full_backup_${new Date().toISOString().replace(/[:.]/g,'-')}.json"`);
+    res.status(200).send(JSON.stringify(payload));
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // Purge and reseed data for a specific location (removed)
 /* router.post('/seed/ratinam', async (_req, res) => {
   try {
