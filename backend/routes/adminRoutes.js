@@ -294,6 +294,56 @@ router.get('/backup/full', async (_req, res) => {
   }
 });
 
+// Export JSON backup for a range of sale IDs (includes sales, sale_items, payments, customers)
+router.get('/backup/sales-range', async (req, res) => {
+  try {
+    const fromId = Number(req.query.from);
+    const toId = Number(req.query.to);
+    if (!Number.isFinite(fromId) || !Number.isFinite(toId) || fromId > toId) {
+      return res.status(400).json({ message: 'Valid query params from and to are required (from <= to)' });
+    }
+    // Sales in range
+    const salesRes = await pool.query('SELECT * FROM sales WHERE id BETWEEN $1 AND $2 ORDER BY id', [fromId, toId]);
+    const sales = salesRes.rows || [];
+    const saleIds = sales.map(s => Number(s.id)).filter(n => Number.isFinite(n));
+    // Related items
+    let sale_items = [];
+    if (saleIds.length > 0) {
+      const placeholders = saleIds.map((_, i) => `$${i+1}`).join(',');
+      const siRes = await pool.query(`SELECT * FROM sale_items WHERE sale_id IN (${placeholders}) ORDER BY sale_id, id`, saleIds);
+      sale_items = siRes.rows || [];
+    }
+    // Payments by invoice id
+    let payments = [];
+    if (saleIds.length > 0) {
+      const placeholders = saleIds.map((_, i) => `$${i+1}`).join(',');
+      const payRes = await pool.query(`SELECT * FROM payments WHERE invoice_id IN (${placeholders}) ORDER BY id`, saleIds);
+      payments = payRes.rows || [];
+    }
+    // Customers linked to these sales
+    let customers = [];
+    if (sales.length > 0) {
+      const customerIds = Array.from(new Set(sales.map(s => Number(s.customer_id)).filter(n => Number.isFinite(n))));
+      if (customerIds.length > 0) {
+        const placeholders = customerIds.map((_, i) => `$${i+1}`).join(',');
+        const custRes = await pool.query(`SELECT * FROM customers WHERE id IN (${placeholders}) ORDER BY id`, customerIds);
+        customers = custRes.rows || [];
+      }
+    }
+    const payload = {
+      dumped_at: new Date().toISOString(),
+      range: { from: fromId, to: toId },
+      counts: { sales: sales.length, sale_items: sale_items.length, payments: payments.length, customers: customers.length },
+      data: { sales, sale_items, payments, customers }
+    };
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="sales_backup_${fromId}-${toId}_${new Date().toISOString().replace(/[:.]/g,'-')}.json"`);
+    res.status(200).send(JSON.stringify(payload));
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // Purge and reseed data for a specific location (removed)
 /* router.post('/seed/ratinam', async (_req, res) => {
   try {
