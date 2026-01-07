@@ -77,6 +77,60 @@ One app where a company can:
 - Default isolation is strict per Org.
 - Cross-org access exists only via explicit **Company Access** grants (invite → accept), scoped to that company (and optionally GSTINs).
 
+### A.2) Final MVP scope for ownership models (locked)
+
+#### Model A (CA-owned) — MVP scope
+**Who creates the company**
+- CA Org Admin creates the company + adds **multiple GSTINs**.
+
+**Who can work**
+- CA Org users (Admin/Preparer/Reviewer/Read-only) based on role.
+- Optional: client users invited by CA (Read-only or Reviewer for approvals).
+
+**What CA-owned supports (MVP)**
+- All core modules for that company/GSTINs:
+  - uploads + duplicate blocking
+  - needs-review cleanup
+  - accounting-lite auto postings + P&L + outstanding
+  - 2B fetch/upload + reconciliation
+  - compliance calendar + status
+  - filing GSTR-1/3B (monthly/quarterly/IFF/nil) via GSP
+  - e-invoice/e-way full workflow (where applicable)
+- Maker-checker within CA org:
+  - Preparer drafts, Reviewer approves/locks/files.
+
+**Billing owner**
+- CA Org subscription pays for CA-owned client companies (MVP rule).
+
+**Data ownership**
+- CA Org is the owner in the system (audit + control). Client access is optional and limited.
+
+#### Model B (Business-owned) — MVP scope
+**Who creates the company**
+- Business Org Admin creates the company + adds **multiple GSTINs**.
+
+**How CA gets access**
+- Business Org invites a CA user email.
+- Invite acceptance is required.
+- Business can revoke access anytime.
+
+**What Business-owned supports (MVP)**
+- Same core modules as CA-owned (above), but with Business as owner.
+- Maker-checker can be:
+  - within business team, and/or
+  - CA acts as Preparer/Reviewer depending on invitation role.
+
+**Billing owner**
+- Business Org subscription pays for Business-owned companies (MVP rule).
+
+**Data ownership**
+- Business Org owns the data; CA has delegated access only to invited companies.
+
+#### Cross-model rules (important)
+- One company is owned by exactly **one owner Org**.
+- A user can belong to one Org but can be granted access to another Org’s company via **Company Access** (Business-owned only).
+- All actions are logged with actor + org + company + GSTIN + period.
+
 ### B) Upload bills inside the app
 - Select company → upload into:
   - Purchases
