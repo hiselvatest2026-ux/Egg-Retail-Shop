@@ -41,6 +41,16 @@ Filters:
 - Counts: uploaded, processed, needs review, duplicate blocked.
 - Drill-down into month → invoices list.
 
+## 6.1) Compliance calendar + status (per GSTIN)
+- Shows due dates for:
+  - GSTR-1
+  - GSTR-3B
+- Shows status per period:
+  - Not started / Draft ready / Pending review / Ready to file / Submitted / Filed / Error
+- Shows 2B status:
+  - fetched yes/no + last fetched time
+  - matched / not in 2B / mismatch counts
+
 ## 7) GSTR-2B upload + reconciliation (purchases)
 - Upload GSTR-2B file (JSON/PDF as supported).
 - App matches purchases to 2B and shows:

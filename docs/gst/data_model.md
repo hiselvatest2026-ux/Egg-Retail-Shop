@@ -35,6 +35,17 @@ This is the minimum set of “things” we store so uploads, duplicates, review,
 - `gstr2b_invoice`: id, gstr2b_import_id, supplier_gstin, invoice_no_norm, invoice_date, taxable_value, igst, cgst, sgst, total_value
 - `reco_result`: id, invoice_id, gstr2b_invoice_id (nullable), status (matched|not_in_2b|mismatch), mismatch_reason
 
+## Filing status + due dates (calendar)
+- `due_date_rule`: return_type (GSTR1|GSTR3B), frequency (monthly|quarterly), period, due_date
+- `gst_return`: id, gstin_id, period, return_type, status (not_started|draft|review|ready|submitted|filed|error)
+- `gst_return`: ack_ref (ARN), last_checked_at, error_message
+
+## Billing (subscription)
+- `plan`: id, name, limits_json
+- `subscription`: org_id, plan_id, status, start_at, end_at, renew_at
+- `payment`: org_id, amount, gateway_ref, status, created_at
+- `invoice_pdf`: org_id, invoice_no, period, amount, tax, pdf_url, paid_at
+
 ## Audit trail
 - `audit_event`: id, org_id, company_id, actor_user_id, entity_type, entity_id, action, before_json, after_json, created_at
 

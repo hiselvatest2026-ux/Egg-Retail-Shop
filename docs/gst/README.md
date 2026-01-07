@@ -10,6 +10,8 @@ If `gst_app.md` feels long, use these smaller docs.
 - `user_flows.md`: screens and what each does
 - `data_model.md`: simple tables/objects we will store
 - `duplicate_detection.md`: how duplicate bills are blocked/allowed
+- `payments_and_billing.md`: subscription plans + payment flow
+- `compliance_calendar_and_status.md`: due dates + filing status + 2B status
 - `milestones.md`: week-by-week plan
 - `competitor_gap_checklist.md`: what’s missing vs competitors + roadmap
 
