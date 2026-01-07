@@ -28,6 +28,11 @@ This is a **single simple document** that covers the MVP you want:
   - Accounting‑lite: opening balances, partial payments/settlements, refunds/chargebacks, journal adjustments, year closing
   - Duplicates: invoice number reused across years/series, revised invoices, PDFs containing multiple invoices
 - Source of truth: users **mostly upload PDFs/Excel** and we generate accounting automatically (Stage 1)
+- GSP scope order: build **2B fetch + filing together** (not separate phases)
+- Upload types in MVP: include **PDF text + Excel/CSV + scanned PDFs/images (OCR)** (confirmed)
+- Invoice granularity: support **one PDF with multiple invoices** via an in-app **split tool** (confirmed)
+- Financial year: **Apr–Mar** (India standard) (confirmed)
+- Login: **simple login for MVP**; OTP/2FA parked for later
 
 ### Pending decisions (please answer; I will not assume)
 No pending decisions (confirmed by you):
@@ -158,6 +163,7 @@ Check duplicates **within the selected company** (and GSTIN if you separate by G
 Supported in MVP:
 - PDF with selectable text
 - Excel/CSV templates (including Tally-style export template)
+ - Scanned PDFs/images via OCR (minimum viable accuracy; review queue required)
 
 Extract:
 - supplier/customer GSTIN
@@ -169,7 +175,10 @@ If missing/uncertain → goes to **Needs Review** queue for manual correction.
 
 **Multi-invoice PDF corner case (confirmed in scope)**
 - If one PDF contains multiple invoices:
-  - MVP behavior: mark as **Needs Review** and require splitting into separate invoices inside the review screen (manual line-by-line creation), OR upload separately (you choose later).
+  - MVP behavior: provide an in-app **Split Invoices** tool:
+    - user selects page ranges (or splits by detected invoice headers when possible)
+    - each split becomes one invoice + document record
+    - duplicate checks run per split
 
 ### E) Compliance calendar + status (due dates + progress)
 Per GSTIN, per month/quarter:
@@ -298,6 +307,7 @@ Billing rules (since you want both A and B):
 
 ### Step 2 (week 3–4): extraction + review + duplicates
 - PDF text + Excel/CSV parsers
+- OCR pipeline for scanned PDFs/images (plus strong review UI)
 - Normalization rules (GSTIN/invoice no/date)
 - Duplicate detection + override flow
 - Needs review queue + edit screen
@@ -309,7 +319,7 @@ Billing rules (since you want both A and B):
 - Reports: P&L + trial balance + ledger + outstanding
 
 ### Step 4 (week 7–8): 2B reconciliation + compliance calendar
-- Fetch/upload 2B
+- Fetch/upload 2B (and align with filing work so both ship together)
 - Matching engine + mismatch reasons + bulk actions
 - Due dates + status dashboard per GSTIN/month
 
