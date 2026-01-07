@@ -33,6 +33,9 @@ This is a **single simple document** that covers the MVP you want:
 - Invoice granularity: support **one PDF with multiple invoices** via an in-app **split tool** (confirmed)
 - Financial year: **Apr–Mar** (India standard) (confirmed)
 - Login: **simple login for MVP**; OTP/2FA parked for later
+- Plan limits (MVP):
+  - Users per org: **3**
+  - Documents per month: **50 per GSTIN**
 
 ### Pending decisions (please answer; I will not assume)
 No pending decisions (confirmed by you):
@@ -272,6 +275,7 @@ Billing per Org (tenant). MVP supports:
 - Invoice/receipt download
 - Simple enforcement:
   - limit GSTIN/users/docs by plan
+    - MVP default limits: **3 users per org**, **50 documents per GSTIN per month**
   - grace period after payment failure
 
 Billing rules (since you want both A and B):
