@@ -325,6 +325,50 @@ Central dashboard per company/GSTIN:
 - Generate and submit GSTR-1/3B payloads via GSP (as supported)
 - Status polling, error handling, retry workflows, evidence logs
 
+---
+
+## 5.6) Building it for *any* client/company with *any number of users* (multi-tenant SaaS)
+
+### A) Tenant model (how you represent “companies”)
+Use a clean hierarchy so you can support both direct businesses and CA firms:
+- **Org (tenant)**: billing + security boundary (who pays, who owns users)
+- **Company**: a business entity managed under an Org (some Orgs manage many Companies)
+- **GSTIN**: operational unit for returns (a Company can have multiple GSTINs)
+- **Tax period**: month/quarter objects with locked versions (prevents “numbers drift”)
+
+This supports:
+- **Business org**: 1 Org → 1 Company → 1+ GSTINs
+- **CA org**: 1 Org → many Companies → many GSTINs (client management)
+
+### B) Users, roles, and access control (RBAC)
+At minimum, define roles at Org scope and (optionally) per Company/GSTIN:
+- **Org Admin**: manage users, Drive/GSP integrations, billing, security settings
+- **Preparer**: ingest, fix extraction issues, reconcile, draft returns
+- **Reviewer**: approve/lock periods, final sign-off
+- **Read-only/Auditor**: view dashboards and evidence, no edits
+
+Key rules:
+- **Hard tenant isolation**: users cannot access other Orgs’ data.
+- **Maker-checker** on critical actions: period lock, final exports/submission.
+
+### C) Drive integration per tenant (avoid “one shared drive for everyone”)
+To safely support unlimited companies:
+- Each Org connects its own Google Workspace/Drive (OAuth) or you provision a service-account-based connector.
+- For each Company/GSTIN, store linked folder IDs + enforce permissions.
+- Ensure the connector can only read/write folders linked to that Org.
+
+### D) Scaling considerations (what usually breaks first)
+- **File processing**: async queue (parsing/OCR/retry) + per-Org rate limits.
+- **Reconciliation**: index by GSTIN+period+invoice-no + hashed amounts for fast matching.
+- **Audit**: every edit needs `who/when/what/why` (CA/enterprise expectation).
+
+### E) Pricing that fits “any number of users”
+Common models in India:
+- **Per GSTIN per month** (includes X users) + add-on users
+- **Per user per month** (includes X GSTINs) + add-on GSTINs
+
+For Drive ingestion + reconciliation, pricing often maps best to **GSTINs + periods processed** (correlates with value and compute).
+
 ## 6) High-level architecture (implementation-neutral)
 
 ### Core components
