@@ -4,6 +4,7 @@ If `gst_app.md` feels long, use these smaller docs.
 
 ## MVP overview (start here)
 - `mvp_overview.md`: 1-page summary in layman English
+- `mvp_filing_scope.md`: MVP scope if you want filing + competitor features
 
 ## Implementation notes (short, focused)
 - `user_flows.md`: screens and what each does

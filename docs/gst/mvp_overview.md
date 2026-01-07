@@ -1,20 +1,22 @@
 # GST App MVP — 1 page overview (layman English)
 
 ## Goal
-Let any company log in, upload GST bills (purchase/sales), see **what is uploaded so far**, and stop **duplicate bills**. Then generate simple GST-ready reports and do basic purchase reconciliation using uploaded GSTR-2B.
+Let any company log in, upload GST bills (purchase/sales), see **what is uploaded so far**, and stop **duplicate bills**. Then reconcile purchases using **official GSTR-2B**, prepare returns, and (if we enable it) **file GSTR-1 and GSTR-3B via a GSP**.
 
-## What users can do in MVP
+## What users can do in MVP (filing-capable version)
 - Create/select a company (GSTIN + state).
 - Upload bills (Purchases or Sales).
 - See upload history (search invoice no / GSTIN / month).
 - Get duplicate warning/block when uploading.
 - Fix extracted invoice details in a “Needs review” screen.
-- Upload GSTR-2B export and reconcile purchases (Matched / Not in 2B / Mismatch).
+- Connect GSTIN (via GSP) and fetch **GSTR-2B**, or upload 2B export (fallback).
+- Reconcile purchases (Matched / Not in 2B / Mismatch) with clear mismatch reasons + bulk actions.
 - Download reports (vendor follow-up, mismatches, monthly totals).
+- Prepare **GSTR-1 + GSTR-3B** data and submit/file (via GSP) with status + error handling.
+- (If required) generate **e-invoice IRN** and **e-way bill** for eligible invoices (minimal).
 
 ## What MVP will NOT do
 - No automatic “clicking GST portal” or scraping.
-- No direct GST filing submission in MVP.
 - No high-accuracy OCR for scanned images (later).
 - No full accounting (only document + invoice extraction + reconciliation + reporting).
 
