@@ -17,6 +17,9 @@ This is a **single simple document** that covers the MVP you want:
 
 ### Confirmed by you
 - Audience: **Both** (Businesses + CA firms)
+- Account ownership models: **Both**
+  - **A (CA-owned)**: CA Org creates/manages client companies inside the CA Org
+  - **B (Business-owned)**: Business Org owns the company and invites CA users
 - Company structure: **Multi‑GSTIN is required**
 - GST scope: include **B2B, B2C, Exports/SEZ, Credit/Debit Notes, Amendments, RCM**
 - Include corner cases:
@@ -48,6 +51,9 @@ One app where a company can:
 
 ### A) Login + company setup (SaaS)
 - Org (tenant) signup/login
+- Org type:
+  - **Business Org**
+  - **CA Org (Practice)**
 - Create companies (name, state)
 - Add **multiple GSTINs** per company (multi‑GSTIN)
 - Add users and roles:
@@ -55,9 +61,21 @@ One app where a company can:
   - Preparer
   - Reviewer
   - Read-only
- - CA mode:
-   - one Org can manage multiple client companies
-   - company-level access control per user (who can see which client)
+
+### A.1) Support both “CA-owned” and “Business-owned” companies (MVP)
+**Model A: CA-owned (Practice mode)**
+- The **CA Org** creates the client company inside the CA Org.
+- CA Org controls users, roles, filing, and audit.
+- Optional: CA invites client users as Read-only/Reviewer for approvals.
+
+**Model B: Business-owned**
+- The **Business Org** creates and owns the company.
+- Business Org invites CA users (Preparer/Reviewer) to work on the company.
+- Business Org can revoke access any time.
+
+**Security rule**
+- Default isolation is strict per Org.
+- Cross-org access exists only via explicit **Company Access** grants (invite → accept), scoped to that company (and optionally GSTINs).
 
 ### B) Upload bills inside the app
 - Select company → upload into:
@@ -91,7 +109,7 @@ Extract:
 - supplier/customer GSTIN
 - invoice number + date
 - taxable value + IGST/CGST/SGST + total
- - invoice type classification (B2B/B2C/Export/SEZ/RCM/CN/DN/Amendment) based on fields and user selection
+- invoice type classification (B2B/B2C/Export/SEZ/RCM/CN/DN/Amendment) based on fields and user selection
 
 If missing/uncertain → goes to **Needs Review** queue for manual correction.
 
@@ -107,7 +125,7 @@ Per GSTIN, per month/quarter:
   - IFF due date (for quarterly filers) when applicable
 - Status per return:
   - not started / draft / pending review / ready / submitted / filed / error
- - Nil return handling: allow marking “Nil” with evidence/audit note
+- Nil return handling: allow marking “Nil” with evidence/audit note
 
 ### F) GSTR‑2B reconciliation (“official verification”)
 Important: **2B is not “filed” by the taxpayer**. It is auto-generated.  
@@ -193,6 +211,10 @@ Billing per Org (tenant). MVP supports:
   - limit GSTIN/users/docs by plan
   - grace period after payment failure
 
+Billing rules (since you want both A and B):
+- If company is **CA-owned**: subscription paid by the **CA Org**
+- If company is **Business-owned**: subscription paid by the **Business Org**
+
 ---
 
 ## 3) What we will NOT build in MVP (to keep it realistic)
@@ -214,6 +236,9 @@ Billing per Org (tenant). MVP supports:
 ### Step 1 (week 1–2): foundation
 - Auth + Org + roles
 - Company/GSTIN setup
+- Implement both ownership models:
+  - CA Org creates client companies (A)
+  - Business Org invites CA users with company-scoped roles (B)
 - File storage for uploads
 - Upload history screen
 
@@ -256,6 +281,7 @@ Billing per Org (tenant). MVP supports:
 
 ## 5) Minimum data we must store (simple list)
 - Org, User, Role, Company, GSTIN
+- Org type + company ownership + company access grants (for “Business-owned invite CA”)
 - Uploaded documents + file hash (for duplicates)
 - Invoices (normalized fields)
 - Duplicate events (blocked/overridden + reason)
@@ -264,5 +290,10 @@ Billing per Org (tenant). MVP supports:
 - Accounting: accounts, parties, vouchers, voucher lines (double-entry)
 - Billing: plan, subscription, payments, invoices/receipts
 - Audit log (who changed what)
+
+### 5.1) Extra minimal tables for “both A and B”
+- `org.type` = business|ca
+- `company.owner_org_id`
+- `company_access`: company_id, granted_to_user_id, role, status (invited/accepted/revoked), granted_by, created_at
 
 
