@@ -27,13 +27,9 @@ This is a **single simple document** that covers the MVP you want:
 - Source of truth: users **mostly upload PDFs/Excel** and we generate accounting automatically (Stage 1)
 
 ### Pending decisions (please answer; I will not assume)
-1) **Duplicate policy**: you said “yes” to the duplicate question, but I need the exact rule:
-   - **A)** Hard‑block always (no override), OR
-   - **B)** Allow override only by Admin/Reviewer with mandatory reason
-2) **E‑invoice & e‑way bill**: required, but what is the MVP scope?
-   - **A)** Generate + cancel only (IRN/EWB) for B2B invoices, OR
-   - **B)** Full workflow (generate, cancel, print, bulk, error retries), OR
-   - **C)** Not in MVP, but in V1 (if you decide to reduce scope)
+No pending decisions (confirmed by you):
+1) **Duplicate policy**: **Allow override only by Admin/Reviewer with mandatory reason**
+2) **E‑invoice & e‑way bill**: **Full workflow in MVP** (includes generate/cancel + print/bulk + error handling/retries)
 
 ---
 
@@ -84,7 +80,7 @@ Check duplicates **within the selected company** (and GSTIN if you separate by G
 
 **Behavior**
 - Default: block upload and show link to existing record
-- Pending decision: either hard‑block always OR allow override by Admin/Reviewer with reason (see section 0)
+- Override allowed only for **Admin/Reviewer** with **mandatory reason** (saved to audit log)
 
 ### D) Invoice extraction (basic)
 Supported in MVP:
@@ -147,6 +143,24 @@ Via approved integration route (typically **GSP**):
 - Support monthly and quarterly filing modes per GSTIN.
 - Support IFF where applicable.
 
+### G.1) E‑invoice + e‑way bill (MVP = full workflow)
+For eligible invoices (as per taxpayer applicability):
+- **E‑invoice (IRN)**
+  - generate IRN
+  - cancel IRN
+  - print/download invoice with IRN/QR (template)
+  - bulk generate + bulk status check
+- **E‑way bill (EWB)**
+  - generate EWB
+  - cancel EWB
+  - print/download EWB
+  - bulk generate + bulk status check
+
+Reliability requirements in MVP:
+- idempotency keys to prevent duplicate IRN/EWB creation
+- retries with clear error messages and “next action”
+- logs per invoice (request/response refs, timestamps)
+
 ### H) Stage 1 Accounting‑lite (so users stop using Tally daily)
 Minimum accounting features:
 - Chart of Accounts templates (Trading + Service)
@@ -186,16 +200,13 @@ Billing per Org (tenant). MVP supports:
 - No advanced inventory (stock valuation, batches, manufacturing).
 - No payroll, cost centers, complex year-end.
 - No high-accuracy OCR for scanned images (later).
-- E-invoice/e-way bill: included per your confirmation, but MVP depth is pending your choice (section 0).
+- E-invoice/e-way bill is included (full workflow). We will *not* build advanced logistics features beyond core generate/cancel/print/bulk/status/retries.
 
 ---
 
 ## 4) Implementation plan (step by step)
 
 ### Step 0 (1–2 days): freeze decisions
-- Confirm remaining pending decisions (section 0):
-  - duplicates override policy
-  - e‑invoice/e‑way depth
 - Filing required in MVP: Yes (GSTR‑1 + 3B) with your confirmed scope
 - 2B source: GSP fetch preferred + upload fallback
 - Subscription model: per GSTIN per month (recommended)
@@ -229,10 +240,17 @@ Billing per Org (tenant). MVP supports:
 - Status polling + error handling UI
 - Store acknowledgements
 
-### Step 6 (week 13–14): payments + pilot
+### Step 6 (week 13–14): e‑invoice + e‑way (full workflow) + payments
+- IRN: generate/cancel + print + bulk + status
+- EWB: generate/cancel + print + bulk + status
+- Reliability: idempotency + retries + error UX
 - Subscription plans + payment gateway integration
 - Enforce plan limits + grace period
+
+### Step 7 (week 15–16): pilot
 - Pilot with 2–5 companies near filing deadline and fix issues
+
+ 
 
 ---
 
