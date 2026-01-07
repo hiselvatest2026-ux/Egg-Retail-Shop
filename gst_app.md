@@ -1,0 +1,378 @@
+# GST App — MVP plan + implementation (step by step)
+
+This is a **single simple document** that covers the MVP you want:
+- multi-company + multi-user
+- upload bills inside the app (company specific)
+- show what is uploaded so far
+- block duplicates
+- GST compliance calendar + status
+- GSTR‑2B reconciliation + “official status” view
+- GST filing flows (GSTR‑1 + GSTR‑3B) via approved integration (GSP)
+- Stage 1 Accounting‑lite (P&L etc.) so users don’t need Tally daily
+- payments/subscriptions model
+
+---
+
+## 0) Confirmed decisions (from you) + pending decisions (need your choice)
+
+### Confirmed by you
+- Audience: **Both** (Businesses + CA firms)
+- Account ownership models: **Both**
+  - **A (CA-owned)**: CA Org creates/manages client companies inside the CA Org
+  - **B (Business-owned)**: Business Org owns the company and invites CA users
+- Company structure: **Multi‑GSTIN is required**
+- GST scope: include **B2B, B2C, Exports/SEZ, Credit/Debit Notes, Amendments, RCM**
+- Include corner cases:
+  - GST: credit/debit notes, cancelled invoices, amendments, RCM, exports/SEZ, multi‑rate invoices, place‑of‑supply, HSN summary, nil returns, quarterly/IFF
+  - 2B: timing/refresh issues, vendor late filing, partial/mismatched values, duplicates across months
+  - Accounting‑lite: opening balances, partial payments/settlements, refunds/chargebacks, journal adjustments, year closing
+  - Duplicates: invoice number reused across years/series, revised invoices, PDFs containing multiple invoices
+- Source of truth: users **mostly upload PDFs/Excel** and we generate accounting automatically (Stage 1)
+- GSP scope order: build **2B fetch + filing together** (not separate phases)
+- Upload types in MVP: include **PDF text + Excel/CSV + scanned PDFs/images (OCR)** (confirmed)
+- Invoice granularity: support **one PDF with multiple invoices** via an in-app **split tool** (confirmed)
+- Financial year: **Apr–Mar** (India standard) (confirmed)
+- Login: **simple login for MVP**; OTP/2FA parked for later
+- Plan limits (MVP):
+  - Users per org: **3**
+  - Documents per month: **50 per GSTIN**
+- Accounting COA template: **Both selectable**
+  - During company setup ask: “Do you mainly sell **Products** or **Services**?”
+  - Auto-select **Trading COA** for Products and **Service COA** for Services (editable later)
+
+### Pending decisions (please answer; I will not assume)
+No pending decisions (confirmed by you):
+1) **Duplicate policy**: **Allow override only by Admin/Reviewer with mandatory reason**
+2) **E‑invoice & e‑way bill**: **Full workflow in MVP** (includes generate/cancel + print/bulk + error handling/retries)
+
+---
+
+## 1) MVP goal (in simple words)
+One app where a company can:
+- upload purchase/sales bills,
+- avoid uploading the same bill twice,
+- see dashboard + due dates + filing status,
+- reconcile purchases with GSTR‑2B,
+- prepare and file GSTR‑1 and GSTR‑3B,
+- and also get basic accounting reports like **Profit & Loss** (Stage 1) so they don’t use Tally daily.
+
+---
+
+## 2) MVP scope (what we build)
+
+### A) Login + company setup (SaaS)
+- Org (tenant) signup/login
+- Org type:
+  - **Business Org**
+  - **CA Org (Practice)**
+- Create companies (name, state)
+- Add **multiple GSTINs** per company (multi‑GSTIN)
+- Add users and roles:
+  - Admin
+  - Preparer
+  - Reviewer
+  - Read-only
+
+### A.1) Support both “CA-owned” and “Business-owned” companies (MVP)
+**Model A: CA-owned (Practice mode)**
+- The **CA Org** creates the client company inside the CA Org.
+- CA Org controls users, roles, filing, and audit.
+- Optional: CA invites client users as Read-only/Reviewer for approvals.
+
+**Model B: Business-owned**
+- The **Business Org** creates and owns the company.
+- Business Org invites CA users (Preparer/Reviewer) to work on the company.
+- Business Org can revoke access any time.
+
+**Security rule**
+- Default isolation is strict per Org.
+- Cross-org access exists only via explicit **Company Access** grants (invite → accept), scoped to that company (and optionally GSTINs).
+
+### A.2) Final MVP scope for ownership models (locked)
+
+#### Model A (CA-owned) — MVP scope
+**Who creates the company**
+- CA Org Admin creates the company + adds **multiple GSTINs**.
+
+**Who can work**
+- CA Org users (Admin/Preparer/Reviewer/Read-only) based on role.
+- Optional: client users invited by CA (Read-only or Reviewer for approvals).
+
+**What CA-owned supports (MVP)**
+- All core modules for that company/GSTINs:
+  - uploads + duplicate blocking
+  - needs-review cleanup
+  - accounting-lite auto postings + P&L + outstanding
+  - 2B fetch/upload + reconciliation
+  - compliance calendar + status
+  - filing GSTR-1/3B (monthly/quarterly/IFF/nil) via GSP
+  - e-invoice/e-way full workflow (where applicable)
+- Maker-checker within CA org:
+  - Preparer drafts, Reviewer approves/locks/files.
+
+**Billing owner**
+- CA Org subscription pays for CA-owned client companies (MVP rule).
+
+**Data ownership**
+- CA Org is the owner in the system (audit + control). Client access is optional and limited.
+
+#### Model B (Business-owned) — MVP scope
+**Who creates the company**
+- Business Org Admin creates the company + adds **multiple GSTINs**.
+
+**How CA gets access**
+- Business Org invites a CA user email.
+- Invite acceptance is required.
+- Business can revoke access anytime.
+
+**What Business-owned supports (MVP)**
+- Same core modules as CA-owned (above), but with Business as owner.
+- Maker-checker can be:
+  - within business team, and/or
+  - CA acts as Preparer/Reviewer depending on invitation role.
+
+**Billing owner**
+- Business Org subscription pays for Business-owned companies (MVP rule).
+
+**Data ownership**
+- Business Org owns the data; CA has delegated access only to invited companies.
+
+#### Cross-model rules (important)
+- One company is owned by exactly **one owner Org**.
+- A user can belong to one Org but can be granted access to another Org’s company via **Company Access** (Business-owned only).
+- All actions are logged with actor + org + company + GSTIN + period.
+
+### B) Upload bills inside the app
+- Select company → upload into:
+  - Purchases
+  - Sales
+- Upload history (“what was uploaded so far”):
+  - file name, date/time, uploaded by
+  - purchase/sale
+  - extracted invoice no/date/GSTIN/amount
+  - status: processing / processed / needs review / blocked duplicate
+  - filters: month, supplier/customer GSTIN, invoice number, status
+
+### C) Duplicate bill prevention (company specific)
+Check duplicates **within the selected company** (and GSTIN if you separate by GSTIN).
+
+**MVP duplicate rules**
+1) Same file duplicate (strong): `sha256(file)` already exists → block  
+2) Same invoice duplicate (strong): same `supplier GSTIN + invoice number + invoice date` (normalized) → block  
+3) Fallback duplicate: same `supplier GSTIN + invoice number` AND amounts match within tolerance → warn/block
+
+**Behavior**
+- Default: block upload and show link to existing record
+- Override allowed only for **Admin/Reviewer** with **mandatory reason** (saved to audit log)
+
+### D) Invoice extraction (basic)
+Supported in MVP:
+- PDF with selectable text
+- Excel/CSV templates (including Tally-style export template)
+ - Scanned PDFs/images via OCR (minimum viable accuracy; review queue required)
+
+Extract:
+- supplier/customer GSTIN
+- invoice number + date
+- taxable value + IGST/CGST/SGST + total
+- invoice type classification (B2B/B2C/Export/SEZ/RCM/CN/DN/Amendment) based on fields and user selection
+
+If missing/uncertain → goes to **Needs Review** queue for manual correction.
+
+**Multi-invoice PDF corner case (confirmed in scope)**
+- If one PDF contains multiple invoices:
+  - MVP behavior: provide an in-app **Split Invoices** tool:
+    - user selects page ranges (or splits by detected invoice headers when possible)
+    - each split becomes one invoice + document record
+    - duplicate checks run per split
+
+### E) Compliance calendar + status (due dates + progress)
+Per GSTIN, per month/quarter:
+- Due dates:
+  - GSTR‑1 due date
+  - GSTR‑3B due date
+  - IFF due date (for quarterly filers) when applicable
+- Status per return:
+  - not started / draft / pending review / ready / submitted / filed / error
+- Nil return handling: allow marking “Nil” with evidence/audit note
+
+### F) GSTR‑2B reconciliation (“official verification”)
+Important: **2B is not “filed” by the taxpayer**. It is auto-generated.  
+What users want is “2B available + last fetched + mismatch list”.
+
+MVP provides:
+- Fetch 2B via GSP (preferred) or allow upload of 2B export (fallback)
+- Match purchases vs 2B:
+  - matched
+  - not in 2B (vendor follow-up)
+  - mismatch (clear reason)
+- Bulk actions + vendor compliance report
+ - Handle timing issues:
+   - show “2B last refreshed at”
+   - show “vendor filed late” type explanations (where detectable)
+   - prevent incorrect conclusions by keeping audit notes per period
+
+### G) GST filing (minimal but real “filing software”)
+Via approved integration route (typically **GSP**):
+- Prepare GSTR‑1 to cover (confirmed in scope):
+  - B2B, B2C (summary where applicable), Exports/SEZ, Credit/Debit notes, Amendments
+- Prepare GSTR‑3B:
+  - summary values + ITC
+  - RCM classification support (at least capture + include in summaries)
+- HSN summary support (at minimum for reporting and for return sections where required)
+- Place‑of‑supply handling (capture + validate)
+- Submit/file with:
+  - acknowledgements / reference IDs
+  - status polling
+  - error resolution screen (“what failed and how to fix”)
+
+**Quarterly/IFF + nil returns (confirmed in scope)**
+- Support monthly and quarterly filing modes per GSTIN.
+- Support IFF where applicable.
+
+### G.1) E‑invoice + e‑way bill (MVP = full workflow)
+For eligible invoices (as per taxpayer applicability):
+- **E‑invoice (IRN)**
+  - generate IRN
+  - cancel IRN
+  - print/download invoice with IRN/QR (template)
+  - bulk generate + bulk status check
+- **E‑way bill (EWB)**
+  - generate EWB
+  - cancel EWB
+  - print/download EWB
+  - bulk generate + bulk status check
+
+Reliability requirements in MVP:
+- idempotency keys to prevent duplicate IRN/EWB creation
+- retries with clear error messages and “next action”
+- logs per invoice (request/response refs, timestamps)
+
+### H) Stage 1 Accounting‑lite (so users stop using Tally daily)
+Minimum accounting features:
+- Chart of Accounts templates (Trading + Service)
+- Party masters (customers/suppliers)
+- Auto-generated vouchers/postings primarily from uploaded invoices:
+  - Sales invoice upload → Sales voucher postings
+  - Purchase invoice upload → Purchase voucher postings
+- Manual adjustments allowed:
+  - Journal adjustments
+  - Opening balances (start of migration)
+  - Receipt/Payment entries for settlements (to support outstanding ageing)
+  - Refund/chargeback adjustments (minimal)
+- Auto-posting (double-entry) with validation
+- Reports:
+  - Profit & Loss
+  - Trial balance (basic)
+  - Ledger report
+  - Outstanding receivables/payables + ageing
+  - Daybook
+ - Year closing (basic):
+   - lock last financial year
+   - carry forward opening balances
+
+### I) Payments (subscription model)
+Billing per Org (tenant). MVP supports:
+- Plans (Starter, Pro/CA)
+- Pay → activate subscription → renew
+- Invoice/receipt download
+- Simple enforcement:
+  - limit GSTIN/users/docs by plan
+    - MVP default limits: **3 users per org**, **50 documents per GSTIN per month**
+  - grace period after payment failure
+
+Billing rules (since you want both A and B):
+- If company is **CA-owned**: subscription paid by the **CA Org**
+- If company is **Business-owned**: subscription paid by the **Business Org**
+
+---
+
+## 3) What we will NOT build in MVP (to keep it realistic)
+- No portal scraping / robot clicking.
+- No advanced inventory (stock valuation, batches, manufacturing).
+- No payroll, cost centers, complex year-end.
+- No high-accuracy OCR for scanned images (later).
+- E-invoice/e-way bill is included (full workflow). We will *not* build advanced logistics features beyond core generate/cancel/print/bulk/status/retries.
+
+---
+
+## 4) Implementation plan (step by step)
+
+### Step 0 (1–2 days): freeze decisions
+- Filing required in MVP: Yes (GSTR‑1 + 3B) with your confirmed scope
+- 2B source: GSP fetch preferred + upload fallback
+- Subscription model: per GSTIN per month (recommended)
+
+### Step 1 (week 1–2): foundation
+- Auth + Org + roles
+- Company/GSTIN setup
+- Implement both ownership models:
+  - CA Org creates client companies (A)
+  - Business Org invites CA users with company-scoped roles (B)
+- File storage for uploads
+- Upload history screen
+
+### Step 2 (week 3–4): extraction + review + duplicates
+- PDF text + Excel/CSV parsers
+- OCR pipeline for scanned PDFs/images (plus strong review UI)
+- Normalization rules (GSTIN/invoice no/date)
+- Duplicate detection + override flow
+- Needs review queue + edit screen
+- Audit log for edits and duplicate actions
+
+### Step 3 (week 5–6): accounting-lite base (Stage 1)
+- Chart of Accounts templates + party masters
+- Auto-generate vouchers from uploads + manual journal/receipt/payment/opening balance
+- Reports: P&L + trial balance + ledger + outstanding
+
+### Step 4 (week 7–8): 2B reconciliation + compliance calendar
+- Fetch/upload 2B (and align with filing work so both ship together)
+- Matching engine + mismatch reasons + bulk actions
+- Due dates + status dashboard per GSTIN/month
+
+### Step 5 (week 9–12): filing flows (GSTR‑1 + 3B)
+- Build return payload generator (minimal supported sections first)
+- Submit/file via GSP
+- Status polling + error handling UI
+- Store acknowledgements
+
+### Step 6 (week 13–14): e‑invoice + e‑way (full workflow) + payments
+- IRN: generate/cancel + print + bulk + status
+- EWB: generate/cancel + print + bulk + status
+- Reliability: idempotency + retries + error UX
+- Subscription plans + payment gateway integration
+- Enforce plan limits + grace period
+
+### Step 7 (week 15–16): pilot
+- Pilot with 2–5 companies near filing deadline and fix issues
+
+ 
+
+---
+
+## 5) Minimum data we must store (simple list)
+- Org, User, Role, Company, GSTIN
+- Org type + company ownership + company access grants (for “Business-owned invite CA”)
+- Uploaded documents + file hash (for duplicates)
+- Invoices (normalized fields)
+- Duplicate events (blocked/overridden + reason)
+- 2B imports + reconciliation results
+- Return status (GSTR‑1/3B) + due dates + acknowledgements
+- Accounting: accounts, parties, vouchers, voucher lines (double-entry)
+- Billing: plan, subscription, payments, invoices/receipts
+- Audit log (who changed what)
+
+### 5.1) Extra minimal tables for “both A and B”
+- `org.type` = business|ca
+- `company.owner_org_id`
+- `company_access`: company_id, granted_to_user_id, role, status (invited/accepted/revoked), granted_by, created_at
+
+---
+
+## 6) Parked for later (cost items to revisit)
+- Domain: ~$1–$2/mo (paid yearly)
+- Email/SMS (OTP, invites): ~$5–$50/mo depending on volume
+- Monitoring (Sentry, etc.): $0–$30/mo to start
+- Payment gateway fees (Razorpay/Cashfree): typically ~1.5%–2% + GST per transaction (varies by method/plan)
+
+
