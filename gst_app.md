@@ -36,6 +36,9 @@ This is a **single simple document** that covers the MVP you want:
 - Plan limits (MVP):
   - Users per org: **3**
   - Documents per month: **50 per GSTIN**
+- Accounting COA template: **Both selectable**
+  - During company setup ask: “Do you mainly sell **Products** or **Services**?”
+  - Auto-select **Trading COA** for Products and **Service COA** for Services (editable later)
 
 ### Pending decisions (please answer; I will not assume)
 No pending decisions (confirmed by you):
