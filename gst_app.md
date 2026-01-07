@@ -350,4 +350,12 @@ Billing rules (since you want both A and B):
 - `company.owner_org_id`
 - `company_access`: company_id, granted_to_user_id, role, status (invited/accepted/revoked), granted_by, created_at
 
+---
+
+## 6) Parked for later (cost items to revisit)
+- Domain: ~$1–$2/mo (paid yearly)
+- Email/SMS (OTP, invites): ~$5–$50/mo depending on volume
+- Monitoring (Sentry, etc.): $0–$30/mo to start
+- Payment gateway fees (Razorpay/Cashfree): typically ~1.5%–2% + GST per transaction (varies by method/plan)
+
 
