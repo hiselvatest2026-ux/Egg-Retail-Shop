@@ -10,4 +10,5 @@ If `gst_app.md` feels long, use these smaller docs.
 - `data_model.md`: simple tables/objects we will store
 - `duplicate_detection.md`: how duplicate bills are blocked/allowed
 - `milestones.md`: week-by-week plan
+- `competitor_gap_checklist.md`: what’s missing vs competitors + roadmap
 
