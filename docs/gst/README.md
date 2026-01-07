@@ -13,6 +13,7 @@ If `gst_app.md` feels long, use these smaller docs.
 - `payments_and_billing.md`: subscription plans + payment flow
 - `compliance_calendar_and_status.md`: due dates + filing status + 2B status
 - `tally_gap_and_strategy.md`: what Tally users expect + what to build
+- `stage1_accounting_lite.md`: Stage 1 feature scope (P&L + vouchers)
 - `milestones.md`: week-by-week plan
 - `competitor_gap_checklist.md`: what’s missing vs competitors + roadmap
 

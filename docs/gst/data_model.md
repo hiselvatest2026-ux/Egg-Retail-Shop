@@ -46,6 +46,16 @@ This is the minimum set of “things” we store so uploads, duplicates, review,
 - `payment`: org_id, amount, gateway_ref, status, created_at
 - `invoice_pdf`: org_id, invoice_no, period, amount, tax, pdf_url, paid_at
 
+## Accounting-lite (Stage 1)
+- `account`: id, company_id, code, name, type (asset|liability|income|expense), parent_id
+- `party`: id, company_id, kind (customer|supplier), name, gstin, state_code
+- `voucher`: id, company_id, gstin_id (optional), type (sale|purchase|receipt|payment|journal), date, number, narration, created_by
+- `voucher_line`: id, voucher_id, account_id, party_id (optional), dr_amount, cr_amount, tax_json (optional), document_id (optional)
+
+Reports derive from postings:
+- Trial balance / P&L uses sums of voucher lines grouped by account type.
+- Outstanding uses voucher lines linked to party (open balance).
+
 ## Audit trail
 - `audit_event`: id, org_id, company_id, actor_user_id, entity_type, entity_id, action, before_json, after_json, created_at
 
